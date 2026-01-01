@@ -90,6 +90,7 @@ model Dealer {
   users           User[]
   contacts        DealerContact[]
   addresses       DealerAddress[]
+  carts           Cart[]
   orders          Order[]
   documents       Document[]
 
@@ -176,6 +177,7 @@ model Product {
 
   images      ProductImage[]
   inventory   Inventory[]
+  cartItems   CartItem[]
   orderItems  OrderItem[]
 
   createdAt   DateTime @default(now())
@@ -233,6 +235,43 @@ model Inventory {
   @@unique([productId, locationId])
   @@index([productId])
   @@index([locationId])
+}
+
+// ============================================================================
+// SHOPPING CART
+// ============================================================================
+
+model Cart {
+  id        String   @id @default(cuid())
+  dealerId  String
+  dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  userId    String?  // Optional - which user created the cart
+  name      String?  // For saved carts
+  isSaved   Boolean  @default(false) // true for saved carts, false for active cart
+
+  items     CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealerId])
+  @@index([userId])
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
 }
 
 // ============================================================================
