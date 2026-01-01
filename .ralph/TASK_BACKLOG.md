@@ -277,7 +277,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 |----|----------|--------|------|------------|---------|
 | 5.1.1 | 🔴 | ✅ | Build document library | Manual | *Completed 2026-01-01 (1058 tests passing)* |
 | 5.1.2 | 🔴 | ✅ | Implement file upload | Manual | *Completed 2026-01-01 (1101 tests passing)* |
-| 5.1.3 | 🟠 | ⏳ | Add document preview | 12 | `/ralph-loop "Implement document preview: PDF viewer, image lightbox, Office document preview. In-modal viewing without download" --max-iterations 12` |
+| 5.1.3 | 🟠 | ✅ | Add document preview | Manual | *Completed 2026-01-01 (1161 tests passing)* |
 | 5.1.4 | 🟠 | ⏳ | Create version control | 12 | `/ralph-loop "Add document versioning: upload new version, version history, restore previous. Track changes and uploaders" --max-iterations 12` |
 | 5.1.5 | 🟡 | ⏳ | Implement access control | 10 | `/ralph-loop "Create document permissions: public, dealer-specific, role-based. Admin override capability. Audit access logs" --max-iterations 10` |
 | 5.1.6 | 🟡 | ⏳ | Add expiration tracking | 8 | `/ralph-loop "Implement document expiration: set expiry dates, renewal reminders, expired document handling. Dashboard widget" --max-iterations 8` |
@@ -462,6 +462,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 5.2.2 | In-App Notifications | Manual | 2026-01-01 | Bell icon, dropdown, full page, grouping, filters |
 | 5.1.1 | Document Library | Manual | 2026-01-01 | 1058 tests, grid/list view, categories, search, filters |
 | 5.1.2 | File Upload | Manual | 2026-01-01 | 1101 tests, drag-drop, progress, validation, quota |
+| 5.1.3 | Document Preview | Manual | 2026-01-01 | 1161 tests, PDF viewer, image lightbox, zoom controls |
 
 ---
 
