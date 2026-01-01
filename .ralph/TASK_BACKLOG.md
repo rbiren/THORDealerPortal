@@ -286,8 +286,8 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 5.2.1 | 🔴 | ⏳ | Create notification service | 15 | `/ralph-loop "Build notification service: create, send, mark read. Support multiple channels. Queue-based delivery. Template system" --max-iterations 15` |
-| 5.2.2 | 🔴 | ⏳ | Build in-app notifications | 12 | `/ralph-loop "Create notification UI: bell icon with count, dropdown with list, notification center page. Mark read, clear all" --max-iterations 12` |
+| 5.2.1 | 🔴 | ✅ | Create notification service | Manual | *Completed 2026-01-01 (1002 tests passing)* |
+| 5.2.2 | 🔴 | ✅ | Build in-app notifications | Manual | *Completed 2026-01-01 (bell icon, dropdown, full page)* |
 | 5.2.3 | 🟠 | ⏳ | Implement email notifications | 12 | `/ralph-loop "Setup transactional email: templates for order updates, alerts, system messages. Resend/SendGrid integration. Unsubscribe links" --max-iterations 12` |
 | 5.2.4 | 🟠 | ⏳ | Add notification preferences | 10 | `/ralph-loop "Create preference UI: toggle by notification type, channel selection (in-app, email, SMS). Per-user configuration" --max-iterations 10` |
 | 5.2.5 | 🟡 | ⏳ | Create system announcements | 10 | `/ralph-loop "Build announcement system: admin creates banners/modals, target audience selection, scheduling, dismissal tracking" --max-iterations 10` |
@@ -458,6 +458,8 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 4.4.2 | Dealer Comparison | Manual | 2026-01-01 | Dealer ranking by revenue/orders/growth, tier distribution |
 | 4.4.3 | System Usage Analytics | Manual | 2026-01-01 | Active users, today logins, active carts |
 | 4.5.1 | Report Export | Manual | 2026-01-01 | 950 tests, CSV/Excel/PDF export, sales/inventory/dealer reports |
+| 5.2.1 | Notification Service | Manual | 2026-01-01 | 1002 tests, CRUD, templates, bulk creation, cleanup |
+| 5.2.2 | In-App Notifications | Manual | 2026-01-01 | Bell icon, dropdown, full page, grouping, filters |
 
 ---
 
