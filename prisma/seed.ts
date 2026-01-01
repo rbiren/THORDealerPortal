@@ -1,6 +1,14 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
+
+// Default password for seed users (only for development)
+const DEFAULT_PASSWORD = 'Password123!'
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12)
+}
 
 async function main() {
   console.log('🌱 Starting seed...')
@@ -277,12 +285,13 @@ async function main() {
 
   console.log('🏢 Created dealers')
 
-  // Create Users
-  // Note: In production, passwords should be properly hashed
+  // Create Users with properly hashed passwords
+  const passwordHash = await hashPassword(DEFAULT_PASSWORD)
+
   const adminUser = await prisma.user.create({
     data: {
       email: 'admin@thordealer.com',
-      passwordHash: 'hashed_password_placeholder', // Replace with bcrypt hash
+      passwordHash,
       firstName: 'Admin',
       lastName: 'User',
       role: 'super_admin',
@@ -295,7 +304,7 @@ async function main() {
       prisma.user.create({
         data: {
           email: `dealer${index + 1}@example.com`,
-          passwordHash: 'hashed_password_placeholder',
+          passwordHash,
           firstName: `Dealer`,
           lastName: `User ${index + 1}`,
           role: 'dealer_admin',
