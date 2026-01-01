@@ -389,3 +389,207 @@ describe('Dealer Management Integration', () => {
     await prisma.dealer.delete({ where: { id: childDealer.id } })
   })
 })
+
+describe('Dealer CRUD Operations', () => {
+  let crudDealerIds: string[] = []
+
+  afterAll(async () => {
+    if (crudDealerIds.length > 0) {
+      await prisma.dealer.deleteMany({
+        where: { id: { in: crudDealerIds } },
+      })
+    }
+    await prisma.dealer.deleteMany({
+      where: { code: { startsWith: 'DLRCRUD' } },
+    })
+    await prisma.$disconnect()
+  })
+
+  it('can create a new dealer', async () => {
+    const dealer = await prisma.dealer.create({
+      data: {
+        code: 'DLRCRUD01',
+        name: 'CRUD Test Dealer',
+        status: 'pending',
+        tier: 'bronze',
+      },
+    })
+    crudDealerIds.push(dealer.id)
+
+    expect(dealer).toBeDefined()
+    expect(dealer.code).toBe('DLRCRUD01')
+    expect(dealer.name).toBe('CRUD Test Dealer')
+    expect(dealer.status).toBe('pending')
+    expect(dealer.tier).toBe('bronze')
+  })
+
+  it('can read a dealer by id with relations', async () => {
+    const dealerId = crudDealerIds[0]
+    const dealer = await prisma.dealer.findUnique({
+      where: { id: dealerId },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        status: true,
+        tier: true,
+        ein: true,
+        licenseNumber: true,
+        insurancePolicy: true,
+        parentDealerId: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            users: true,
+            orders: true,
+            childDealers: true,
+          },
+        },
+      },
+    })
+
+    expect(dealer).not.toBeNull()
+    expect(dealer?.code).toBe('DLRCRUD01')
+    expect(dealer?._count).toBeDefined()
+  })
+
+  it('can update dealer fields', async () => {
+    const dealerId = crudDealerIds[0]
+    const updated = await prisma.dealer.update({
+      where: { id: dealerId },
+      data: {
+        name: 'Updated Dealer Name',
+        tier: 'gold',
+        ein: '12-3456789',
+        licenseNumber: 'LIC-001',
+      },
+    })
+
+    expect(updated.name).toBe('Updated Dealer Name')
+    expect(updated.tier).toBe('gold')
+    expect(updated.ein).toBe('12-3456789')
+    expect(updated.licenseNumber).toBe('LIC-001')
+  })
+
+  it('can change dealer status', async () => {
+    const dealerId = crudDealerIds[0]
+    const updated = await prisma.dealer.update({
+      where: { id: dealerId },
+      data: { status: 'active' },
+    })
+
+    expect(updated.status).toBe('active')
+  })
+
+  it('can change dealer tier', async () => {
+    const dealerId = crudDealerIds[0]
+    const updated = await prisma.dealer.update({
+      where: { id: dealerId },
+      data: { tier: 'platinum' },
+    })
+
+    expect(updated.tier).toBe('platinum')
+  })
+
+  it('enforces unique dealer code', async () => {
+    await expect(
+      prisma.dealer.create({
+        data: {
+          code: 'DLRCRUD01', // Same as existing
+          name: 'Duplicate Code Dealer',
+          status: 'pending',
+          tier: 'bronze',
+        },
+      })
+    ).rejects.toThrow()
+  })
+
+  it('can set parent dealer relationship', async () => {
+    const childDealer = await prisma.dealer.create({
+      data: {
+        code: 'DLRCRUDCHILD',
+        name: 'Child Dealer',
+        status: 'active',
+        tier: 'bronze',
+        parentDealerId: crudDealerIds[0],
+      },
+    })
+    crudDealerIds.push(childDealer.id)
+
+    expect(childDealer.parentDealerId).toBe(crudDealerIds[0])
+
+    // Verify parent has child count
+    const parent = await prisma.dealer.findUnique({
+      where: { id: crudDealerIds[0] },
+      include: {
+        _count: {
+          select: { childDealers: true },
+        },
+      },
+    })
+    expect(parent?._count.childDealers).toBeGreaterThanOrEqual(1)
+  })
+
+  it('can remove parent dealer relationship', async () => {
+    const childDealerId = crudDealerIds[1]
+    const updated = await prisma.dealer.update({
+      where: { id: childDealerId },
+      data: { parentDealerId: null },
+    })
+
+    expect(updated.parentDealerId).toBeNull()
+  })
+
+  it('can delete a dealer without relations', async () => {
+    const dealerToDelete = await prisma.dealer.create({
+      data: {
+        code: 'DLRTODELETE',
+        name: 'Dealer to Delete',
+        status: 'inactive',
+        tier: 'bronze',
+      },
+    })
+
+    await prisma.dealer.delete({
+      where: { id: dealerToDelete.id },
+    })
+
+    const deleted = await prisma.dealer.findUnique({
+      where: { id: dealerToDelete.id },
+    })
+    expect(deleted).toBeNull()
+  })
+
+  it('can update business details', async () => {
+    const dealerId = crudDealerIds[0]
+    const updated = await prisma.dealer.update({
+      where: { id: dealerId },
+      data: {
+        ein: '98-7654321',
+        licenseNumber: 'LIC-999',
+        insurancePolicy: 'POL-888',
+      },
+    })
+
+    expect(updated.ein).toBe('98-7654321')
+    expect(updated.licenseNumber).toBe('LIC-999')
+    expect(updated.insurancePolicy).toBe('POL-888')
+  })
+
+  it('can clear optional fields', async () => {
+    const dealerId = crudDealerIds[0]
+    const updated = await prisma.dealer.update({
+      where: { id: dealerId },
+      data: {
+        ein: null,
+        licenseNumber: null,
+        insurancePolicy: null,
+      },
+    })
+
+    expect(updated.ein).toBeNull()
+    expect(updated.licenseNumber).toBeNull()
+    expect(updated.insurancePolicy).toBeNull()
+  })
+})

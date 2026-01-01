@@ -7,8 +7,12 @@ import { revalidatePath } from 'next/cache'
 import {
   dealerFilterSchema,
   bulkDealerActionSchema,
+  createDealerSchema,
+  updateDealerSchema,
   type DealerFilterInput,
   type BulkDealerActionInput,
+  type CreateDealerInput,
+  type UpdateDealerInput,
 } from '@/lib/validations/dealer'
 
 export type DealerListItem = {
@@ -213,4 +217,294 @@ export async function getParentDealers() {
     },
     orderBy: { name: 'asc' },
   })
+}
+
+// Dealer CRUD Operations
+
+export type DealerDetail = {
+  id: string
+  code: string
+  name: string
+  status: string
+  tier: string
+  ein: string | null
+  licenseNumber: string | null
+  insurancePolicy: string | null
+  parentDealerId: string | null
+  createdAt: Date
+  updatedAt: Date
+  parentDealer: {
+    id: string
+    name: string
+    code: string
+  } | null
+  _count: {
+    users: number
+    orders: number
+    childDealers: number
+  }
+}
+
+export async function getDealer(id: string): Promise<DealerDetail | null> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return null
+  }
+
+  return prisma.dealer.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      status: true,
+      tier: true,
+      ein: true,
+      licenseNumber: true,
+      insurancePolicy: true,
+      parentDealerId: true,
+      createdAt: true,
+      updatedAt: true,
+      parentDealer: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+        },
+      },
+      _count: {
+        select: {
+          users: true,
+          orders: true,
+          childDealers: true,
+        },
+      },
+    },
+  })
+}
+
+export type CreateDealerState = {
+  success: boolean
+  message: string
+  dealerId?: string
+  errors?: Record<string, string[]>
+}
+
+export async function createDealer(input: CreateDealerInput): Promise<CreateDealerState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    const validatedData = createDealerSchema.parse(input)
+
+    // Check if code already exists
+    const existingDealer = await prisma.dealer.findUnique({
+      where: { code: validatedData.code },
+    })
+
+    if (existingDealer) {
+      return {
+        success: false,
+        message: 'Validation failed',
+        errors: { code: ['Dealer code is already in use'] },
+      }
+    }
+
+    // Validate parent dealer if provided
+    if (validatedData.parentDealerId) {
+      const parentDealer = await prisma.dealer.findUnique({
+        where: { id: validatedData.parentDealerId },
+      })
+      if (!parentDealer) {
+        return {
+          success: false,
+          message: 'Validation failed',
+          errors: { parentDealerId: ['Parent dealer not found'] },
+        }
+      }
+    }
+
+    const dealer = await prisma.dealer.create({
+      data: {
+        code: validatedData.code,
+        name: validatedData.name,
+        status: validatedData.status,
+        tier: validatedData.tier,
+        ein: validatedData.ein || null,
+        licenseNumber: validatedData.licenseNumber || null,
+        insurancePolicy: validatedData.insurancePolicy || null,
+        parentDealerId: validatedData.parentDealerId || null,
+      },
+    })
+
+    revalidatePath('/admin/dealers')
+    return {
+      success: true,
+      message: 'Dealer created successfully',
+      dealerId: dealer.id,
+    }
+  } catch (error) {
+    console.error('Create dealer error:', error)
+    if (error instanceof Error && error.name === 'ZodError') {
+      return {
+        success: false,
+        message: 'Validation failed',
+        errors: { _form: ['Invalid input data'] },
+      }
+    }
+    return { success: false, message: 'An error occurred while creating the dealer' }
+  }
+}
+
+export type UpdateDealerState = {
+  success: boolean
+  message: string
+  errors?: Record<string, string[]>
+}
+
+export async function updateDealer(input: UpdateDealerInput): Promise<UpdateDealerState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    const validatedData = updateDealerSchema.parse(input)
+    const { id, ...updateData } = validatedData
+
+    const existingDealer = await prisma.dealer.findUnique({
+      where: { id },
+    })
+
+    if (!existingDealer) {
+      return { success: false, message: 'Dealer not found' }
+    }
+
+    // Check code uniqueness if changing
+    if (updateData.code && updateData.code !== existingDealer.code) {
+      const codeExists = await prisma.dealer.findUnique({
+        where: { code: updateData.code },
+      })
+      if (codeExists) {
+        return {
+          success: false,
+          message: 'Validation failed',
+          errors: { code: ['Dealer code is already in use'] },
+        }
+      }
+    }
+
+    // Validate parent dealer if changing
+    if (updateData.parentDealerId) {
+      // Prevent circular reference
+      if (updateData.parentDealerId === id) {
+        return {
+          success: false,
+          message: 'Validation failed',
+          errors: { parentDealerId: ['Dealer cannot be its own parent'] },
+        }
+      }
+      const parentDealer = await prisma.dealer.findUnique({
+        where: { id: updateData.parentDealerId },
+      })
+      if (!parentDealer) {
+        return {
+          success: false,
+          message: 'Validation failed',
+          errors: { parentDealerId: ['Parent dealer not found'] },
+        }
+      }
+    }
+
+    // Build update data, filtering out undefined values
+    const cleanUpdateData: Record<string, unknown> = {}
+    if (updateData.code !== undefined) cleanUpdateData.code = updateData.code
+    if (updateData.name !== undefined) cleanUpdateData.name = updateData.name
+    if (updateData.status !== undefined) cleanUpdateData.status = updateData.status
+    if (updateData.tier !== undefined) cleanUpdateData.tier = updateData.tier
+    if (updateData.ein !== undefined) cleanUpdateData.ein = updateData.ein
+    if (updateData.licenseNumber !== undefined) cleanUpdateData.licenseNumber = updateData.licenseNumber
+    if (updateData.insurancePolicy !== undefined) cleanUpdateData.insurancePolicy = updateData.insurancePolicy
+    if (updateData.parentDealerId !== undefined) cleanUpdateData.parentDealerId = updateData.parentDealerId
+
+    await prisma.dealer.update({
+      where: { id },
+      data: cleanUpdateData,
+    })
+
+    revalidatePath('/admin/dealers')
+    revalidatePath(`/admin/dealers/${id}`)
+    return { success: true, message: 'Dealer updated successfully' }
+  } catch (error) {
+    console.error('Update dealer error:', error)
+    if (error instanceof Error && error.name === 'ZodError') {
+      return {
+        success: false,
+        message: 'Validation failed',
+        errors: { _form: ['Invalid input data'] },
+      }
+    }
+    return { success: false, message: 'An error occurred while updating the dealer' }
+  }
+}
+
+export type DeleteDealerState = {
+  success: boolean
+  message: string
+}
+
+export async function deleteDealer(id: string): Promise<DeleteDealerState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  // Only super_admin can delete dealers
+  if (session.user.role !== 'super_admin') {
+    return { success: false, message: 'Only super admins can delete dealers' }
+  }
+
+  try {
+    const dealer = await prisma.dealer.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            users: true,
+            orders: true,
+            childDealers: true,
+          },
+        },
+      },
+    })
+
+    if (!dealer) {
+      return { success: false, message: 'Dealer not found' }
+    }
+
+    // Prevent deletion if dealer has users, orders, or child dealers
+    if (dealer._count.users > 0) {
+      return { success: false, message: 'Cannot delete dealer with associated users' }
+    }
+    if (dealer._count.orders > 0) {
+      return { success: false, message: 'Cannot delete dealer with associated orders' }
+    }
+    if (dealer._count.childDealers > 0) {
+      return { success: false, message: 'Cannot delete dealer with child dealers' }
+    }
+
+    await prisma.dealer.delete({ where: { id } })
+
+    revalidatePath('/admin/dealers')
+    return { success: true, message: 'Dealer deleted successfully' }
+  } catch (error) {
+    console.error('Delete dealer error:', error)
+    return { success: false, message: 'An error occurred while deleting the dealer' }
+  }
 }
