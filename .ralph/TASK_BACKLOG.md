@@ -111,7 +111,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
 | 1.5.1 | 🟠 | ✅ | Implement audit log service | Manual | *Completed 2026-01-01 (235 tests passing)* |
-| 1.5.2 | 🟠 | ⏳ | Build audit log viewer | 12 | `/ralph-loop "Create admin audit log viewer with: filtering by user/action/entity, date range, search. Paginated results with detail expansion" --max-iterations 12` |
+| 1.5.2 | 🟠 | ✅ | Build audit log viewer | Manual | *Completed 2026-01-01 (266 tests passing)* |
 
 ---
 
@@ -410,6 +410,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.4.4 | Dealer onboarding wizard | Manual | 2026-01-01 | 204 tests, 4-step wizard (Basic Info, Business Details, Contacts, Review) |
 | 1.4.5 | Dealer hierarchy visualization | Manual | 2026-01-01 | 215 tests, tree view, filters, search, stats |
 | 1.5.1 | Audit log service | Manual | 2026-01-01 | 235 tests, logCreate/Update/Delete helpers, query functions |
+| 1.5.2 | Audit log viewer | Manual | 2026-01-01 | 266 tests, filters (user/action/entity/date), pagination, detail expansion |
 
 ---
 
