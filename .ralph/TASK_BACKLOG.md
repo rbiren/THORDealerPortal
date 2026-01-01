@@ -142,7 +142,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 2.3.1 | 🔴 | ⏳ | Create inventory dashboard | 15 | `/ralph-loop "Build inventory dashboard with: total stock, low stock alerts, inventory value. Add location breakdown and quick filters" --max-iterations 15` |
+| 2.3.1 | 🔴 | ✅ | Create inventory dashboard | Manual | *Completed 2026-01-01 (439 tests passing)* |
 | 2.3.2 | 🟠 | ⏳ | Implement inventory list | 12 | `/ralph-loop "Create inventory list view: product, location, quantity, reserved, available. Add sorting, filtering, export functionality" --max-iterations 12` |
 | 2.3.3 | 🟠 | ⏳ | Build location management | 10 | `/ralph-loop "Create inventory location CRUD. Support warehouse, store types. Add address and contact information" --max-iterations 10` |
 | 2.3.4 | 🟠 | ⏳ | Add inventory adjustments | 12 | `/ralph-loop "Implement inventory adjustment feature: add/remove stock with reason codes. Create adjustment history log with audit trail" --max-iterations 12` |
@@ -418,6 +418,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 2.1.5 | Category navigation | Manual | 2026-01-01 | 359 tests, hierarchical sidebar, product counts, expand/collapse, active highlight |
 | 2.2.1 | Product CRUD (Admin) | Manual | 2026-01-01 | 390 tests, create/edit forms, image management, bulk actions, admin table |
 | 2.2.2 | Category Management | Manual | 2026-01-01 | 413 tests, CRUD with tree view, drag-drop reorder, 3-level nesting, parent validation |
+| 2.3.1 | Inventory Dashboard | Manual | 2026-01-01 | 439 tests, summary cards, location breakdown, low/out-of-stock alerts, category breakdown |
 
 ---
 
