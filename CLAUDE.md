@@ -19,6 +19,11 @@ This document provides guidance for AI assistants working with the THORDealerPor
 THORDealerPortal/
 ├── README.md           # Project overview and setup instructions
 ├── CLAUDE.md           # This file - AI assistant guidelines
+├── docs/               # Documentation
+│   └── RALPH_WIGGUM_GUIDE.md  # Ralph Wiggum autonomous loop guide
+├── .ralph/             # Ralph Wiggum loop state and templates
+│   ├── PROGRESS_TEMPLATE.md   # Progress tracking template
+│   └── TASK_BACKLOG.md        # Planned development tasks
 └── (future directories to be added)
 ```
 
@@ -162,6 +167,46 @@ npm run test:coverage
 
 ---
 
+## Ralph Wiggum Autonomous Loops
+
+This project supports the Ralph Wiggum plugin for autonomous, iterative AI development.
+
+### Quick Start
+
+```bash
+# Install the plugin
+/plugin marketplace add anthropics/claude-code
+/plugin install ralph-wiggum@claude-code-plugins
+
+# Start a development loop
+/ralph-loop "Implement feature X with tests" --max-iterations 20
+
+# Cancel if needed
+/cancel-ralph
+```
+
+### Key Principles
+
+1. **Always set max iterations** - Use `--max-iterations` as your safety limit
+2. **Use TDD** - Write tests first, let Ralph implement until green
+3. **Clear completion criteria** - Use `--completion-promise "ALL TESTS PASS"`
+4. **Track progress** - Use `.ralph/` templates for complex tasks
+
+### Memory Process
+
+Ralph maintains context through:
+- **Git history** - Each iteration sees previous commits
+- **File state** - Modified files persist between iterations
+- **Progress files** - Use `.ralph/progress.md` for explicit tracking
+
+### Documentation
+
+- Full guide: `docs/RALPH_WIGGUM_GUIDE.md`
+- Progress template: `.ralph/PROGRESS_TEMPLATE.md`
+- Task backlog: `.ralph/TASK_BACKLOG.md`
+
+---
+
 ## AI Assistant Guidelines
 
 ### Do's
@@ -256,6 +301,9 @@ AUTH_SECRET=your-secret-key
 ### [Unreleased]
 - Initial repository setup
 - Added CLAUDE.md documentation
+- Added Ralph Wiggum autonomous loop guide and templates
+- Created `.ralph/` directory with progress tracking templates
+- Created task backlog for planned development
 
 ---
 
