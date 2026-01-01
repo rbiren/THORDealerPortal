@@ -1,0 +1,386 @@
+// Prisma Schema for THORDealerPortal
+// Using SQLite for local development - swap to PostgreSQL for production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTHENTICATION & USERS
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          String    @default("dealer_user") // super_admin, admin, dealer_admin, dealer_user, readonly
+  status        String    @default("active") // active, inactive, pending, suspended
+  mfaEnabled    Boolean   @default(false)
+  mfaSecret     String?
+
+  dealerId      String?
+  dealer        Dealer?   @relation(fields: [dealerId], references: [id])
+
+  sessions      Session[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+  @@index([dealerId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+  @@index([email])
+}
+
+// ============================================================================
+// DEALERS
+// ============================================================================
+
+model Dealer {
+  id              String   @id @default(cuid())
+  code            String   @unique // Dealer code (e.g., "DLR001")
+  name            String
+  status          String   @default("pending") // active, pending, suspended, inactive
+  tier            String   @default("bronze") // platinum, gold, silver, bronze
+
+  // Business info
+  ein             String?  // Employer Identification Number
+  licenseNumber   String?
+  insurancePolicy String?
+
+  // Parent dealer for hierarchy
+  parentDealerId  String?
+  parentDealer    Dealer?  @relation("DealerHierarchy", fields: [parentDealerId], references: [id])
+  childDealers    Dealer[] @relation("DealerHierarchy")
+
+  users           User[]
+  contacts        DealerContact[]
+  addresses       DealerAddress[]
+  orders          Order[]
+  documents       Document[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([code])
+  @@index([status])
+  @@index([tier])
+}
+
+model DealerContact {
+  id        String  @id @default(cuid())
+  dealerId  String
+  dealer    Dealer  @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  type      String  // primary, billing, shipping, support
+  name      String
+  email     String
+  phone     String?
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealerId])
+}
+
+model DealerAddress {
+  id        String  @id @default(cuid())
+  dealerId  String
+  dealer    Dealer  @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  type      String  // billing, shipping, physical
+  street    String
+  street2   String?
+  city      String
+  state     String
+  zipCode   String
+  country   String  @default("US")
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealerId])
+}
+
+// ============================================================================
+// PRODUCTS & INVENTORY
+// ============================================================================
+
+model ProductCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  parentId    String?
+  parent      ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    ProductCategory[] @relation("CategoryHierarchy")
+  products    Product[]
+  sortOrder   Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  description String?
+
+  categoryId  String?
+  category    ProductCategory? @relation(fields: [categoryId], references: [id])
+
+  price       Float    // Base price
+  costPrice   Float?   // Cost for margin calculation
+  status      String   @default("active") // active, discontinued, draft
+
+  // Specifications stored as JSON string (SQLite doesn't have native JSON)
+  specifications String? // JSON string
+
+  images      ProductImage[]
+  inventory   Inventory[]
+  orderItems  OrderItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sku])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model InventoryLocation {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  type      String   // warehouse, store, distribution_center
+  address   String?
+  isActive  Boolean  @default(true)
+
+  inventory Inventory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}
+
+model Inventory {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  locationId  String
+  location    InventoryLocation @relation(fields: [locationId], references: [id])
+
+  quantity    Int      @default(0)
+  reserved    Int      @default(0) // Reserved for pending orders
+  lowStockThreshold Int @default(10)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([productId, locationId])
+  @@index([productId])
+  @@index([locationId])
+}
+
+// ============================================================================
+// ORDERS
+// ============================================================================
+
+model Order {
+  id            String   @id @default(cuid())
+  orderNumber   String   @unique
+  dealerId      String
+  dealer        Dealer   @relation(fields: [dealerId], references: [id])
+
+  status        String   @default("draft") // draft, submitted, confirmed, processing, shipped, delivered, cancelled
+
+  // Pricing
+  subtotal      Float    @default(0)
+  taxAmount     Float    @default(0)
+  shippingAmount Float   @default(0)
+  totalAmount   Float    @default(0)
+
+  // Addresses (stored as JSON strings for flexibility)
+  shippingAddress String? // JSON string
+  billingAddress  String? // JSON string
+
+  // Tracking
+  poNumber      String?  // Customer's PO number
+  notes         String?
+
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+
+  submittedAt   DateTime?
+  confirmedAt   DateTime?
+  shippedAt     DateTime?
+  deliveredAt   DateTime?
+  cancelledAt   DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([orderNumber])
+  @@index([dealerId])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  note      String?
+  changedBy String?  // User ID who made the change
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ============================================================================
+// DOCUMENTS
+// ============================================================================
+
+model Document {
+  id          String   @id @default(cuid())
+  dealerId    String?
+  dealer      Dealer?  @relation(fields: [dealerId], references: [id])
+
+  name        String
+  category    String   // contract, marketing, compliance, training, product_spec
+  mimeType    String
+  size        Int      // File size in bytes
+  url         String   // S3 URL or local path
+
+  version     Int      @default(1)
+  isPublic    Boolean  @default(false)
+
+  expiresAt   DateTime?
+  uploadedBy  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([dealerId])
+  @@index([category])
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      String    // order_update, low_stock, document_expiry, system
+  title     String
+  body      String
+  data      String?   // JSON string for additional data
+
+  readAt    DateTime?
+
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([type])
+}
+
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+
+  action      String   // create, update, delete, login, logout
+  entityType  String   // User, Dealer, Order, Product, etc.
+  entityId    String?
+
+  // Changes stored as JSON string
+  oldValues   String?  // JSON string
+  newValues   String?  // JSON string
+
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
