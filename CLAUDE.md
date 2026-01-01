@@ -4,12 +4,18 @@ This document provides guidance for AI assistants working with the THORDealerPor
 
 ## Project Overview
 
-**THORDealerPortal** is a dealer portal application. This repository is currently in its initial bootstrap phase.
+**THORDealerPortal** is a comprehensive B2B dealer portal platform enabling dealers to manage inventory, process orders, access analytics, and communicate with the organization.
 
 ### Current Status
 
-- **Stage**: Initial setup (no application code yet)
+- **Stage**: Initial setup (foundation phase)
 - **Branch Strategy**: Feature branches prefixed with `claude/` for AI-assisted development
+- **Development Approach**: Ralph Wiggum autonomous loops for iterative implementation
+
+### Key Documentation
+
+- **Project Plan**: `docs/PROJECT_PLAN.md` - Complete architecture, phases, and technical specifications
+- **Task Backlog**: `.ralph/TASK_BACKLOG.md` - 117 tasks across 7 phases with ready-to-run commands
 
 ---
 
@@ -20,10 +26,11 @@ THORDealerPortal/
 ├── README.md           # Project overview and setup instructions
 ├── CLAUDE.md           # This file - AI assistant guidelines
 ├── docs/               # Documentation
+│   ├── PROJECT_PLAN.md        # Complete project plan and architecture
 │   └── RALPH_WIGGUM_GUIDE.md  # Ralph Wiggum autonomous loop guide
 ├── .ralph/             # Ralph Wiggum loop state and templates
 │   ├── PROGRESS_TEMPLATE.md   # Progress tracking template
-│   └── TASK_BACKLOG.md        # Planned development tasks
+│   └── TASK_BACKLOG.md        # Comprehensive task backlog (117 tasks)
 └── (future directories to be added)
 ```
 
@@ -303,7 +310,9 @@ AUTH_SECRET=your-secret-key
 - Added CLAUDE.md documentation
 - Added Ralph Wiggum autonomous loop guide and templates
 - Created `.ralph/` directory with progress tracking templates
-- Created task backlog for planned development
+- Created comprehensive project plan with 7 development phases
+- Added detailed task backlog with 117 tasks and ready-to-run Ralph commands
+- Documented system architecture, database design, and API specifications
 
 ---
 
