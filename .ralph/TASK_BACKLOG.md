@@ -264,6 +264,22 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 4.5.2 | 🟡 | ⏳ | Create scheduled reports | 15 | `/ralph-loop "Build report scheduling: frequency (daily/weekly/monthly), recipients, format. Email delivery with attachments" --max-iterations 15` |
 | 4.5.3 | 🟡 | ⏳ | Add custom report builder | 20 | `/ralph-loop "Create drag-drop report builder: select metrics, dimensions, filters, visualizations. Save custom reports" --max-iterations 20` |
 
+### 4.6 Inventory Forecasting Module
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 4.6.1 | 🔴 | ✅ | Design forecasting schema | Manual | *Completed 2026-01-01 - 5 models: ForecastConfig, DemandForecast, SuggestedOrder, SeasonalPattern, MarketIndicator* |
+| 4.6.2 | 🔴 | ✅ | Build demand analysis algorithms | Manual | *Completed 2026-01-01 - Trend, seasonality, outlier detection, confidence intervals* |
+| 4.6.3 | 🔴 | ✅ | Create forecasting service | Manual | *Completed 2026-01-01 - 18-month horizon, order recommendations, EOQ calculation* |
+| 4.6.4 | 🔴 | ✅ | Build forecasting API routes | Manual | *Completed 2026-01-01 - /api/forecasting/config, /demand, /orders, /market* |
+| 4.6.5 | 🔴 | ✅ | Create forecasting dashboard UI | Manual | *Completed 2026-01-01 - Summary cards, charts, timeline visualization* |
+| 4.6.6 | 🔴 | ✅ | Build order plan table component | Manual | *Completed 2026-01-01 - Sortable, filterable, expandable rows* |
+| 4.6.7 | 🟠 | ✅ | Create market analysis component | Manual | *Completed 2026-01-01 - Regional indicators, impact assessment* |
+| 4.6.8 | 🟠 | ✅ | Write forecasting tests | Manual | *Completed 2026-01-01 - 27 tests for algorithms and DB models* |
+| 4.6.9 | 🟡 | ⏳ | Integrate with dealer dashboard | 10 | `/ralph-loop "Add forecasting widget to dealer dashboard. Show upcoming orders, demand trends. Link to full forecasting page" --max-iterations 10` |
+| 4.6.10 | 🟡 | ⏳ | Add product-level forecast details | 12 | `/ralph-loop "Create product forecast detail view. Show 18-month projections per product. Allow custom adjustments" --max-iterations 12` |
+| 4.6.11 | 🟢 | ⏳ | Implement forecast accuracy tracking | 10 | `/ralph-loop "Track forecast vs actual. Calculate MAPE, MAE. Show accuracy metrics. Auto-tune models based on errors" --max-iterations 10` |
+
 ---
 
 ## Phase 5: Documents & Notifications
@@ -394,6 +410,14 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 0.3.1 | Prisma + SQLite | Manual | 2026-01-01 | Zero-config local dev |
 | 0.3.2 | Database schema (14 models) | Manual | 2026-01-01 | Full schema from plan |
 | 0.3.4 | Seed data script | Manual | 2026-01-01 | 4 dealers, 5 products |
+| 4.6.1 | Forecasting schema design | Manual | 2026-01-01 | 5 new models (19 total) |
+| 4.6.2 | Demand analysis algorithms | Manual | 2026-01-01 | Trend, seasonality, confidence |
+| 4.6.3 | Forecasting service | Manual | 2026-01-01 | 18-month planning |
+| 4.6.4 | Forecasting API routes | Manual | 2026-01-01 | 4 endpoints |
+| 4.6.5 | Forecasting dashboard UI | Manual | 2026-01-01 | Summary, charts, timeline |
+| 4.6.6 | Order plan table | Manual | 2026-01-01 | Expandable, filterable |
+| 4.6.7 | Market analysis component | Manual | 2026-01-01 | Regional indicators |
+| 4.6.8 | Forecasting tests | Manual | 2026-01-01 | 27 tests (41 total) |
 
 ---
 
@@ -437,13 +461,14 @@ Phase 0 ──┬──▶ Phase 1 ──┬──▶ Phase 3 ──▶ Phase 4
 | Phase 1 | 18 | 225 | 56 |
 | Phase 2 | 14 | 175 | 44 |
 | Phase 3 | 18 | 230 | 58 |
-| Phase 4 | 14 | 170 | 43 |
+| Phase 4 | 25 | 202 | 51 |
 | Phase 5 | 14 | 160 | 40 |
 | Phase 6 | 13 | 165 | 41 |
 | Phase 7 | 10 | 130 | 33 |
-| **Total** | **117** | **1415** | **355** |
+| **Total** | **128** | **1447** | **363** |
 
 *Assuming ~4 iterations per hour with Ralph Wiggum
+*Phase 4 includes Inventory Forecasting Module (4.6) - 8 tasks completed, 3 pending
 
 ---
 
