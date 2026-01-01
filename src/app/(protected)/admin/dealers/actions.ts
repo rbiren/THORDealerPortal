@@ -458,6 +458,133 @@ export type DeleteDealerState = {
   message: string
 }
 
+export type DealerUser = {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  role: string
+  status: string
+  createdAt: Date
+}
+
+export async function getDealerUsers(dealerId: string): Promise<DealerUser[]> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  return prisma.user.findMany({
+    where: { dealerId },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      status: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
+export type DealerOrder = {
+  id: string
+  orderNumber: string
+  status: string
+  totalAmount: number
+  createdAt: Date
+}
+
+export async function getDealerOrders(dealerId: string): Promise<DealerOrder[]> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  return prisma.order.findMany({
+    where: { dealerId },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      totalAmount: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  })
+}
+
+export type DealerContact = {
+  id: string
+  type: string
+  name: string
+  email: string
+  phone: string | null
+  isPrimary: boolean
+}
+
+export async function getDealerContacts(dealerId: string): Promise<DealerContact[]> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  return prisma.dealerContact.findMany({
+    where: { dealerId },
+    select: {
+      id: true,
+      type: true,
+      name: true,
+      email: true,
+      phone: true,
+      isPrimary: true,
+    },
+    orderBy: [{ isPrimary: 'desc' }, { name: 'asc' }],
+  })
+}
+
+export type DealerAddress = {
+  id: string
+  type: string
+  street: string
+  street2: string | null
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  isPrimary: boolean
+}
+
+export async function getDealerAddresses(dealerId: string): Promise<DealerAddress[]> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  return prisma.dealerAddress.findMany({
+    where: { dealerId },
+    select: {
+      id: true,
+      type: true,
+      street: true,
+      street2: true,
+      city: true,
+      state: true,
+      zipCode: true,
+      country: true,
+      isPrimary: true,
+    },
+    orderBy: [{ isPrimary: 'desc' }, { type: 'asc' }],
+  })
+}
+
 export async function deleteDealer(id: string): Promise<DeleteDealerState> {
   const session = await auth()
 

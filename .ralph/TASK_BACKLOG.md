@@ -102,7 +102,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 |----|----------|--------|------|------------|---------|
 | 1.4.1 | 🔴 | ✅ | Create dealer list view | Manual | *Completed 2026-01-01 (152 tests passing)* |
 | 1.4.2 | 🔴 | ✅ | Implement dealer CRUD | Manual | *Completed 2026-01-01 (163 tests passing)* |
-| 1.4.3 | 🟠 | ⏳ | Build dealer detail page | 18 | `/ralph-loop "Create comprehensive dealer detail page with tabs: Overview, Users, Orders, Documents, Settings. Include activity timeline and quick stats" --max-iterations 18` |
+| 1.4.3 | 🟠 | ✅ | Build dealer detail page | Manual | *Completed 2026-01-01 (173 tests passing)* |
 | 1.4.4 | 🟠 | ⏳ | Implement dealer onboarding | 20 | `/ralph-loop "Build multi-step dealer onboarding wizard: 1) Basic info 2) Business details 3) Contacts 4) Documents upload 5) Review & submit. Progress tracking, save draft" --max-iterations 20` |
 | 1.4.5 | 🟡 | ⏳ | Add dealer hierarchy | 12 | `/ralph-loop "Implement parent/child dealer relationships. Create hierarchy visualization. Handle permissions inheritance" --max-iterations 12` |
 
@@ -399,13 +399,14 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.1.3 | Password reset flow | Manual | 2026-01-01 | Token service, email service, forgot/reset pages |
 | 1.2.1 | Role-based permission system | Manual | 2026-01-01 | Completed with 1.1.1 |
 | 1.2.2 | Route protection middleware | Manual | 2026-01-01 | Completed with 1.1.1 |
-| 1.2.3 | Permission guards | Manual | 2026-01-01 | useSession, usePermission, PermissionGate, RequireRole |
-| 1.3.1 | User profile page | Manual | 2026-01-01 | Profile view/edit, dealer info, validation |
-| 1.3.2 | Password change | Manual | 2026-01-01 | Change password form, validation, tests |
-| 1.3.3 | User list (admin) | Manual | 2026-01-01 | DataTable, filters, bulk actions, pagination |
-| 1.3.4 | User CRUD (admin) | Manual | 2026-01-01 | Create/edit forms, validation, role/dealer assignment |
-| 1.4.1 | Dealer list view | Manual | 2026-01-01 | DataTable, filters, stats, bulk actions |
-| 1.4.2 | Dealer CRUD | Manual | 2026-01-01 | Create/edit forms, business details, parent relationships |
+| 1.2.3 | Permission guards | Manual | 2026-01-01 | hooks + components |
+| 1.3.1 | User profile page | Manual | 2026-01-01 | 68 tests passing |
+| 1.3.2 | Password change | Manual | 2026-01-01 | 79 tests passing |
+| 1.3.3 | User list (admin) | Manual | 2026-01-01 | 112 tests passing |
+| 1.3.4 | User CRUD (admin) | Manual | 2026-01-01 | 121 tests passing |
+| 1.4.1 | Dealer list view | Manual | 2026-01-01 | 152 tests passing |
+| 1.4.2 | Dealer CRUD | Manual | 2026-01-01 | 163 tests passing |
+| 1.4.3 | Dealer detail page | Manual | 2026-01-01 | 173 tests, tabs (Overview, Users, Orders, Contacts, Settings) |
 
 ---
 

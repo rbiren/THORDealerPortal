@@ -1,20 +1,37 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getDealer, getParentDealers } from '../actions'
-import { DealerForm } from '../DealerForm'
+import {
+  getDealer,
+  getParentDealers,
+  getDealerUsers,
+  getDealerOrders,
+  getDealerContacts,
+  getDealerAddresses,
+} from '../actions'
+import { DealerTabs } from './DealerTabs'
 
 export const metadata = {
-  title: 'Edit Dealer - THOR Dealer Portal Admin',
-  description: 'Edit dealer in the THOR Dealer Portal',
+  title: 'Dealer Details - THOR Dealer Portal Admin',
+  description: 'View and manage dealer in the THOR Dealer Portal',
 }
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
-export default async function EditDealerPage({ params }: Props) {
+export default async function DealerDetailPage({ params }: Props) {
   const { id } = await params
-  const [dealer, parentDealers] = await Promise.all([getDealer(id), getParentDealers()])
+
+  // Fetch all dealer data in parallel
+  const [dealer, parentDealers, users, orders, contacts, addresses] = await Promise.all([
+    getDealer(id),
+    getParentDealers(),
+    getDealerUsers(id),
+    getDealerOrders(id),
+    getDealerContacts(id),
+    getDealerAddresses(id),
+  ])
 
   if (!dealer) {
     notFound()
@@ -95,7 +112,7 @@ export default async function EditDealerPage({ params }: Props) {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link
             href="/admin/dealers"
@@ -116,66 +133,37 @@ export default async function EditDealerPage({ params }: Props) {
             </svg>
             Back to dealers
           </Link>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600 text-lg font-bold">
-              {dealer.code.substring(0, 2)}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-gray-900">{dealer.name}</h1>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTierColor(dealer.tier)}`}>
-                  {dealer.tier}
-                </span>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(dealer.status)}`}>
-                  {dealer.status}
-                </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600 text-lg font-bold">
+                {dealer.code.substring(0, 2)}
               </div>
-              <p className="text-sm text-gray-500 font-mono">{dealer.code}</p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold text-gray-900">{dealer.name}</h1>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTierColor(dealer.tier)}`}>
+                    {dealer.tier}
+                  </span>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(dealer.status)}`}>
+                    {dealer.status}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 font-mono">{dealer.code}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-4 py-5 sm:p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">Edit Dealer</h2>
-            <DealerForm dealer={dealer} parentDealers={parentDealers} mode="edit" />
-          </div>
-        </div>
-
-        {/* Dealer Stats */}
-        <div className="mt-6 bg-white rounded-lg shadow">
-          <div className="px-4 py-5 sm:p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Dealer Information</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Users</div>
-                <div className="text-2xl font-bold text-gray-900">{dealer._count.users}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Orders</div>
-                <div className="text-2xl font-bold text-gray-900">{dealer._count.orders}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Child Dealers</div>
-                <div className="text-2xl font-bold text-gray-900">{dealer._count.childDealers}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Created</div>
-                <div className="text-sm font-bold text-gray-900">
-                  {new Date(dealer.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-            {dealer.parentDealer && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                <div className="text-sm font-medium text-blue-800">Parent Dealer</div>
-                <div className="text-sm text-blue-600">
-                  {dealer.parentDealer.name} ({dealer.parentDealer.code})
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-96 rounded-lg" />}>
+          <DealerTabs
+            dealer={dealer}
+            users={users}
+            orders={orders}
+            contacts={contacts}
+            addresses={addresses}
+            parentDealers={parentDealers}
+          />
+        </Suspense>
       </main>
     </div>
   )

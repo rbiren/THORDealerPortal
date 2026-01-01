@@ -593,3 +593,378 @@ describe('Dealer CRUD Operations', () => {
     expect(updated.insurancePolicy).toBeNull()
   })
 })
+
+describe('Dealer Detail Page Operations', () => {
+  let testDealerId: string
+  let testUserId: string
+  let testOrderId: string
+  let testContactId: string
+  let testAddressId: string
+
+  beforeAll(async () => {
+    // Create a test dealer with related data
+    const dealer = await prisma.dealer.create({
+      data: {
+        code: 'DLRDETAIL01',
+        name: 'Detail Test Dealer',
+        status: 'active',
+        tier: 'gold',
+        ein: '12-3456789',
+        licenseNumber: 'LIC-DETAIL',
+        insurancePolicy: 'POL-DETAIL',
+      },
+    })
+    testDealerId = dealer.id
+
+    // Create a test user for this dealer
+    const user = await prisma.user.create({
+      data: {
+        email: 'detail-test@example.com',
+        firstName: 'Detail',
+        lastName: 'Tester',
+        passwordHash: 'test-hash',
+        role: 'dealer_user',
+        status: 'active',
+        dealerId: testDealerId,
+      },
+    })
+    testUserId = user.id
+
+    // Create a test order for this dealer
+    const order = await prisma.order.create({
+      data: {
+        orderNumber: 'ORD-DETAIL-001',
+        status: 'confirmed',
+        totalAmount: 1500.0,
+        dealerId: testDealerId,
+      },
+    })
+    testOrderId = order.id
+
+    // Create a test contact for this dealer
+    const contact = await prisma.dealerContact.create({
+      data: {
+        name: 'John Contact',
+        email: 'john@dealertest.com',
+        phone: '555-1234',
+        type: 'sales',
+        isPrimary: true,
+        dealerId: testDealerId,
+      },
+    })
+    testContactId = contact.id
+
+    // Create a test address for this dealer
+    const address = await prisma.dealerAddress.create({
+      data: {
+        type: 'billing',
+        street: '123 Main St',
+        street2: 'Suite 100',
+        city: 'Testville',
+        state: 'TX',
+        zipCode: '75001',
+        country: 'USA',
+        isPrimary: true,
+        dealerId: testDealerId,
+      },
+    })
+    testAddressId = address.id
+  })
+
+  afterAll(async () => {
+    // Clean up in reverse order of creation
+    await prisma.dealerAddress.deleteMany({ where: { dealerId: testDealerId } })
+    await prisma.dealerContact.deleteMany({ where: { dealerId: testDealerId } })
+    await prisma.order.deleteMany({ where: { dealerId: testDealerId } })
+    await prisma.user.deleteMany({ where: { dealerId: testDealerId } })
+    await prisma.dealer.delete({ where: { id: testDealerId } })
+    await prisma.$disconnect()
+  })
+
+  describe('getDealerUsers functionality', () => {
+    it('returns users for a dealer', async () => {
+      const users = await prisma.user.findMany({
+        where: { dealerId: testDealerId },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          status: true,
+        },
+      })
+
+      expect(users.length).toBeGreaterThanOrEqual(1)
+      expect(users[0].email).toBe('detail-test@example.com')
+      expect(users[0].role).toBe('dealer_user')
+    })
+
+    it('returns empty array for dealer with no users', async () => {
+      const emptyDealer = await prisma.dealer.create({
+        data: {
+          code: 'DLRNOUSERS',
+          name: 'Dealer No Users',
+          status: 'active',
+          tier: 'bronze',
+        },
+      })
+
+      const users = await prisma.user.findMany({
+        where: { dealerId: emptyDealer.id },
+      })
+
+      expect(users).toEqual([])
+
+      await prisma.dealer.delete({ where: { id: emptyDealer.id } })
+    })
+  })
+
+  describe('getDealerOrders functionality', () => {
+    it('returns orders for a dealer', async () => {
+      const orders = await prisma.order.findMany({
+        where: { dealerId: testDealerId },
+        select: {
+          id: true,
+          orderNumber: true,
+          status: true,
+          totalAmount: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+
+      expect(orders.length).toBeGreaterThanOrEqual(1)
+      expect(orders[0].orderNumber).toBe('ORD-DETAIL-001')
+      expect(orders[0].totalAmount).toBe(1500.0)
+    })
+
+    it('orders are sorted by creation date descending', async () => {
+      // Create additional order
+      await prisma.order.create({
+        data: {
+          orderNumber: 'ORD-DETAIL-002',
+          status: 'draft',
+          totalAmount: 500.0,
+          dealerId: testDealerId,
+        },
+      })
+
+      const orders = await prisma.order.findMany({
+        where: { dealerId: testDealerId },
+        orderBy: { createdAt: 'desc' },
+      })
+
+      expect(orders.length).toBeGreaterThanOrEqual(2)
+      // Newest order should be first
+      expect(orders[0].orderNumber).toBe('ORD-DETAIL-002')
+    })
+  })
+
+  describe('getDealerContacts functionality', () => {
+    it('returns contacts for a dealer', async () => {
+      const contacts = await prisma.dealerContact.findMany({
+        where: { dealerId: testDealerId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          type: true,
+          isPrimary: true,
+        },
+      })
+
+      expect(contacts.length).toBeGreaterThanOrEqual(1)
+      expect(contacts[0].name).toBe('John Contact')
+      expect(contacts[0].type).toBe('sales')
+      expect(contacts[0].isPrimary).toBe(true)
+    })
+
+    it('can have multiple contacts', async () => {
+      await prisma.dealerContact.create({
+        data: {
+          name: 'Jane Secondary',
+          email: 'jane@dealertest.com',
+          type: 'support',
+          isPrimary: false,
+          dealerId: testDealerId,
+        },
+      })
+
+      const contacts = await prisma.dealerContact.findMany({
+        where: { dealerId: testDealerId },
+      })
+
+      expect(contacts.length).toBeGreaterThanOrEqual(2)
+    })
+  })
+
+  describe('getDealerAddresses functionality', () => {
+    it('returns addresses for a dealer', async () => {
+      const addresses = await prisma.dealerAddress.findMany({
+        where: { dealerId: testDealerId },
+        select: {
+          id: true,
+          type: true,
+          street: true,
+          street2: true,
+          city: true,
+          state: true,
+          zipCode: true,
+          country: true,
+          isPrimary: true,
+        },
+      })
+
+      expect(addresses.length).toBeGreaterThanOrEqual(1)
+      expect(addresses[0].street).toBe('123 Main St')
+      expect(addresses[0].city).toBe('Testville')
+      expect(addresses[0].type).toBe('billing')
+    })
+
+    it('can have multiple addresses of different types', async () => {
+      await prisma.dealerAddress.create({
+        data: {
+          type: 'shipping',
+          street: '456 Warehouse Ave',
+          city: 'Shiptown',
+          state: 'TX',
+          zipCode: '75002',
+          country: 'USA',
+          isPrimary: false,
+          dealerId: testDealerId,
+        },
+      })
+
+      const addresses = await prisma.dealerAddress.findMany({
+        where: { dealerId: testDealerId },
+      })
+
+      expect(addresses.length).toBeGreaterThanOrEqual(2)
+      const types = addresses.map((a) => a.type)
+      expect(types).toContain('billing')
+      expect(types).toContain('shipping')
+    })
+  })
+
+  describe('Dealer detail page data aggregation', () => {
+    it('can fetch all dealer detail data in parallel', async () => {
+      const [dealer, users, orders, contacts, addresses] = await Promise.all([
+        prisma.dealer.findUnique({
+          where: { id: testDealerId },
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            status: true,
+            tier: true,
+            ein: true,
+            licenseNumber: true,
+            insurancePolicy: true,
+            createdAt: true,
+            updatedAt: true,
+            parentDealer: {
+              select: { id: true, name: true, code: true },
+            },
+            _count: {
+              select: {
+                users: true,
+                orders: true,
+                childDealers: true,
+              },
+            },
+          },
+        }),
+        prisma.user.findMany({
+          where: { dealerId: testDealerId },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            status: true,
+          },
+        }),
+        prisma.order.findMany({
+          where: { dealerId: testDealerId },
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+            totalAmount: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.dealerContact.findMany({
+          where: { dealerId: testDealerId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            type: true,
+            isPrimary: true,
+          },
+        }),
+        prisma.dealerAddress.findMany({
+          where: { dealerId: testDealerId },
+          select: {
+            id: true,
+            type: true,
+            street: true,
+            street2: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            country: true,
+            isPrimary: true,
+          },
+        }),
+      ])
+
+      // Verify all data was fetched
+      expect(dealer).not.toBeNull()
+      expect(dealer?.code).toBe('DLRDETAIL01')
+      expect(users.length).toBeGreaterThanOrEqual(1)
+      expect(orders.length).toBeGreaterThanOrEqual(1)
+      expect(contacts.length).toBeGreaterThanOrEqual(1)
+      expect(addresses.length).toBeGreaterThanOrEqual(1)
+
+      // Verify counts match
+      expect(dealer?._count.users).toBe(users.length)
+      expect(dealer?._count.orders).toBe(orders.length)
+    })
+
+    it('handles dealer with parent correctly', async () => {
+      const childDealer = await prisma.dealer.create({
+        data: {
+          code: 'DLRCHILD01',
+          name: 'Child Detail Dealer',
+          status: 'active',
+          tier: 'bronze',
+          parentDealerId: testDealerId,
+        },
+      })
+
+      const dealerWithParent = await prisma.dealer.findUnique({
+        where: { id: childDealer.id },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          parentDealer: {
+            select: { id: true, name: true, code: true },
+          },
+        },
+      })
+
+      expect(dealerWithParent?.parentDealer).not.toBeNull()
+      expect(dealerWithParent?.parentDealer?.code).toBe('DLRDETAIL01')
+
+      await prisma.dealer.delete({ where: { id: childDealer.id } })
+    })
+  })
+})
