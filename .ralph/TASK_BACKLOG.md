@@ -244,9 +244,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 4.3.1 | 🟠 | ⏳ | Create inventory value report | 12 | `/ralph-loop "Build inventory value report: total value by location, category. Cost vs retail value. Historical value chart" --max-iterations 12` |
-| 4.3.2 | 🟠 | ⏳ | Add inventory turnover report | 12 | `/ralph-loop "Create turnover report: products by turnover rate, slow movers, fast movers. Days of supply calculation" --max-iterations 12` |
-| 4.3.3 | 🟡 | ⏳ | Build inventory aging report | 10 | `/ralph-loop "Create aging report: products by age bucket (30/60/90/120+ days). Identify obsolete inventory risk" --max-iterations 10` |
+| 4.3.1 | 🟠 | ✅ | Create inventory value report | Manual | *Completed 2026-01-01 (867 tests passing)* |
+| 4.3.2 | 🟠 | ✅ | Add inventory turnover report | Manual | *Completed 2026-01-01 (turnover rate, days of supply)* |
+| 4.3.3 | 🟡 | ✅ | Build inventory aging report | Manual | *Completed 2026-01-01 (age buckets, aging summary)* |
 
 ### 4.4 Admin Analytics
 
@@ -451,6 +451,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 4.2.1 | Sales Summary Report | Manual | 2026-01-01 | 825 tests, date range, totals, growth indicators |
 | 4.2.2 | Product Sales Breakdown | Manual | 2026-01-01 | Top products by revenue/quantity, category breakdown |
 | 4.2.3 | Comparison Reports | Manual | 2026-01-01 | Period comparison, growth %, avg order value comparison |
+| 4.3.1 | Inventory Value Report | Manual | 2026-01-01 | 867 tests, value by location/category, cost vs retail |
+| 4.3.2 | Inventory Turnover Report | Manual | 2026-01-01 | Turnover rate, days of supply, fast/slow movers |
+| 4.3.3 | Inventory Aging Report | Manual | 2026-01-01 | Age buckets (30/60/90/120+ days), aging summary |
 
 ---
 
