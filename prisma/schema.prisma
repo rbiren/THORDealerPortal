@@ -20,6 +20,7 @@ model User {
   passwordHash  String
   firstName     String
   lastName      String
+  phone         String?
   role          String    @default("dealer_user") // super_admin, admin, dealer_admin, dealer_user, readonly
   status        String    @default("active") // active, inactive, pending, suspended
   mfaEnabled    Boolean   @default(false)
