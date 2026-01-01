@@ -1,0 +1,276 @@
+/**
+ * Thor Dealer Portal - Design Tokens
+ *
+ * This file contains all CSS custom properties (design tokens) for the Thor Dealer Portal.
+ * These tokens are derived from the Thor Industries brand guidelines (thorindustries.com).
+ *
+ * @see docs/STYLE_GUIDE.md for complete documentation
+ */
+
+:root {
+  /* ============================================
+     COLOR TOKENS
+     ============================================ */
+
+  /* Primary Colors */
+  --color-charcoal: #181817;
+  --color-off-white: #FFFDFA;
+  --color-dark-gray: #2A2928;
+
+  /* Secondary Colors */
+  --color-olive-green: #495737;
+  --color-burnt-orange: #A46807;
+  --color-medium-gray: #8C8A7E;
+
+  /* Neutral Colors */
+  --color-light-gray: #D9D6CF;
+  --color-light-beige: #F7F4F0;
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+
+  /* Semantic Colors */
+  --color-success: #495737;
+  --color-warning: #A46807;
+  --color-error: #B32D2D;
+  --color-info: #2A5B8C;
+
+  /* Semantic Color Variants (Light) */
+  --color-success-light: #E8EDE5;
+  --color-warning-light: #FDF3E3;
+  --color-error-light: #FDEAEA;
+  --color-info-light: #E8F0F7;
+
+  /* Background Colors */
+  --color-bg-primary: var(--color-white);
+  --color-bg-secondary: var(--color-light-beige);
+  --color-bg-tertiary: var(--color-light-gray);
+  --color-bg-dark: var(--color-charcoal);
+  --color-bg-darker: var(--color-black);
+
+  /* Text Colors */
+  --color-text-primary: var(--color-charcoal);
+  --color-text-secondary: var(--color-medium-gray);
+  --color-text-muted: var(--color-light-gray);
+  --color-text-inverse: var(--color-off-white);
+
+  /* Border Colors */
+  --color-border-default: var(--color-light-gray);
+  --color-border-strong: var(--color-medium-gray);
+  --color-border-focus: var(--color-charcoal);
+
+  /* ============================================
+     TYPOGRAPHY TOKENS
+     ============================================ */
+
+  /* Font Families */
+  --font-heading: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
+  --font-size-3xl: 1.875rem;   /* 30px */
+  --font-size-4xl: 2.25rem;    /* 36px */
+  --font-size-5xl: 3rem;       /* 48px */
+  --font-size-6xl: 3.75rem;    /* 60px */
+
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.1;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+  --line-height-loose: 1.75;
+
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.02em;
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+  --letter-spacing-wider: 0.05em;
+  --letter-spacing-widest: 0.1em;
+
+  /* ============================================
+     SPACING TOKENS
+     ============================================ */
+
+  /* Base Spacing Unit (4px) */
+  --space-unit: 4px;
+
+  /* Spacing Scale */
+  --space-0: 0;
+  --space-1: calc(var(--space-unit) * 1);   /* 4px */
+  --space-2: calc(var(--space-unit) * 2);   /* 8px */
+  --space-3: calc(var(--space-unit) * 3);   /* 12px */
+  --space-4: calc(var(--space-unit) * 4);   /* 16px */
+  --space-5: calc(var(--space-unit) * 5);   /* 20px */
+  --space-6: calc(var(--space-unit) * 6);   /* 24px */
+  --space-7: calc(var(--space-unit) * 7);   /* 28px */
+  --space-8: calc(var(--space-unit) * 8);   /* 32px */
+  --space-10: calc(var(--space-unit) * 10); /* 40px */
+  --space-12: calc(var(--space-unit) * 12); /* 48px */
+  --space-14: calc(var(--space-unit) * 14); /* 56px */
+  --space-16: calc(var(--space-unit) * 16); /* 64px */
+  --space-20: calc(var(--space-unit) * 20); /* 80px */
+  --space-24: calc(var(--space-unit) * 24); /* 96px */
+
+  /* Component Spacing */
+  --space-component-padding-sm: var(--space-2);
+  --space-component-padding-md: var(--space-4);
+  --space-component-padding-lg: var(--space-6);
+
+  /* Section Spacing */
+  --space-section-mobile: var(--space-12);
+  --space-section-tablet: var(--space-16);
+  --space-section-desktop: var(--space-24);
+
+  /* ============================================
+     LAYOUT TOKENS
+     ============================================ */
+
+  /* Container Widths */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1440px;
+
+  /* Container Padding */
+  --container-padding-mobile: var(--space-4);
+  --container-padding-tablet: var(--space-6);
+  --container-padding-desktop: var(--space-8);
+
+  /* Header Height */
+  --header-height: 72px;
+  --header-height-mobile: 64px;
+
+  /* Sidebar Width */
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 72px;
+
+  /* ============================================
+     BORDER TOKENS
+     ============================================ */
+
+  /* Border Widths */
+  --border-width-none: 0;
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  --border-width-thick: 4px;
+
+  /* Border Radius */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ============================================
+     SHADOW TOKENS
+     ============================================ */
+
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgba(24, 24, 23, 0.04);
+  --shadow-sm: 0 2px 4px rgba(24, 24, 23, 0.06);
+  --shadow-md: 0 4px 8px rgba(24, 24, 23, 0.08);
+  --shadow-lg: 0 8px 16px rgba(24, 24, 23, 0.1);
+  --shadow-xl: 0 16px 32px rgba(24, 24, 23, 0.12);
+  --shadow-2xl: 0 24px 48px rgba(24, 24, 23, 0.16);
+
+  /* Focus Shadow */
+  --shadow-focus: 0 0 0 3px rgba(24, 24, 23, 0.1);
+  --shadow-focus-error: 0 0 0 3px rgba(179, 45, 45, 0.2);
+
+  /* ============================================
+     ANIMATION TOKENS
+     ============================================ */
+
+  /* Transition Durations */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 700ms;
+
+  /* Easing Functions */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Common Transitions */
+  --transition-colors: color var(--duration-normal) var(--ease-default),
+                       background-color var(--duration-normal) var(--ease-default),
+                       border-color var(--duration-normal) var(--ease-default);
+  --transition-opacity: opacity var(--duration-normal) var(--ease-default);
+  --transition-transform: transform var(--duration-normal) var(--ease-default);
+  --transition-shadow: box-shadow var(--duration-normal) var(--ease-default);
+  --transition-all: all var(--duration-normal) var(--ease-default);
+
+  /* ============================================
+     Z-INDEX TOKENS
+     ============================================ */
+
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-sidebar: 400;
+  --z-header: 500;
+  --z-drawer: 600;
+  --z-modal-backdrop: 700;
+  --z-modal: 800;
+  --z-popover: 900;
+  --z-tooltip: 1000;
+
+  /* ============================================
+     BREAKPOINT TOKENS (for reference)
+     ============================================ */
+
+  /*
+   * These are for documentation only.
+   * Use media queries with these values:
+   *
+   * --breakpoint-sm: 576px;
+   * --breakpoint-md: 768px;
+   * --breakpoint-lg: 1024px;
+   * --breakpoint-xl: 1280px;
+   * --breakpoint-2xl: 1440px;
+   */
+}
+
+/* ============================================
+   DARK MODE TOKENS (if needed in future)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root.theme-auto {
+    --color-bg-primary: var(--color-charcoal);
+    --color-bg-secondary: var(--color-dark-gray);
+    --color-text-primary: var(--color-off-white);
+    --color-text-secondary: var(--color-light-gray);
+    --color-border-default: var(--color-dark-gray);
+  }
+}
+
+:root.theme-dark {
+  --color-bg-primary: var(--color-charcoal);
+  --color-bg-secondary: var(--color-dark-gray);
+  --color-text-primary: var(--color-off-white);
+  --color-text-secondary: var(--color-light-gray);
+  --color-border-default: var(--color-dark-gray);
+}
