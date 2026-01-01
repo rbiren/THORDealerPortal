@@ -70,6 +70,17 @@ Only create new `.md` files when:
 - Remove placeholder sections when implementing features
 - Delete `.ralph/progress.md` after completing Ralph loops
 
+### Push Protocol
+
+**Before every push**, complete these steps:
+
+1. Run tests: `npm test`
+2. Update `.ralph/TASK_BACKLOG.md`:
+   - Mark task status ✅ in phase table
+   - Add row to "Completed Tasks" section
+3. If schema changed: verify `npm run db:push` works
+4. Commit with task ID: `feat(0.1.1): Description`
+
 ---
 
 ## Code Conventions
@@ -142,14 +153,17 @@ Full guide: `docs/RALPH_WIGGUM_GUIDE.md`
 ## Getting Started
 
 ```bash
-# Install dependencies (after package.json exists)
+# First time setup
 npm install
+npm run db:setup    # Generate Prisma + push schema + seed
 
 # Development
-npm run dev
+npm run dev         # Start Next.js dev server
+npm run db:studio   # Open Prisma Studio GUI
 
-# Tests
-npm test
+# Testing
+npm test            # Run all tests
+npm run test:watch  # Watch mode
 ```
 
 ---
