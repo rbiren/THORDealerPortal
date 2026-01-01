@@ -125,8 +125,8 @@ This document contains the complete task breakdown for building THORDealerPortal
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
 | 2.1.1 | 🔴 | ✅ | Create product list view | Manual | *Completed 2026-01-01 (299 tests passing)* |
-| 2.1.2 | 🔴 | ⏳ | Implement product search | 15 | `/ralph-loop "Add product search with PostgreSQL full-text search. Include autocomplete, search history, and relevance sorting. Debounce input" --max-iterations 15 --completion-promise "SEARCH WORKING"` |
-| 2.1.3 | 🔴 | ⏳ | Build product filters | 12 | `/ralph-loop "Create product filtering: categories, price range, availability, attributes. Implement filter chips, clear all. URL parameter sync" --max-iterations 12` |
+| 2.1.2 | 🔴 | ✅ | Implement product search | Manual | *Completed 2026-01-01 (322 tests passing)* |
+| 2.1.3 | 🔴 | ✅ | Build product filters | Manual | *Completed 2026-01-01 (filter chips, clear all, URL sync)* |
 | 2.1.4 | 🟠 | ⏳ | Create product detail page | 18 | `/ralph-loop "Build product detail page with: image gallery, specifications, inventory by location, related products. Add to cart functionality" --max-iterations 18` |
 | 2.1.5 | 🟠 | ⏳ | Implement category navigation | 12 | `/ralph-loop "Create category sidebar with hierarchical navigation. Show product counts. Support expand/collapse. Highlight active category" --max-iterations 12` |
 
@@ -412,6 +412,8 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.5.1 | Audit log service | Manual | 2026-01-01 | 235 tests, logCreate/Update/Delete helpers, query functions |
 | 1.5.2 | Audit log viewer | Manual | 2026-01-01 | 266 tests, filters (user/action/entity/date), pagination, detail expansion |
 | 2.1.1 | Product list view | Manual | 2026-01-01 | 299 tests, grid/list toggle, filters (category/status/price/stock), pagination |
+| 2.1.2 | Product search | Manual | 2026-01-01 | 322 tests, autocomplete dropdown, search history, relevance scoring |
+| 2.1.3 | Product filters | Manual | 2026-01-01 | Filter chips, removable tags, clear all, URL parameter sync |
 
 ---
 

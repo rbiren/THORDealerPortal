@@ -1,13 +1,20 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ProductCard } from './ProductCard'
+import { SearchAutocomplete } from './SearchAutocomplete'
 import type { ProductListResult } from './actions'
 
 type Props = {
   data: ProductListResult
   categories: { id: string; name: string; slug: string; parentId: string | null }[]
+}
+
+type FilterChip = {
+  key: string
+  label: string
+  value: string
 }
 
 export function ProductGrid({ data, categories }: Props) {
@@ -51,6 +58,55 @@ export function ProductGrid({ data, categories }: Props) {
     )
   }
 
+  // Build filter chips for active filters
+  const getFilterChips = (): FilterChip[] => {
+    const chips: FilterChip[] = []
+
+    const search = searchParams.get('search')
+    if (search) {
+      chips.push({ key: 'search', label: 'Search', value: search })
+    }
+
+    const categoryId = searchParams.get('categoryId')
+    if (categoryId) {
+      const category = categories.find((c) => c.id === categoryId)
+      if (category) {
+        chips.push({ key: 'categoryId', label: 'Category', value: category.name })
+      }
+    }
+
+    const status = searchParams.get('status')
+    if (status && status !== 'all') {
+      chips.push({ key: 'status', label: 'Status', value: status })
+    }
+
+    const minPrice = searchParams.get('minPrice')
+    if (minPrice) {
+      chips.push({ key: 'minPrice', label: 'Min Price', value: `$${minPrice}` })
+    }
+
+    const maxPrice = searchParams.get('maxPrice')
+    if (maxPrice) {
+      chips.push({ key: 'maxPrice', label: 'Max Price', value: `$${maxPrice}` })
+    }
+
+    const inStock = searchParams.get('inStock')
+    if (inStock && inStock !== 'all') {
+      chips.push({ key: 'inStock', label: 'Stock', value: inStock === 'yes' ? 'In Stock' : 'Out of Stock' })
+    }
+
+    return chips
+  }
+
+  const removeFilter = (key: string) => {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete(key)
+      params.set('page', '1')
+      router.push(`${pathname}?${params.toString()}`)
+    })
+  }
+
   // Build category options with hierarchy
   const getCategoryOptions = () => {
     const roots = categories.filter((c) => !c.parentId)
@@ -70,20 +126,48 @@ export function ProductGrid({ data, categories }: Props) {
     return options
   }
 
+  const filterChips = getFilterChips()
+
   return (
     <div className="space-y-4">
+      {/* Filter Chips */}
+      {filterChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-gray-500">Active filters:</span>
+          {filterChips.map((chip) => (
+            <span
+              key={chip.key}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+            >
+              <span className="font-medium">{chip.label}:</span>
+              <span>{chip.value}</span>
+              <button
+                type="button"
+                onClick={() => removeFilter(chip.key)}
+                className="ml-1 hover:text-blue-600"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </span>
+          ))}
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="text-sm text-blue-600 hover:text-blue-800 ml-2"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex flex-wrap gap-4">
-          {/* Search */}
-          <div className="flex-1 min-w-[200px]">
-            <input
-              type="text"
-              placeholder="Search products..."
-              defaultValue={searchParams.get('search') || ''}
-              onChange={(e) => updateFilters({ search: e.target.value, page: '1' })}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+          {/* Search with Autocomplete */}
+          <div className="flex-1 min-w-[300px]">
+            <SearchAutocomplete />
           </div>
 
           {/* Category */}
@@ -190,14 +274,6 @@ export function ProductGrid({ data, categories }: Props) {
             </button>
           </div>
 
-          {hasActiveFilters() && (
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            >
-              Clear Filters
-            </button>
-          )}
         </div>
       </div>
 
