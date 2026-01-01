@@ -203,9 +203,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 3.5.1 | 🟠 | ⏳ | Create invoice generation | 15 | `/ralph-loop "Build PDF invoice generator: order details, line items, totals, payment terms. Use professional template. Store generated PDFs" --max-iterations 15` |
-| 3.5.2 | 🟠 | ⏳ | Build invoice list | 10 | `/ralph-loop "Create invoice list view: invoice number, order, date, amount, status. Add filters and download functionality" --max-iterations 10` |
-| 3.5.3 | 🟡 | ⏳ | Add invoice email delivery | 8 | `/ralph-loop "Implement automatic invoice email on order confirmation. Add manual resend option. Track delivery status" --max-iterations 8` |
+| 3.5.1 | 🟠 | ✅ | Create invoice generation | Manual | *Completed 2026-01-01 (697 tests passing)* |
+| 3.5.2 | 🟠 | ✅ | Build invoice list | Manual | *Completed 2026-01-01 (filters, stats, pagination)* |
+| 3.5.3 | 🟡 | ✅ | Add invoice email delivery | Manual | *Completed 2026-01-01 (email, print, mark paid)* |
 
 ### 3.6 Admin Order Management
 
@@ -438,6 +438,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 3.4.1 | Order List Page | Manual | 2026-01-01 | Filters, pagination, stats cards |
 | 3.4.2 | Order Detail Page | Manual | 2026-01-01 | Items, timeline, shipping, reorder |
 | 3.4.3 | Order Search | Manual | 2026-01-01 | Order/PO number search |
+| 3.5.1 | Invoice Generation | Manual | 2026-01-01 | 697 tests, HTML templates, print support |
+| 3.5.2 | Invoice List | Manual | 2026-01-01 | Filters, stats, pagination |
+| 3.5.3 | Invoice Email Delivery | Manual | 2026-01-01 | Email templates, mark paid, print |
 
 ---
 
