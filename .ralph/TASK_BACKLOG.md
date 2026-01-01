@@ -100,7 +100,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 1.4.1 | 🔴 | ⏳ | Create dealer list view | 15 | `/ralph-loop "Build dealer list with DataTable: sortable columns, filtering, pagination. Show key metrics: status, tier, order count. Add quick actions" --max-iterations 15` |
+| 1.4.1 | 🔴 | ✅ | Create dealer list view | Manual | *Completed 2026-01-01 (152 tests passing)* |
 | 1.4.2 | 🔴 | ⏳ | Implement dealer CRUD | 20 | `/ralph-loop "Create dealer create/edit forms with: basic info, business details, contact management, address management. Multi-step form for creation" --max-iterations 20 --completion-promise "DEALER CRUD COMPLETE"` |
 | 1.4.3 | 🟠 | ⏳ | Build dealer detail page | 18 | `/ralph-loop "Create comprehensive dealer detail page with tabs: Overview, Users, Orders, Documents, Settings. Include activity timeline and quick stats" --max-iterations 18` |
 | 1.4.4 | 🟠 | ⏳ | Implement dealer onboarding | 20 | `/ralph-loop "Build multi-step dealer onboarding wizard: 1) Basic info 2) Business details 3) Contacts 4) Documents upload 5) Review & submit. Progress tracking, save draft" --max-iterations 20` |
@@ -404,6 +404,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.3.2 | Password change | Manual | 2026-01-01 | Change password form, validation, tests |
 | 1.3.3 | User list (admin) | Manual | 2026-01-01 | DataTable, filters, bulk actions, pagination |
 | 1.3.4 | User CRUD (admin) | Manual | 2026-01-01 | Create/edit forms, validation, role/dealer assignment |
+| 1.4.1 | Dealer list view | Manual | 2026-01-01 | DataTable, filters, stats, bulk actions |
 
 ---
 
