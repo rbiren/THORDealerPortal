@@ -194,9 +194,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 3.4.1 | 🔴 | ⏳ | Build order list page | 15 | `/ralph-loop "Create order history page: sortable table with order number, date, status, total. Add filters by status, date range. Pagination" --max-iterations 15` |
-| 3.4.2 | 🔴 | ⏳ | Create order detail page | 18 | `/ralph-loop "Build order detail page: order info, items, status timeline, shipping info, documents. Add reorder and invoice download actions" --max-iterations 18` |
-| 3.4.3 | 🟠 | ⏳ | Implement order search | 10 | `/ralph-loop "Add order search by: order number, PO number, product. Include autocomplete and recent searches. Show quick results" --max-iterations 10` |
+| 3.4.1 | 🔴 | ✅ | Build order list page | Manual | *Completed 2026-01-01 (filters, pagination, stats)* |
+| 3.4.2 | 🔴 | ✅ | Create order detail page | Manual | *Completed 2026-01-01 (items, timeline, reorder)* |
+| 3.4.3 | 🟠 | ✅ | Implement order search | Manual | *Completed with 3.4.1 (order/PO search)* |
 | 3.4.4 | 🟡 | ⏳ | Add shipping tracking | 12 | `/ralph-loop "Integrate shipping carrier tracking: fetch tracking info, display delivery status, estimated delivery. Support multiple carriers" --max-iterations 12` |
 
 ### 3.5 Invoice Management
@@ -435,6 +435,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 3.3.2 | Order Confirmation | Manual | 2026-01-01 | Confirmation page, email notification |
 | 3.3.3 | Order Status Updates | Manual | 2026-01-01 | Status workflow, progress timeline, notifications |
 | 3.3.4 | Order Cancellation | Manual | 2026-01-01 | Cancel modal, inventory release, validation |
+| 3.4.1 | Order List Page | Manual | 2026-01-01 | Filters, pagination, stats cards |
+| 3.4.2 | Order Detail Page | Manual | 2026-01-01 | Items, timeline, shipping, reorder |
+| 3.4.3 | Order Search | Manual | 2026-01-01 | Order/PO number search |
 
 ---
 
