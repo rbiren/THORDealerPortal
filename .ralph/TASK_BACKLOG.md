@@ -235,9 +235,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 4.2.1 | 🔴 | ⏳ | Create sales summary report | 18 | `/ralph-loop "Build sales summary report: date range selector, total sales, order count, average order value. Bar/line charts for trends" --max-iterations 18` |
-| 4.2.2 | 🟠 | ⏳ | Add product sales breakdown | 12 | `/ralph-loop "Create product sales report: top sellers, category breakdown, product performance table. Add drill-down capability" --max-iterations 12` |
-| 4.2.3 | 🟠 | ⏳ | Build comparison reports | 12 | `/ralph-loop "Create period comparison: YoY, MoM, custom ranges. Show growth percentages, variance highlighting" --max-iterations 12` |
+| 4.2.1 | 🔴 | ✅ | Create sales summary report | Manual | *Completed 2026-01-01 (825 tests passing)* |
+| 4.2.2 | 🟠 | ✅ | Add product sales breakdown | Manual | *Completed 2026-01-01 (top products, category breakdown)* |
+| 4.2.3 | 🟠 | ✅ | Build comparison reports | Manual | *Completed 2026-01-01 (period comparison, growth %)* |
 | 4.2.4 | 🟡 | ⏳ | Add sales forecasting | 15 | `/ralph-loop "Implement basic sales forecasting: trend analysis, seasonal patterns, projected values. Show confidence intervals" --max-iterations 15` |
 
 ### 4.3 Inventory Reports
@@ -448,6 +448,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 4.1.2 | Sales Metrics Cards | Manual | 2026-01-01 | MTD, YTD, growth %, average order value |
 | 4.1.3 | Recent Activity Feed | Manual | 2026-01-01 | Orders, invoices, status changes timeline |
 | 4.1.4 | Quick Actions Panel | Manual | 2026-01-01 | New order, browse, orders, invoices shortcuts |
+| 4.2.1 | Sales Summary Report | Manual | 2026-01-01 | 825 tests, date range, totals, growth indicators |
+| 4.2.2 | Product Sales Breakdown | Manual | 2026-01-01 | Top products by revenue/quantity, category breakdown |
+| 4.2.3 | Comparison Reports | Manual | 2026-01-01 | Period comparison, growth %, avg order value comparison |
 
 ---
 
