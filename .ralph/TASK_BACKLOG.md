@@ -124,7 +124,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 2.1.1 | 🔴 | ⏳ | Create product list view | 15 | `/ralph-loop "Build product catalog page with grid/list toggle. Show product cards with image, name, SKU, price, stock status. Add pagination" --max-iterations 15` |
+| 2.1.1 | 🔴 | ✅ | Create product list view | Manual | *Completed 2026-01-01 (299 tests passing)* |
 | 2.1.2 | 🔴 | ⏳ | Implement product search | 15 | `/ralph-loop "Add product search with PostgreSQL full-text search. Include autocomplete, search history, and relevance sorting. Debounce input" --max-iterations 15 --completion-promise "SEARCH WORKING"` |
 | 2.1.3 | 🔴 | ⏳ | Build product filters | 12 | `/ralph-loop "Create product filtering: categories, price range, availability, attributes. Implement filter chips, clear all. URL parameter sync" --max-iterations 12` |
 | 2.1.4 | 🟠 | ⏳ | Create product detail page | 18 | `/ralph-loop "Build product detail page with: image gallery, specifications, inventory by location, related products. Add to cart functionality" --max-iterations 18` |
@@ -411,6 +411,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.4.5 | Dealer hierarchy visualization | Manual | 2026-01-01 | 215 tests, tree view, filters, search, stats |
 | 1.5.1 | Audit log service | Manual | 2026-01-01 | 235 tests, logCreate/Update/Delete helpers, query functions |
 | 1.5.2 | Audit log viewer | Manual | 2026-01-01 | 266 tests, filters (user/action/entity/date), pagination, detail expansion |
+| 2.1.1 | Product list view | Manual | 2026-01-01 | 299 tests, grid/list toggle, filters (category/status/price/stock), pagination |
 
 ---
 
