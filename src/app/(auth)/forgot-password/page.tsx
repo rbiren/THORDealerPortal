@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { ForgotPasswordForm } from './ForgotPasswordForm'
 
 export const metadata = {
   title: 'Forgot Password - THOR Dealer Portal',
@@ -36,41 +36,7 @@ export default function ForgotPasswordPage() {
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
         <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-          <div className="rounded-md bg-yellow-50 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-yellow-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">
-                  Coming Soon
-                </h3>
-                <p className="mt-2 text-sm text-yellow-700">
-                  Password reset functionality is being implemented. Please
-                  contact support for assistance.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Link
-              href="/login"
-              className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-            >
-              Back to sign in
-            </Link>
-          </div>
+          <ForgotPasswordForm />
         </div>
       </div>
     </div>
