@@ -12,11 +12,11 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-6">
       {state.error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="alert-error">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-red-400"
+                className="h-5 w-5 text-error"
                 viewBox="0 0 20 20"
                 fill="currentColor"
                 aria-hidden="true"
@@ -29,20 +29,17 @@ export function LoginForm() {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-red-800">{state.error}</p>
+              <p className="text-sm font-medium">{state.error}</p>
             </div>
           </div>
         </div>
       )}
 
       <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium leading-6 text-gray-900"
-        >
+        <label htmlFor="email" className="label">
           Email address
         </label>
-        <div className="mt-2">
+        <div className="mt-1">
           <input
             id="email"
             name="email"
@@ -50,7 +47,7 @@ export function LoginForm() {
             autoComplete="email"
             required
             disabled={isPending}
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+            className="input disabled:bg-light-beige disabled:text-medium-gray disabled:cursor-not-allowed"
             placeholder="you@example.com"
           />
         </div>
@@ -58,22 +55,19 @@ export function LoginForm() {
 
       <div>
         <div className="flex items-center justify-between">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium leading-6 text-gray-900"
-          >
+          <label htmlFor="password" className="label">
             Password
           </label>
           <div className="text-sm">
             <Link
               href="/forgot-password"
-              className="font-semibold text-blue-600 hover:text-blue-500"
+              className="font-semibold text-olive hover:text-olive-800"
             >
               Forgot password?
             </Link>
           </div>
         </div>
-        <div className="mt-2">
+        <div className="mt-1">
           <input
             id="password"
             name="password"
@@ -81,7 +75,7 @@ export function LoginForm() {
             autoComplete="current-password"
             required
             disabled={isPending}
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+            className="input disabled:bg-light-beige disabled:text-medium-gray disabled:cursor-not-allowed"
             placeholder="Enter your password"
           />
         </div>
@@ -91,12 +85,12 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
+          className="btn-primary w-full py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? (
             <>
               <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-off-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
