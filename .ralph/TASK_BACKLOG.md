@@ -93,7 +93,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 |----|----------|--------|------|------------|---------|
 | 1.3.1 | 🔴 | ✅ | Create user profile page | Manual | *Completed 2026-01-01 (68 tests passing)* |
 | 1.3.2 | 🟠 | ✅ | Implement password change | Manual | *Completed 2026-01-01 (79 tests passing)* |
-| 1.3.3 | 🟠 | ⏳ | Build user list (admin) | 15 | `/ralph-loop "Create admin user list with pagination, search, filtering by role/status. Add bulk actions: activate, deactivate, delete. Include responsive table" --max-iterations 15` |
+| 1.3.3 | 🟠 | ✅ | Build user list (admin) | Manual | *Completed 2026-01-01 (112 tests passing)* |
 | 1.3.4 | 🟠 | ⏳ | Implement user CRUD (admin) | 15 | `/ralph-loop "Build user create/edit forms for admin. Role assignment, dealer assignment, status management. Add validation and audit logging" --max-iterations 15` |
 
 ### 1.4 Dealer Management Core
@@ -402,6 +402,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.2.3 | Permission guards | Manual | 2026-01-01 | useSession, usePermission, PermissionGate, RequireRole |
 | 1.3.1 | User profile page | Manual | 2026-01-01 | Profile view/edit, dealer info, validation |
 | 1.3.2 | Password change | Manual | 2026-01-01 | Change password form, validation, tests |
+| 1.3.3 | User list (admin) | Manual | 2026-01-01 | DataTable, filters, bulk actions, pagination |
 
 ---
 
