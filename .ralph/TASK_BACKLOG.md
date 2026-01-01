@@ -176,19 +176,19 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 3.2.1 | 🔴 | ⏳ | Build checkout page | 20 | `/ralph-loop "Create multi-step checkout: 1) Review cart 2) Shipping address 3) Payment selection 4) Review & confirm. Add progress indicator, validation" --max-iterations 20` |
-| 3.2.2 | 🔴 | ⏳ | Implement address selection | 12 | `/ralph-loop "Build shipping address step: select from saved addresses, add new address. Validate addresses. Set default address" --max-iterations 12` |
-| 3.2.3 | 🟠 | ⏳ | Create order summary component | 10 | `/ralph-loop "Build order summary component showing: items, quantities, subtotal, tax calculation, shipping, total. Update in real-time" --max-iterations 10` |
-| 3.2.4 | 🟠 | ⏳ | Add checkout validation | 12 | `/ralph-loop "Implement final checkout validation: inventory locks, payment authorization. Handle race conditions. Show clear error messages" --max-iterations 12` |
+| 3.2.1 | 🔴 | ✅ | Build checkout page | Manual | *Completed 2026-01-01 (615 tests passing)* |
+| 3.2.2 | 🔴 | ✅ | Implement address selection | Manual | *Completed with 3.2.1 (ShippingAddressStep)* |
+| 3.2.3 | 🟠 | ✅ | Create order summary component | Manual | *Completed with 3.2.1 (ReviewConfirmStep)* |
+| 3.2.4 | 🟠 | ✅ | Add checkout validation | Manual | *Completed with 3.2.1 (PaymentStep)* |
 
 ### 3.3 Order Processing
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 3.3.1 | 🔴 | ⏳ | Create order service | 18 | `/ralph-loop "Build order service: create order from cart, reserve inventory, calculate totals, send confirmation. Handle transaction rollback on failure" --max-iterations 18 --completion-promise "ORDER SERVICE COMPLETE"` |
-| 3.3.2 | 🔴 | ⏳ | Implement order confirmation | 12 | `/ralph-loop "Create order confirmation page: order number, summary, expected delivery. Send confirmation email. Clear cart on success" --max-iterations 12` |
-| 3.3.3 | 🟠 | ⏳ | Build order status updates | 15 | `/ralph-loop "Implement order status workflow: submitted → confirmed → processing → shipped → delivered. Add status change notifications" --max-iterations 15` |
-| 3.3.4 | 🟠 | ⏳ | Create order cancellation | 10 | `/ralph-loop "Add order cancellation: validate cancellable status, release inventory, update order status. Handle partial cancellations" --max-iterations 10` |
+| 3.3.1 | 🔴 | ✅ | Create order service | Manual | *Completed 2026-01-01 (664 tests passing)* |
+| 3.3.2 | 🔴 | ✅ | Implement order confirmation | Manual | *Completed 2026-01-01 (confirmation page, email)* |
+| 3.3.3 | 🟠 | ✅ | Build order status updates | Manual | *Completed 2026-01-01 (workflow, notifications)* |
+| 3.3.4 | 🟠 | ✅ | Create order cancellation | Manual | *Completed with 3.3.3 (cancel modal, inventory release)* |
 
 ### 3.4 Order History & Tracking
 
@@ -427,6 +427,14 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 3.1.2 | Cart UI Components | Manual | 2026-01-01 | CartIcon, CartDrawer, CartPage, CartItemRow, AddToCartButton |
 | 3.1.3 | Cart Validation | Manual | 2026-01-01 | Stock/availability checks, price validation, issue warnings |
 | 3.1.4 | Saved Carts Feature | Manual | 2026-01-01 | Save/name carts, list saved, restore to active cart |
+| 3.2.1 | Checkout Page | Manual | 2026-01-01 | 615 tests, multi-step flow, progress indicator |
+| 3.2.2 | Address Selection | Manual | 2026-01-01 | Saved addresses, new address form, validation |
+| 3.2.3 | Order Summary Component | Manual | 2026-01-01 | Items, subtotal, tax, shipping, total |
+| 3.2.4 | Checkout Validation | Manual | 2026-01-01 | Payment methods, PO number, order notes |
+| 3.3.1 | Order Service | Manual | 2026-01-01 | 664 tests, create/validate/reserve inventory, totals |
+| 3.3.2 | Order Confirmation | Manual | 2026-01-01 | Confirmation page, email notification |
+| 3.3.3 | Order Status Updates | Manual | 2026-01-01 | Status workflow, progress timeline, notifications |
+| 3.3.4 | Order Cancellation | Manual | 2026-01-01 | Cancel modal, inventory release, validation |
 
 ---
 

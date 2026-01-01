@@ -8,6 +8,7 @@ import { CartReviewStep } from './steps/CartReviewStep'
 import { ShippingAddressStep } from './steps/ShippingAddressStep'
 import { PaymentStep } from './steps/PaymentStep'
 import { ReviewConfirmStep } from './steps/ReviewConfirmStep'
+import { submitOrder } from './actions'
 
 export type CheckoutStep = 'cart' | 'shipping' | 'payment' | 'review'
 
@@ -105,17 +106,47 @@ export default function CheckoutPage() {
   }
 
   async function handleSubmitOrder() {
+    if (!checkoutData.shippingAddress || !checkoutData.paymentMethod) {
+      setError('Please complete all required fields')
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
     try {
-      // TODO: Call order creation API
-      // For now, simulate order creation
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const result = await submitOrder({
+        dealerId: cart.dealerId || 'demo-dealer',
+        cartId: cart.id || '',
+        items: cart.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        shippingAddress: checkoutData.shippingAddress,
+        billingAddress: checkoutData.sameAsBilling
+          ? undefined
+          : checkoutData.billingAddress || undefined,
+        paymentMethod: checkoutData.paymentMethod,
+        poNumber: checkoutData.poNumber || undefined,
+        notes: checkoutData.notes || undefined,
+      })
+
+      if (!result.success) {
+        if (result.validationIssues && result.validationIssues.length > 0) {
+          setError(
+            'Some items have issues: ' +
+              result.validationIssues.map((i) => i.issue).join(', ')
+          )
+        } else {
+          setError(result.error || 'Failed to submit order. Please try again.')
+        }
+        return
+      }
 
       // Clear cart and redirect to confirmation
       clearCart()
-      router.push('/cart/checkout/confirmation?order=ORD-' + Date.now())
+      router.push(`/cart/checkout/confirmation?order=${result.orderNumber}`)
     } catch (err) {
       setError('Failed to submit order. Please try again.')
     } finally {

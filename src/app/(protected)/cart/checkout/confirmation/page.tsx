@@ -1,11 +1,56 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { getOrderDetails } from '../actions'
+
+type OrderDetails = {
+  id: string
+  orderNumber: string
+  status: string
+  subtotal: number
+  taxAmount: number
+  shippingAmount: number
+  totalAmount: number
+  poNumber: string | null
+  shippingAddress: {
+    name: string
+    street: string
+    city: string
+    state: string
+    zipCode: string
+  } | null
+  items: Array<{
+    id: string
+    productName: string
+    productSku: string
+    quantity: number
+    totalPrice: number
+  }>
+  submittedAt: string | null
+}
 
 export default function ConfirmationPage() {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order') ?? 'ORD-000000'
+  const [order, setOrder] = useState<OrderDetails | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchOrder() {
+      if (orderNumber && orderNumber !== 'ORD-000000') {
+        try {
+          const details = await getOrderDetails(orderNumber)
+          setOrder(details as OrderDetails)
+        } catch (error) {
+          console.error('Failed to fetch order details:', error)
+        }
+      }
+      setLoading(false)
+    }
+    fetchOrder()
+  }, [orderNumber])
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -41,7 +86,74 @@ export default function ConfirmationPage() {
           <p className="text-xl font-heading font-bold text-charcoal">
             {orderNumber}
           </p>
+          {order?.poNumber && (
+            <p className="text-sm text-medium-gray mt-2">
+              PO: {order.poNumber}
+            </p>
+          )}
         </div>
+
+        {/* Order Summary */}
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin h-6 w-6 border-2 border-olive border-t-transparent rounded-full" />
+          </div>
+        ) : order ? (
+          <div className="text-left bg-white border border-light-gray rounded-lg p-6 mb-8">
+            <h2 className="font-heading font-semibold text-charcoal mb-4">
+              Order Summary
+            </h2>
+
+            {/* Items */}
+            <div className="divide-y divide-light-gray mb-4">
+              {order.items.map((item) => (
+                <div key={item.id} className="py-3 flex justify-between">
+                  <div>
+                    <p className="font-medium text-charcoal">{item.productName}</p>
+                    <p className="text-sm text-medium-gray">
+                      {item.productSku} &times; {item.quantity}
+                    </p>
+                  </div>
+                  <p className="font-medium text-charcoal">
+                    ${item.totalPrice.toFixed(2)}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Totals */}
+            <div className="border-t border-light-gray pt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-medium-gray">Subtotal</span>
+                <span>${order.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-medium-gray">Tax</span>
+                <span>${order.taxAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-medium-gray">Shipping</span>
+                <span>{order.shippingAmount === 0 ? 'FREE' : `$${order.shippingAmount.toFixed(2)}`}</span>
+              </div>
+              <div className="flex justify-between font-bold text-lg border-t border-light-gray pt-2 mt-2">
+                <span>Total</span>
+                <span className="text-olive">${order.totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Shipping Address */}
+            {order.shippingAddress && (
+              <div className="mt-6 pt-4 border-t border-light-gray">
+                <h3 className="font-medium text-charcoal mb-2">Ship To</h3>
+                <p className="text-sm text-medium-gray">
+                  {order.shippingAddress.name}<br />
+                  {order.shippingAddress.street}<br />
+                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : null}
 
         {/* What's Next */}
         <div className="text-left bg-white border border-light-gray rounded-lg p-6 mb-8">
