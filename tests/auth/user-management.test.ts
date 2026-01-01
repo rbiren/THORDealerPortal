@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import {
@@ -392,5 +392,216 @@ describe('User Management Integration', () => {
     expect(user).not.toBeNull()
     expect(user?.dealer).not.toBeNull()
     expect(user?.dealer?.code).toBe('USRMGMT01')
+  })
+})
+
+describe('User CRUD Operations', () => {
+  let crudTestDealerId: string
+  let createdUserIds: string[] = []
+
+  beforeAll(async () => {
+    // Create test dealer
+    const dealer = await prisma.dealer.create({
+      data: {
+        code: 'USRCRUD01',
+        name: 'User CRUD Test Dealer',
+        status: 'active',
+        tier: 'silver',
+      },
+    })
+    crudTestDealerId = dealer.id
+  })
+
+  afterAll(async () => {
+    // Clean up created users
+    if (createdUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: createdUserIds } },
+      })
+    }
+    await prisma.user.deleteMany({
+      where: { email: { startsWith: 'crud-test-' } },
+    })
+    await prisma.dealer.deleteMany({
+      where: { code: 'USRCRUD01' },
+    })
+    await prisma.$disconnect()
+  })
+
+  it('can create a new user with password hash', async () => {
+    const password = await bcrypt.hash('TestPass123', 12)
+    const user = await prisma.user.create({
+      data: {
+        email: 'crud-test-create@example.com',
+        passwordHash: password,
+        firstName: 'CRUD',
+        lastName: 'Create',
+        role: 'dealer_user',
+        status: 'active',
+        dealerId: crudTestDealerId,
+      },
+    })
+    createdUserIds.push(user.id)
+
+    expect(user).toBeDefined()
+    expect(user.email).toBe('crud-test-create@example.com')
+    expect(user.firstName).toBe('CRUD')
+    expect(user.passwordHash).not.toBe('TestPass123')
+  })
+
+  it('can read a user by id', async () => {
+    const userId = createdUserIds[0]
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        status: true,
+        mfaEnabled: true,
+        dealerId: true,
+        createdAt: true,
+        updatedAt: true,
+        dealer: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+      },
+    })
+
+    expect(user).not.toBeNull()
+    expect(user?.email).toBe('crud-test-create@example.com')
+    expect(user?.dealer?.code).toBe('USRCRUD01')
+  })
+
+  it('can update user fields', async () => {
+    const userId = createdUserIds[0]
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: 'Updated',
+        lastName: 'User',
+        phone: '555-123-4567',
+        status: 'pending',
+      },
+    })
+
+    expect(updated.firstName).toBe('Updated')
+    expect(updated.lastName).toBe('User')
+    expect(updated.phone).toBe('555-123-4567')
+    expect(updated.status).toBe('pending')
+  })
+
+  it('can change user role', async () => {
+    const userId = createdUserIds[0]
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { role: 'dealer_admin' },
+    })
+
+    expect(updated.role).toBe('dealer_admin')
+
+    // Reset role
+    await prisma.user.update({
+      where: { id: userId },
+      data: { role: 'dealer_user' },
+    })
+  })
+
+  it('can change user dealer assignment', async () => {
+    const userId = createdUserIds[0]
+
+    // Remove dealer assignment
+    const removed = await prisma.user.update({
+      where: { id: userId },
+      data: { dealerId: null },
+    })
+    expect(removed.dealerId).toBeNull()
+
+    // Re-assign dealer
+    const reassigned = await prisma.user.update({
+      where: { id: userId },
+      data: { dealerId: crudTestDealerId },
+    })
+    expect(reassigned.dealerId).toBe(crudTestDealerId)
+  })
+
+  it('enforces unique email constraint', async () => {
+    const password = await bcrypt.hash('TestPass123', 12)
+
+    await expect(
+      prisma.user.create({
+        data: {
+          email: 'crud-test-create@example.com', // Same as existing
+          passwordHash: password,
+          firstName: 'Duplicate',
+          lastName: 'Email',
+          role: 'dealer_user',
+          status: 'active',
+        },
+      })
+    ).rejects.toThrow()
+  })
+
+  it('can delete a user', async () => {
+    const password = await bcrypt.hash('TestPass123', 12)
+    const userToDelete = await prisma.user.create({
+      data: {
+        email: 'crud-test-delete@example.com',
+        passwordHash: password,
+        firstName: 'Delete',
+        lastName: 'Me',
+        role: 'readonly',
+        status: 'inactive',
+      },
+    })
+
+    await prisma.user.delete({
+      where: { id: userToDelete.id },
+    })
+
+    const deleted = await prisma.user.findUnique({
+      where: { id: userToDelete.id },
+    })
+    expect(deleted).toBeNull()
+  })
+
+  it('can update password hash', async () => {
+    const userId = createdUserIds[0]
+    const newPassword = await bcrypt.hash('NewPassword456', 12)
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newPassword },
+    })
+
+    // Verify new password works
+    const isValid = await bcrypt.compare('NewPassword456', updated.passwordHash)
+    expect(isValid).toBe(true)
+
+    // Verify old password doesn't work
+    const isInvalid = await bcrypt.compare('TestPass123', updated.passwordHash)
+    expect(isInvalid).toBe(false)
+  })
+
+  it('can get total user count with filters', async () => {
+    const totalUsers = await prisma.user.count()
+    expect(totalUsers).toBeGreaterThan(0)
+
+    const activeUsers = await prisma.user.count({
+      where: { status: 'active' },
+    })
+    expect(activeUsers).toBeLessThanOrEqual(totalUsers)
+
+    const dealerUsers = await prisma.user.count({
+      where: { dealerId: crudTestDealerId },
+    })
+    expect(dealerUsers).toBeGreaterThanOrEqual(1)
   })
 })
