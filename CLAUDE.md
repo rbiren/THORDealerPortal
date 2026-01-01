@@ -23,296 +23,145 @@ This document provides guidance for AI assistants working with the THORDealerPor
 
 ```
 THORDealerPortal/
-├── README.md           # Project overview and setup instructions
-├── CLAUDE.md           # This file - AI assistant guidelines
-├── docs/               # Documentation
-│   ├── PROJECT_PLAN.md        # Complete project plan and architecture
-│   └── RALPH_WIGGUM_GUIDE.md  # Ralph Wiggum autonomous loop guide
-├── .ralph/             # Ralph Wiggum loop state and templates
+├── README.md           # Project overview (public-facing)
+├── CLAUDE.md           # AI assistant guidelines (this file)
+├── docs/               # Reference documentation
+│   ├── PROJECT_PLAN.md        # Architecture and technical specs
+│   └── RALPH_WIGGUM_GUIDE.md  # Ralph Wiggum usage guide
+├── .ralph/             # Ralph Wiggum runtime state
 │   ├── PROGRESS_TEMPLATE.md   # Progress tracking template
-│   └── TASK_BACKLOG.md        # Comprehensive task backlog (117 tasks)
-└── (future directories to be added)
-```
-
-### Planned Directory Structure
-
-As the project develops, expect the following structure:
-
-```
-THORDealerPortal/
-├── src/                # Source code
-│   ├── components/     # Reusable UI components
-│   ├── pages/          # Page-level components/routes
-│   ├── services/       # API clients and business logic
-│   ├── utils/          # Utility functions
-│   ├── hooks/          # Custom React hooks (if React)
-│   ├── types/          # TypeScript type definitions
-│   └── styles/         # Global styles and theme
-├── tests/              # Test files
-├── public/             # Static assets
-├── docs/               # Documentation
-└── config/             # Configuration files
+│   └── TASK_BACKLOG.md        # Development task backlog
+└── src/                # Source code (to be created)
 ```
 
 ---
 
-## Development Workflow
+## Documentation Rules
 
-### Getting Started
+### File Placement
 
-```bash
-# Clone the repository
-git clone <repository-url>
-cd THORDealerPortal
+| Type | Location | When to Create |
+|------|----------|----------------|
+| AI guidelines | `CLAUDE.md` (root) | Already exists - update only |
+| Project info | `README.md` (root) | Already exists - update only |
+| Technical specs | `docs/` | Architecture, API docs, design decisions |
+| Ralph state | `.ralph/` | Progress files during active loops only |
+| Code docs | Inline/JSDoc | With the code itself |
 
-# Install dependencies (when package.json is added)
-npm install
+### Do NOT Create
 
-# Start development server
-npm run dev
-```
+- ❌ Separate README files in subdirectories
+- ❌ CHANGELOG.md (use git history + CLAUDE.md changelog section)
+- ❌ CONTRIBUTING.md (covered in CLAUDE.md)
+- ❌ Multiple markdown files for single features
+- ❌ Documentation that duplicates code comments
 
-### Branch Naming Conventions
+### When to Create New Docs
 
-- `main` or `master` - Production-ready code
-- `develop` - Integration branch for features
-- `feature/<description>` - New features
-- `bugfix/<description>` - Bug fixes
-- `claude/<description>` - AI-assisted development branches
+Only create new `.md` files when:
+1. Content exceeds 200 lines AND serves a distinct purpose
+2. Multiple developers need standalone reference material
+3. Content is reusable across projects (e.g., style guides)
 
-### Commit Message Format
+### Documentation Updates
 
-Use conventional commits:
-
-```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
-```
-
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
+- Update existing docs rather than creating new ones
+- Keep `CLAUDE.md` under 300 lines
+- Remove placeholder sections when implementing features
+- Delete `.ralph/progress.md` after completing Ralph loops
 
 ---
 
 ## Code Conventions
 
-### General Guidelines
-
-1. **Keep it simple** - Avoid over-engineering; implement only what's needed
-2. **Be consistent** - Follow existing patterns in the codebase
-3. **Document intent** - Comments should explain "why", not "what"
-4. **Test critical paths** - Focus testing on business-critical functionality
-
 ### File Naming
 
 - Components: `PascalCase.tsx` (e.g., `DealerDashboard.tsx`)
 - Utilities: `camelCase.ts` (e.g., `formatCurrency.ts`)
-- Constants: `SCREAMING_SNAKE_CASE` for values, `camelCase.ts` for files
-- Test files: `*.test.ts` or `*.spec.ts`
+- Constants: `SCREAMING_SNAKE_CASE` values, `camelCase.ts` files
+- Tests: `*.test.ts` or `*.spec.ts`
 
 ### Code Style
 
-- Use TypeScript for type safety
-- Prefer functional components and hooks (React)
-- Use async/await over Promise chains
-- Destructure objects and arrays when practical
-- Avoid magic numbers - use named constants
+- TypeScript for all code
+- Functional React components with hooks
+- async/await over Promise chains
+- Named constants over magic numbers
+- Zod for runtime validation
 
----
-
-## Testing
-
-### Test Structure
+### Commit Messages
 
 ```
-tests/
-├── unit/           # Unit tests for isolated functions
-├── integration/    # Integration tests for combined functionality
-└── e2e/            # End-to-end tests
+<type>(<scope>): <description>
 ```
 
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run with coverage
-npm run test:coverage
-```
-
----
-
-## Common Tasks
-
-### Adding a New Feature
-
-1. Create a feature branch from `develop`
-2. Implement the feature with tests
-3. Update documentation if needed
-4. Create a pull request
-
-### Fixing a Bug
-
-1. Create a bugfix branch
-2. Write a failing test that reproduces the bug
-3. Fix the bug
-4. Verify the test passes
-5. Create a pull request
-
----
-
-## Ralph Wiggum Autonomous Loops
-
-This project supports the Ralph Wiggum plugin for autonomous, iterative AI development.
-
-### Quick Start
-
-```bash
-# Install the plugin
-/plugin marketplace add anthropics/claude-code
-/plugin install ralph-wiggum@claude-code-plugins
-
-# Start a development loop
-/ralph-loop "Implement feature X with tests" --max-iterations 20
-
-# Cancel if needed
-/cancel-ralph
-```
-
-### Key Principles
-
-1. **Always set max iterations** - Use `--max-iterations` as your safety limit
-2. **Use TDD** - Write tests first, let Ralph implement until green
-3. **Clear completion criteria** - Use `--completion-promise "ALL TESTS PASS"`
-4. **Track progress** - Use `.ralph/` templates for complex tasks
-
-### Memory Process
-
-Ralph maintains context through:
-- **Git history** - Each iteration sees previous commits
-- **File state** - Modified files persist between iterations
-- **Progress files** - Use `.ralph/progress.md` for explicit tracking
-
-### Documentation
-
-- Full guide: `docs/RALPH_WIGGUM_GUIDE.md`
-- Progress template: `.ralph/PROGRESS_TEMPLATE.md`
-- Task backlog: `.ralph/TASK_BACKLOG.md`
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ---
 
 ## AI Assistant Guidelines
 
-### Do's
+### Do
 
-- **Read before modifying** - Always read files before making changes
-- **Use existing patterns** - Follow conventions already established in the codebase
-- **Make minimal changes** - Only change what's necessary to complete the task
-- **Verify your work** - Run tests and linting after making changes
-- **Explain your reasoning** - Communicate what you're doing and why
+- Read files before modifying
+- Follow existing patterns
+- Make minimal, focused changes
+- Run tests after changes
+- Use task backlog IDs when implementing features
 
-### Don'ts
+### Don't
 
-- **Don't over-engineer** - Avoid adding unnecessary abstractions or features
-- **Don't ignore errors** - Address warnings and errors, don't suppress them
-- **Don't make assumptions** - Ask for clarification when requirements are unclear
-- **Don't modify unrelated code** - Stay focused on the task at hand
-- **Don't skip security considerations** - Be mindful of OWASP top 10 vulnerabilities
-
-### Security Considerations
-
-When writing code, always consider:
-- Input validation and sanitization
-- SQL injection prevention (use parameterized queries)
-- XSS prevention (escape user content)
-- CSRF protection
-- Proper authentication and authorization
-- Secure handling of sensitive data
+- Over-engineer solutions
+- Add unnecessary abstractions
+- Create documentation files without need
+- Modify unrelated code
+- Skip security considerations (OWASP top 10)
 
 ---
 
-## Troubleshooting
+## Ralph Wiggum Quick Reference
 
-### Common Issues
+```bash
+# Start a loop (always set max-iterations)
+/ralph-loop "Task description" --max-iterations 20
 
-*(To be documented as issues arise)*
+# Cancel
+/cancel-ralph
+```
 
-### Getting Help
+### Memory Process
 
-- Check existing documentation
-- Review similar implementations in the codebase
-- Ask for clarification on requirements
+1. **Git history** - Commit frequently with clear messages
+2. **File state** - Changes persist between iterations
+3. **Progress files** - Use `.ralph/progress.md` for complex tasks (delete when done)
 
----
-
-## Dependencies
-
-### Core Dependencies
-
-*(To be added when package.json is created)*
-
-### Development Dependencies
-
-*(To be added when package.json is created)*
+Full guide: `docs/RALPH_WIGGUM_GUIDE.md`
 
 ---
 
-## Environment Variables
+## Getting Started
 
-*(To be documented when .env.example is created)*
+```bash
+# Install dependencies (after package.json exists)
+npm install
 
-Example format:
-```env
-# API Configuration
-API_BASE_URL=https://api.example.com
-API_KEY=your-api-key
+# Development
+npm run dev
 
-# Database
-DATABASE_URL=postgresql://...
-
-# Authentication
-AUTH_SECRET=your-secret-key
+# Tests
+npm test
 ```
 
 ---
 
-## Deployment
+## Security Checklist
 
-### Environments
-
-- **Development**: Local development environment
-- **Staging**: Pre-production testing
-- **Production**: Live environment
-
-### Deployment Process
-
-*(To be documented when CI/CD is configured)*
-
----
-
-## Changelog
-
-### [Unreleased]
-- Initial repository setup
-- Added CLAUDE.md documentation
-- Added Ralph Wiggum autonomous loop guide and templates
-- Created `.ralph/` directory with progress tracking templates
-- Created comprehensive project plan with 7 development phases
-- Added detailed task backlog with 117 tasks and ready-to-run Ralph commands
-- Documented system architecture, database design, and API specifications
+- [ ] Input validation (Zod schemas)
+- [ ] Parameterized queries (Prisma)
+- [ ] XSS prevention (React escaping)
+- [ ] CSRF tokens
+- [ ] Auth on all protected routes
+- [ ] No secrets in code
 
 ---
 
