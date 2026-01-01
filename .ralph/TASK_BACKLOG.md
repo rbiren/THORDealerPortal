@@ -104,7 +104,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.4.2 | 🔴 | ✅ | Implement dealer CRUD | Manual | *Completed 2026-01-01 (163 tests passing)* |
 | 1.4.3 | 🟠 | ✅ | Build dealer detail page | Manual | *Completed 2026-01-01 (173 tests passing)* |
 | 1.4.4 | 🟠 | ✅ | Implement dealer onboarding | Manual | *Completed 2026-01-01 (204 tests passing)* |
-| 1.4.5 | 🟡 | ⏳ | Add dealer hierarchy | 12 | `/ralph-loop "Implement parent/child dealer relationships. Create hierarchy visualization. Handle permissions inheritance" --max-iterations 12` |
+| 1.4.5 | 🟡 | ✅ | Add dealer hierarchy | Manual | *Completed 2026-01-01 (215 tests passing)* |
 
 ### 1.5 Audit Logging
 
@@ -408,6 +408,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.4.2 | Dealer CRUD | Manual | 2026-01-01 | 163 tests passing |
 | 1.4.3 | Dealer detail page | Manual | 2026-01-01 | 173 tests, tabs (Overview, Users, Orders, Contacts, Settings) |
 | 1.4.4 | Dealer onboarding wizard | Manual | 2026-01-01 | 204 tests, 4-step wizard (Basic Info, Business Details, Contacts, Review) |
+| 1.4.5 | Dealer hierarchy visualization | Manual | 2026-01-01 | 215 tests, tree view, filters, search, stats |
 
 ---
 

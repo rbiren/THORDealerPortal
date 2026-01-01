@@ -585,6 +585,188 @@ export async function getDealerAddresses(dealerId: string): Promise<DealerAddres
   })
 }
 
+// Hierarchy types and functions
+
+export type DealerHierarchyNode = {
+  id: string
+  code: string
+  name: string
+  status: string
+  tier: string
+  _count: {
+    users: number
+    orders: number
+  }
+  children: DealerHierarchyNode[]
+}
+
+export async function getDealerHierarchy(): Promise<DealerHierarchyNode[]> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  // Fetch all dealers with counts
+  const allDealers = await prisma.dealer.findMany({
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      status: true,
+      tier: true,
+      parentDealerId: true,
+      _count: {
+        select: {
+          users: true,
+          orders: true,
+        },
+      },
+    },
+    orderBy: { name: 'asc' },
+  })
+
+  // Build tree structure
+  const dealerMap = new Map<string, DealerHierarchyNode>()
+  const rootDealers: DealerHierarchyNode[] = []
+
+  // First pass: create all nodes
+  allDealers.forEach((dealer) => {
+    dealerMap.set(dealer.id, {
+      id: dealer.id,
+      code: dealer.code,
+      name: dealer.name,
+      status: dealer.status,
+      tier: dealer.tier,
+      _count: dealer._count,
+      children: [],
+    })
+  })
+
+  // Second pass: build tree
+  allDealers.forEach((dealer) => {
+    const node = dealerMap.get(dealer.id)!
+    if (dealer.parentDealerId) {
+      const parent = dealerMap.get(dealer.parentDealerId)
+      if (parent) {
+        parent.children.push(node)
+      } else {
+        // Parent not found, treat as root
+        rootDealers.push(node)
+      }
+    } else {
+      rootDealers.push(node)
+    }
+  })
+
+  return rootDealers
+}
+
+export type DealerSubtree = {
+  dealer: DealerHierarchyNode
+  ancestors: { id: string; code: string; name: string }[]
+  descendants: DealerHierarchyNode[]
+}
+
+export async function getDealerSubtree(dealerId: string): Promise<DealerSubtree | null> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return null
+  }
+
+  const dealer = await prisma.dealer.findUnique({
+    where: { id: dealerId },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      status: true,
+      tier: true,
+      parentDealerId: true,
+      _count: {
+        select: {
+          users: true,
+          orders: true,
+        },
+      },
+    },
+  })
+
+  if (!dealer) {
+    return null
+  }
+
+  // Get ancestors (walk up the tree)
+  const ancestors: { id: string; code: string; name: string }[] = []
+  let currentParentId = dealer.parentDealerId
+
+  while (currentParentId) {
+    const parent = await prisma.dealer.findUnique({
+      where: { id: currentParentId },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        parentDealerId: true,
+      },
+    })
+    if (parent) {
+      ancestors.unshift({ id: parent.id, code: parent.code, name: parent.name })
+      currentParentId = parent.parentDealerId
+    } else {
+      break
+    }
+  }
+
+  // Get all descendants recursively
+  async function getDescendants(parentId: string): Promise<DealerHierarchyNode[]> {
+    const children = await prisma.dealer.findMany({
+      where: { parentDealerId: parentId },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        status: true,
+        tier: true,
+        _count: {
+          select: {
+            users: true,
+            orders: true,
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    })
+
+    const nodes: DealerHierarchyNode[] = []
+    for (const child of children) {
+      const descendants = await getDescendants(child.id)
+      nodes.push({
+        ...child,
+        children: descendants,
+      })
+    }
+    return nodes
+  }
+
+  const descendants = await getDescendants(dealerId)
+
+  return {
+    dealer: {
+      id: dealer.id,
+      code: dealer.code,
+      name: dealer.name,
+      status: dealer.status,
+      tier: dealer.tier,
+      _count: dealer._count,
+      children: descendants,
+    },
+    ancestors,
+    descendants,
+  }
+}
+
 export async function deleteDealer(id: string): Promise<DeleteDealerState> {
   const session = await auth()
 
