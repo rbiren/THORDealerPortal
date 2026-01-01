@@ -83,9 +83,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 1.2.1 | 🔴 | ⏳ | Create role-based permission system | 18 | `/ralph-loop "Implement RBAC system with roles: super_admin, admin, dealer_admin, dealer_user, readonly. Create permission checking utilities and middleware" --max-iterations 18 --completion-promise "RBAC COMPLETE"` |
-| 1.2.2 | 🔴 | ⏳ | Add route protection middleware | 12 | `/ralph-loop "Create Next.js middleware for route protection. Redirect unauthenticated users. Check permissions for protected routes. Handle API routes" --max-iterations 12` |
-| 1.2.3 | 🟠 | ⏳ | Implement permission guards | 10 | `/ralph-loop "Create React hooks and components for permission-based UI rendering: usePermission, PermissionGate, RequireRole" --max-iterations 10` |
+| 1.2.1 | 🔴 | ✅ | Create role-based permission system | Manual | *Completed with 1.1.1 (roles.ts)* |
+| 1.2.2 | 🔴 | ✅ | Add route protection middleware | Manual | *Completed with 1.1.1 (middleware.ts)* |
+| 1.2.3 | 🟠 | ✅ | Implement permission guards | Manual | *Completed 2026-01-01 (hooks + components)* |
 
 ### 1.3 User Management
 
@@ -397,6 +397,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 1.1.1 | NextAuth.js setup | Manual | 2026-01-01 | Credentials, JWT, bcrypt, RBAC utils |
 | 1.1.2 | Login page and flow | Manual | 2026-01-01 | Login form, validation, server action, dashboard |
 | 1.1.3 | Password reset flow | Manual | 2026-01-01 | Token service, email service, forgot/reset pages |
+| 1.2.1 | Role-based permission system | Manual | 2026-01-01 | Completed with 1.1.1 |
+| 1.2.2 | Route protection middleware | Manual | 2026-01-01 | Completed with 1.1.1 |
+| 1.2.3 | Permission guards | Manual | 2026-01-01 | useSession, usePermission, PermissionGate, RequireRole |
 
 ---
 
