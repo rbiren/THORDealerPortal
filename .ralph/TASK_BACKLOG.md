@@ -73,7 +73,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
 | 1.1.1 | 🔴 | ✅ | Implement NextAuth.js setup | Manual | *Completed 2026-01-01 (38 tests passing)* |
-| 1.1.2 | 🔴 | ⏳ | Create login page and flow | 15 | `/ralph-loop "Build login page with email/password form. Add validation with Zod. Handle errors gracefully. Include 'forgot password' link. Style with shadcn/ui" --max-iterations 15 --completion-promise "LOGIN WORKING"` |
+| 1.1.2 | 🔴 | ✅ | Create login page and flow | Manual | *Completed 2026-01-01 (48 tests passing)* |
 | 1.1.3 | 🔴 | ⏳ | Implement password reset flow | 15 | `/ralph-loop "Create forgot password and reset password pages. Implement secure token generation, email sending, and token validation. Add expiration handling" --max-iterations 15` |
 | 1.1.4 | 🟠 | ⏳ | Add session management | 12 | `/ralph-loop "Implement session listing and management. Allow users to view active sessions and revoke them. Track IP and user agent" --max-iterations 12` |
 | 1.1.5 | 🟠 | ⏳ | Implement MFA (TOTP) | 20 | `/ralph-loop "Add optional TOTP-based MFA. Create setup flow with QR code, verification, and backup codes. Integrate with login flow" --max-iterations 20` |
@@ -395,6 +395,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 0.3.2 | Database schema (14 models) | Manual | 2026-01-01 | Full schema from plan |
 | 0.3.4 | Seed data script | Manual | 2026-01-01 | 4 dealers, 5 products |
 | 1.1.1 | NextAuth.js setup | Manual | 2026-01-01 | Credentials, JWT, bcrypt, RBAC utils |
+| 1.1.2 | Login page and flow | Manual | 2026-01-01 | Login form, validation, server action, dashboard |
 
 ---
 
