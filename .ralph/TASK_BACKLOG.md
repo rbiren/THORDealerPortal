@@ -280,6 +280,48 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 4.6.10 | 🟡 | ⏳ | Add product-level forecast details | 12 | `/ralph-loop "Create product forecast detail view. Show 18-month projections per product. Allow custom adjustments" --max-iterations 12` |
 | 4.6.11 | 🟢 | ⏳ | Implement forecast accuracy tracking | 10 | `/ralph-loop "Track forecast vs actual. Calculate MAPE, MAE. Show accuracy metrics. Auto-tune models based on errors" --max-iterations 10` |
 
+#### 4.6.A Advanced Algorithms Enhancement
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 4.6.12 | 🟠 | ⏳ | Implement Holt-Winters exponential smoothing | 15 | `/ralph-loop "Implement Holt-Winters triple exponential smoothing in demand-analyzer.ts: Add HoltWintersParams interface (alpha, beta, gamma, seasonLength), Create holtWintersSmoothing() function with level/trend/seasonal components, Add optimizeHoltWintersParams() using grid search, Support both multiplicative and additive seasonality. Write unit tests for each function. All tests must pass" --max-iterations 15 --completion-promise "HOLT-WINTERS COMPLETE"` |
+| 4.6.13 | 🟠 | ⏳ | Add weighted moving average with adaptive weights | 10 | `/ralph-loop "Add weighted moving average to demand-analyzer.ts: Create calculateWeightedMA() with configurable weight profiles, Add weight presets: recent-heavy, balanced, linear-decay, Implement adaptive weights based on forecast errors. Add unit tests. All tests must pass" --max-iterations 10 --completion-promise "WMA COMPLETE"` |
+| 4.6.14 | 🟡 | ⏳ | Create demand decomposition (trend/seasonal/residual) | 12 | `/ralph-loop "Create demand decomposition in demand-analyzer.ts: Add decomposeTimeSeries() function (trend, seasonal, residual), Use moving average for trend extraction, Calculate seasonal indices from detrended data, Return DecompositionResult with all components, Add visualization data format. Write comprehensive tests. All tests must pass" --max-iterations 12 --completion-promise "DECOMPOSITION COMPLETE"` |
+| 4.6.15 | 🟡 | ⏳ | Add demand variability analysis (CV, ADI, Croston) | 12 | `/ralph-loop "Add demand variability analysis to demand-analyzer.ts: Calculate coefficient of variation (CV), Compute average demand interval (ADI) for intermittent demand, Implement Croston's method for lumpy demand, Add demandClassification() returning 'smooth'|'erratic'|'intermittent'|'lumpy'. Write unit tests for each scenario. All tests must pass" --max-iterations 12 --completion-promise "VARIABILITY ANALYSIS COMPLETE"` |
+
+#### 4.6.B Accuracy & Auto-Tuning Enhancement
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 4.6.16 | 🔴 | ⏳ | Build accuracy metrics system (MAPE, MAE, RMSE) | 12 | `/ralph-loop "Build forecast accuracy metrics system: Create src/lib/services/forecasting/accuracy-tracker.ts, Add calculateMAPE(), calculateMAE(), calculateRMSE(), calculateBias(), Create tracking signal calculation for control limits, Build accuracy summary aggregation by product/category. Write comprehensive unit tests. All tests must pass" --max-iterations 12 --completion-promise "ACCURACY METRICS COMPLETE"` |
+| 4.6.17 | 🔴 | ⏳ | Implement forecast vs actual tracking | 10 | `/ralph-loop "Implement forecast vs actual tracking: Add updateActualDemand() to forecasting-service.ts, Create job/hook to capture actuals from confirmed orders, Update DemandForecast.actualDemand and forecastError fields, Add getAccuracyHistory() for dashboard, Create accuracy trends visualization data. Write integration tests. All tests must pass" --max-iterations 10 --completion-promise "ACTUALS TRACKING COMPLETE"` |
+| 4.6.18 | 🟠 | ⏳ | Create auto-tuning engine for parameters | 15 | `/ralph-loop "Create auto-tuning engine for forecast parameters: Add src/lib/services/forecasting/auto-tuner.ts, Implement grid search for optimal parameters, Select best algorithm per product based on backtest, Update ForecastConfig with tuned parameters, Add tuning history tracking. Write tests for tuning logic. All tests must pass" --max-iterations 15 --completion-promise "AUTO-TUNER COMPLETE"` |
+| 4.6.19 | 🟡 | ⏳ | Add anomaly detection and alerts | 10 | `/ralph-loop "Add demand anomaly detection and alerts: Create detectDemandAnomalies() using statistical methods, Add anomaly flags to forecasts, Create Notification records for significant deviations, Build anomaly summary for dashboard. Write unit tests. All tests must pass" --max-iterations 10 --completion-promise "ANOMALY DETECTION COMPLETE"` |
+
+#### 4.6.C Scenario Planning Enhancement
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 4.6.20 | 🟠 | ⏳ | Build what-if analysis feature | 15 | `/ralph-loop "Build what-if analysis feature: Add src/lib/services/forecasting/scenario-planner.ts, Create simulateScenario() with adjustable parameters, Return modified forecasts without saving to DB, Add scenario comparison data structure, Create API endpoint /api/forecasting/scenarios, Build basic scenario UI component. Write tests. All tests must pass" --max-iterations 15 --completion-promise "WHAT-IF COMPLETE"` |
+| 4.6.21 | 🟡 | ⏳ | Create scenario templates (optimistic/pessimistic) | 10 | `/ralph-loop "Create scenario templates: Add predefined scenarios: optimistic (+20%), pessimistic (-20%), most_likely, Create seasonal spike template, Add supply disruption template (extended lead times), Store templates in database or config, Add template selection to UI. Write tests. All tests must pass" --max-iterations 10 --completion-promise "SCENARIO TEMPLATES COMPLETE"` |
+| 4.6.22 | 🟢 | ⏳ | Add sensitivity analysis visualization | 12 | `/ralph-loop "Add sensitivity analysis visualization: Create calculateSensitivity() for key parameters, Show how forecast changes with parameter variations, Generate tornado chart data, Add sensitivity tab to forecasting dashboard. Write tests. All tests must pass" --max-iterations 12 --completion-promise "SENSITIVITY COMPLETE"` |
+
+#### 4.6.D Inventory Classification Enhancement
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 4.6.23 | 🟠 | ⏳ | Implement ABC analysis for inventory | 10 | `/ralph-loop "Implement ABC analysis for inventory: Add src/lib/services/forecasting/inventory-classifier.ts, Create performABCAnalysis() based on revenue/margin, Calculate cumulative percentages for Pareto, Assign A (top 80%), B (next 15%), C (bottom 5%), Add classification to product data, Create ABC summary visualization data. Write tests. All tests must pass" --max-iterations 10 --completion-promise "ABC ANALYSIS COMPLETE"` |
+| 4.6.24 | 🟠 | ⏳ | Add XYZ analysis and ABC-XYZ matrix | 10 | `/ralph-loop "Add XYZ analysis and ABC-XYZ matrix: Create performXYZAnalysis() based on demand CV, X (CV < 0.5), Y (0.5 <= CV < 1.0), Z (CV >= 1.0), Build combined ABC-XYZ matrix (9 segments), Add forecasting strategy recommendations per segment, Create matrix visualization data. Write tests. All tests must pass" --max-iterations 10 --completion-promise "XYZ MATRIX COMPLETE"` |
+| 4.6.25 | 🟡 | ⏳ | Create product lifecycle stage detection | 12 | `/ralph-loop "Create product lifecycle stage detection: Add detectLifecycleStage() analyzing trend patterns, Stages: introduction, growth, maturity, decline, Calculate months in each stage, Add lifecycle-appropriate forecast adjustments, Handle new products with analogous product mapping. Write tests. All tests must pass" --max-iterations 12 --completion-promise "LIFECYCLE DETECTION COMPLETE"` |
+
+#### 4.6.E Ultra Test Suite Enhancement
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 4.6.26 | 🔴 | ⏳ | Ultra algorithm unit tests (edge cases) | 15 | `/ralph-loop "Create ultra comprehensive algorithm tests: Edge cases: empty data, single point, all zeros, negative values, Sparse data: missing months, irregular intervals, Seasonal pattern edge cases: weak patterns, multi-year patterns, Trend edge cases: flat, exponential, step changes, Confidence interval coverage validation, Outlier detection accuracy. Minimum 50 test cases. All tests must pass" --max-iterations 15 --completion-promise "ULTRA ALGORITHM TESTS COMPLETE"` |
+| 4.6.27 | 🔴 | ⏳ | Integration tests for API routes | 12 | `/ralph-loop "Create comprehensive API integration tests: Test all /api/forecasting/* endpoints, Test with valid and invalid inputs, Test concurrent requests, Test large payload handling, End-to-end flow: config -> forecast -> orders. Minimum 30 integration tests. All tests must pass" --max-iterations 12 --completion-promise "INTEGRATION TESTS COMPLETE"` |
+| 4.6.28 | 🟡 | ⏳ | Performance and load testing | 10 | `/ralph-loop "Add performance and load testing: Create tests/performance/forecasting.perf.ts, Simulate 1000 products forecast generation, Measure memory usage and execution time, Set performance thresholds (e.g., <5s for 100 products), Test database query efficiency, Document performance baselines. All tests must pass" --max-iterations 10 --completion-promise "PERFORMANCE TESTS COMPLETE"` |
+
 ---
 
 ## Phase 5: Documents & Notifications
@@ -461,14 +503,14 @@ Phase 0 ──┬──▶ Phase 1 ──┬──▶ Phase 3 ──▶ Phase 4
 | Phase 1 | 18 | 225 | 56 |
 | Phase 2 | 14 | 175 | 44 |
 | Phase 3 | 18 | 230 | 58 |
-| Phase 4 | 25 | 202 | 51 |
+| Phase 4 | 42 | 402 | 101 |
 | Phase 5 | 14 | 160 | 40 |
 | Phase 6 | 13 | 165 | 41 |
 | Phase 7 | 10 | 130 | 33 |
-| **Total** | **128** | **1447** | **363** |
+| **Total** | **145** | **1647** | **413** |
 
 *Assuming ~4 iterations per hour with Ralph Wiggum
-*Phase 4 includes Inventory Forecasting Module (4.6) - 8 tasks completed, 3 pending
+*Phase 4.6 Inventory Forecasting: 8 completed, 20 pending (includes 17 enhancement tasks)
 
 ---
 
@@ -517,5 +559,6 @@ Before every push, verify:
 
 ---
 
-*Document Version: 2.1*
+*Document Version: 2.2*
 *Last Updated: 2026-01-01*
+*Enhancement Plan: See .ralph/FORECASTING_ENHANCEMENT_PLAN.md for detailed phase descriptions*
