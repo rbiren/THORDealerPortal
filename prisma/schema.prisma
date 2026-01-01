@@ -32,6 +32,7 @@ model User {
   sessions      Session[]
   notifications Notification[]
   auditLogs     AuditLog[]
+  orderNotes    OrderNote[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -304,6 +305,7 @@ model Order {
   items         OrderItem[]
   statusHistory OrderStatusHistory[]
   invoices      Invoice[]
+  orderNotes    OrderNote[]
 
   submittedAt   DateTime?
   confirmedAt   DateTime?
@@ -348,6 +350,22 @@ model OrderStatusHistory {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+}
+
+model OrderNote {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  content    String
+  isInternal Boolean  @default(true)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
 }
 
 // ============================================================================

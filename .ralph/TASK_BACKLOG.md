@@ -211,9 +211,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 3.6.1 | 🟠 | ⏳ | Build admin order list | 15 | `/ralph-loop "Create admin order management: all orders across dealers, advanced filters, bulk status updates. Export functionality" --max-iterations 15` |
-| 3.6.2 | 🟠 | ⏳ | Add order editing | 12 | `/ralph-loop "Implement admin order editing: modify quantities, add/remove items, adjust pricing. Add audit trail for changes" --max-iterations 12` |
-| 3.6.3 | 🟡 | ⏳ | Create order notes | 8 | `/ralph-loop "Add internal order notes feature: admin can add notes, visibility controls. Show in timeline. Notify relevant users" --max-iterations 8` |
+| 3.6.1 | 🟠 | ✅ | Build admin order list | Manual | *Completed 2026-01-01 (741 tests passing)* |
+| 3.6.2 | 🟠 | ✅ | Add order editing | Manual | *Completed 2026-01-01 (inline item editing, price updates)* |
+| 3.6.3 | 🟡 | ✅ | Create order notes | Manual | *Completed 2026-01-01 (internal/external visibility)* |
 
 ---
 
@@ -441,6 +441,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 3.5.1 | Invoice Generation | Manual | 2026-01-01 | 697 tests, HTML templates, print support |
 | 3.5.2 | Invoice List | Manual | 2026-01-01 | Filters, stats, pagination |
 | 3.5.3 | Invoice Email Delivery | Manual | 2026-01-01 | Email templates, mark paid, print |
+| 3.6.1 | Admin Order List | Manual | 2026-01-01 | 741 tests, all orders, advanced filters, bulk actions, CSV export |
+| 3.6.2 | Order Editing | Manual | 2026-01-01 | Inline item editing, price updates, quantity changes |
+| 3.6.3 | Order Notes | Manual | 2026-01-01 | Internal/external visibility, note timeline |
 
 ---
 
