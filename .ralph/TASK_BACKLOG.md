@@ -134,7 +134,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 2.2.1 | 🟠 | ⏳ | Build product CRUD | 20 | `/ralph-loop "Create product management forms: basic info, pricing, categories, specifications. Add image upload with drag-drop. Preview before save" --max-iterations 20` |
+| 2.2.1 | 🟠 | ✅ | Build product CRUD | Manual | *Completed 2026-01-01 (390 tests passing)* |
 | 2.2.2 | 🟠 | ⏳ | Implement category management | 12 | `/ralph-loop "Build category CRUD with drag-drop reordering. Support nested categories up to 3 levels. Add icon/image upload" --max-iterations 12` |
 | 2.2.3 | 🟡 | ⏳ | Add bulk product import | 15 | `/ralph-loop "Create CSV/Excel product import: template download, file upload, validation preview, import with error handling. Show progress" --max-iterations 15` |
 
@@ -416,6 +416,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 2.1.3 | Product filters | Manual | 2026-01-01 | Filter chips, removable tags, clear all, URL parameter sync |
 | 2.1.4 | Product detail page | Manual | 2026-01-01 | 344 tests, image gallery, specifications, inventory by location, related products |
 | 2.1.5 | Category navigation | Manual | 2026-01-01 | 359 tests, hierarchical sidebar, product counts, expand/collapse, active highlight |
+| 2.2.1 | Product CRUD (Admin) | Manual | 2026-01-01 | 390 tests, create/edit forms, image management, bulk actions, admin table |
 
 ---
 
