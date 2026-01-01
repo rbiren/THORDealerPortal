@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { getProducts, getCategoriesFlat, getProductStats } from './actions'
+import { getProducts, getCategoriesFlat, getCategories, getProductStats } from './actions'
 import { ProductGrid } from './ProductGrid'
+import { CategorySidebar } from './CategorySidebar'
 import { productFilterSchema } from '@/lib/validations/product'
 
 export const metadata = {
@@ -11,6 +12,14 @@ export const metadata = {
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+async function CategorySidebarWrapper({ searchParams }: Props) {
+  const params = await searchParams
+  const categoryId = typeof params.categoryId === 'string' ? params.categoryId : null
+  const categories = await getCategories()
+
+  return <CategorySidebar categories={categories} activeCategoryId={categoryId} />
 }
 
 async function ProductGridWrapper({ searchParams }: Props) {
@@ -71,9 +80,26 @@ async function ProductStats() {
   )
 }
 
+function SidebarSkeleton() {
+  return (
+    <div className="w-64 flex-shrink-0">
+      <div className="bg-white rounded-lg shadow p-4 animate-pulse">
+        <div className="h-4 w-24 bg-gray-200 rounded mb-4" />
+        <div className="space-y-2">
+          <div className="h-8 bg-gray-200 rounded" />
+          <div className="h-px bg-gray-200 my-3" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-8 bg-gray-200 rounded" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function GridSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="flex-1 space-y-4">
       <div className="bg-white p-4 rounded-lg shadow animate-pulse">
         <div className="flex flex-wrap gap-4">
           <div className="h-10 w-48 bg-gray-200 rounded" />
@@ -82,8 +108,8 @@ function GridSkeleton() {
           <div className="h-10 w-36 bg-gray-200 rounded" />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {Array.from({ length: 8 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="bg-white rounded-lg shadow overflow-hidden animate-pulse">
             <div className="aspect-square bg-gray-200" />
             <div className="p-4 space-y-2">
@@ -195,9 +221,22 @@ export default async function ProductsPage({ searchParams }: Props) {
           <ProductStats />
         </Suspense>
 
-        <Suspense fallback={<GridSkeleton />}>
-          <ProductGridWrapper searchParams={searchParams} />
-        </Suspense>
+        {/* Two-column layout with sidebar */}
+        <div className="flex gap-6">
+          {/* Category Sidebar - hidden on mobile, visible on larger screens */}
+          <div className="hidden lg:block">
+            <Suspense fallback={<SidebarSkeleton />}>
+              <CategorySidebarWrapper searchParams={searchParams} />
+            </Suspense>
+          </div>
+
+          {/* Main Product Grid */}
+          <div className="flex-1 min-w-0">
+            <Suspense fallback={<GridSkeleton />}>
+              <ProductGridWrapper searchParams={searchParams} />
+            </Suspense>
+          </div>
+        </div>
       </main>
     </div>
   )
