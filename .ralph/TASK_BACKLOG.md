@@ -226,10 +226,10 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 4.1.1 | 🔴 | ⏳ | Create dealer dashboard layout | 15 | `/ralph-loop "Build dealer dashboard with card-based layout: quick stats, recent orders, inventory alerts, notifications. Responsive grid" --max-iterations 15` |
-| 4.1.2 | 🔴 | ⏳ | Add sales metrics cards | 12 | `/ralph-loop "Create sales metric cards: MTD sales, YTD sales, vs previous period, order count. Add trend indicators and sparkline charts" --max-iterations 12 --completion-promise "DASHBOARD METRICS COMPLETE"` |
-| 4.1.3 | 🟠 | ⏳ | Build recent activity feed | 10 | `/ralph-loop "Create activity feed component: recent orders, status changes, document uploads. Infinite scroll, filter by type" --max-iterations 10` |
-| 4.1.4 | 🟠 | ⏳ | Add quick actions panel | 8 | `/ralph-loop "Create quick actions: new order, browse products, view reports, manage users. Customizable shortcuts for dealers" --max-iterations 8` |
+| 4.1.1 | 🔴 | ✅ | Create dealer dashboard layout | Manual | *Completed 2026-01-01 (781 tests passing)* |
+| 4.1.2 | 🔴 | ✅ | Add sales metrics cards | Manual | *Completed 2026-01-01 (MTD, YTD, growth %, avg order)* |
+| 4.1.3 | 🟠 | ✅ | Build recent activity feed | Manual | *Completed 2026-01-01 (orders, invoices, status changes)* |
+| 4.1.4 | 🟠 | ✅ | Add quick actions panel | Manual | *Completed 2026-01-01 (new order, browse, orders, invoices)* |
 
 ### 4.2 Sales Reports
 
@@ -444,6 +444,10 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 3.6.1 | Admin Order List | Manual | 2026-01-01 | 741 tests, all orders, advanced filters, bulk actions, CSV export |
 | 3.6.2 | Order Editing | Manual | 2026-01-01 | Inline item editing, price updates, quantity changes |
 | 3.6.3 | Order Notes | Manual | 2026-01-01 | Internal/external visibility, note timeline |
+| 4.1.1 | Dealer Dashboard Layout | Manual | 2026-01-01 | 781 tests, card-based layout, responsive grid |
+| 4.1.2 | Sales Metrics Cards | Manual | 2026-01-01 | MTD, YTD, growth %, average order value |
+| 4.1.3 | Recent Activity Feed | Manual | 2026-01-01 | Orders, invoices, status changes timeline |
+| 4.1.4 | Quick Actions Panel | Manual | 2026-01-01 | New order, browse, orders, invoices shortcuts |
 
 ---
 

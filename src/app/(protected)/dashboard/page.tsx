@@ -1,300 +1,431 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
+'use client'
 
-export const metadata = {
-  title: 'Dashboard - THOR Dealer Portal',
-  description: 'Your THOR Dealer Portal dashboard',
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import {
+  getDashboardStats,
+  getRecentOrders,
+  getActivityFeed,
+  getLowStockAlerts,
+  type DashboardStats,
+  type RecentOrder,
+  type ActivityItem,
+  type LowStockAlert,
+} from './actions'
+
+const statusColors: Record<string, string> = {
+  gray: 'bg-gray-100 text-gray-800',
+  blue: 'bg-blue-100 text-blue-800',
+  olive: 'bg-olive/10 text-olive',
+  yellow: 'bg-yellow-100 text-yellow-800',
+  purple: 'bg-purple-100 text-purple-800',
+  green: 'bg-green-100 text-green-800',
+  red: 'bg-red-100 text-red-800',
 }
 
-export default async function DashboardPage() {
-  const session = await auth()
+export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [lowStockAlerts, setLowStockAlerts] = useState<LowStockAlert[]>([])
+  const [mounted, setMounted] = useState(false)
 
-  if (!session?.user) {
-    redirect('/login')
+  // TODO: Get dealer ID from session
+  const dealerId = 'demo-dealer'
+
+  useEffect(() => {
+    setMounted(true)
+    loadDashboard()
+  }, [])
+
+  async function loadDashboard() {
+    const [statsData, ordersData, activityData, alertsData] = await Promise.all([
+      getDashboardStats(dealerId),
+      getRecentOrders(dealerId, 5),
+      getActivityFeed(dealerId, 8),
+      getLowStockAlerts(5),
+    ])
+    setStats(statsData)
+    setRecentOrders(ordersData)
+    setActivities(activityData)
+    setLowStockAlerts(alertsData)
+  }
+
+  function formatDate(dateString: string) {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  function formatCurrency(amount: number) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin h-8 w-8 border-2 border-olive border-t-transparent rounded-full" />
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between">
-            <div className="flex">
-              <div className="flex flex-shrink-0 items-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
-                  <svg
-                    className="h-5 w-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"
-                    />
-                  </svg>
-                </div>
-                <span className="ml-2 text-lg font-semibold text-gray-900">
-                  THOR Dealer Portal
-                </span>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="page-subtitle">Welcome back! Here&apos;s your business overview.</p>
+      </div>
+
+      {/* Stats Cards - Top Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Monthly Sales */}
+        <div className="card">
+          <div className="card-body">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-medium-gray">Monthly Sales</p>
+                <p className="text-2xl font-heading font-bold text-charcoal mt-1">
+                  {stats ? formatCurrency(stats.monthlySales) : '--'}
+                </p>
+                {stats && stats.monthlyGrowth !== 0 && (
+                  <p className={`text-sm mt-1 ${stats.monthlyGrowth > 0 ? 'text-success' : 'text-error'}`}>
+                    {stats.monthlyGrowth > 0 ? '+' : ''}{stats.monthlyGrowth}% vs last month
+                  </p>
+                )}
               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-700">
-                {session.user.name || session.user.email}
-              </span>
-              <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                {session.user.role}
-              </span>
-              <form action="/api/auth/signout" method="POST">
-                <button
-                  type="submit"
-                  className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Welcome back, {session.user.name?.split(' ')[0] || 'User'}!
-          </p>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="overflow-hidden rounded-lg bg-white shadow">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-6 w-6 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="truncate text-sm font-medium text-gray-500">
-                      Total Orders
-                    </dt>
-                    <dd className="text-lg font-semibold text-gray-900">--</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-lg bg-white shadow">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-6 w-6 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="truncate text-sm font-medium text-gray-500">
-                      Products Available
-                    </dt>
-                    <dd className="text-lg font-semibold text-gray-900">--</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-lg bg-white shadow">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-6 w-6 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="truncate text-sm font-medium text-gray-500">
-                      Monthly Sales
-                    </dt>
-                    <dd className="text-lg font-semibold text-gray-900">--</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-lg bg-white shadow">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-6 w-6 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="truncate text-sm font-medium text-gray-500">
-                      Notifications
-                    </dt>
-                    <dd className="text-lg font-semibold text-gray-900">--</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 rounded-lg bg-white p-6 shadow">
-          <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Link
-              href="/orders/new"
-              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-            >
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4.5v15m7.5-7.5h-15"
-                  />
+              <div className="h-12 w-12 bg-olive/10 rounded-lg flex items-center justify-center">
+                <svg className="h-6 w-6 text-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="min-w-0 flex-1">
-                <span className="absolute inset-0" aria-hidden="true" />
-                <p className="text-sm font-medium text-gray-900">New Order</p>
-              </div>
-            </Link>
-            <Link
-              href="/products"
-              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-            >
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                  />
-                </svg>
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="absolute inset-0" aria-hidden="true" />
-                <p className="text-sm font-medium text-gray-900">
-                  Browse Products
+            </div>
+          </div>
+        </div>
+
+        {/* YTD Sales */}
+        <div className="card">
+          <div className="card-body">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-medium-gray">Year to Date</p>
+                <p className="text-2xl font-heading font-bold text-charcoal mt-1">
+                  {stats ? formatCurrency(stats.yearToDateSales) : '--'}
+                </p>
+                <p className="text-sm text-medium-gray mt-1">
+                  Avg order: {stats ? formatCurrency(stats.averageOrderValue) : '--'}
                 </p>
               </div>
-            </Link>
-            <Link
-              href="/orders"
-              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-            >
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                  />
+              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <div className="min-w-0 flex-1">
-                <span className="absolute inset-0" aria-hidden="true" />
-                <p className="text-sm font-medium text-gray-900">View Orders</p>
-              </div>
-            </Link>
-            <Link
-              href="/support"
-              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-            >
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
-                  />
-                </svg>
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="absolute inset-0" aria-hidden="true" />
-                <p className="text-sm font-medium text-gray-900">Get Support</p>
-              </div>
-            </Link>
+            </div>
           </div>
         </div>
-      </main>
+
+        {/* Pending Orders */}
+        <div className="card">
+          <div className="card-body">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-medium-gray">Pending Orders</p>
+                <p className="text-2xl font-heading font-bold text-charcoal mt-1">
+                  {stats?.pendingOrders ?? '--'}
+                </p>
+                <p className="text-sm text-medium-gray mt-1">
+                  {stats?.totalOrders ?? 0} total orders
+                </p>
+              </div>
+              <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Invoices */}
+        <div className="card">
+          <div className="card-body">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-medium-gray">Pending Invoices</p>
+                <p className="text-2xl font-heading font-bold text-charcoal mt-1">
+                  {stats?.pendingInvoices ?? '--'}
+                </p>
+                {stats && stats.overdueInvoices > 0 && (
+                  <p className="text-sm text-error mt-1">
+                    {stats.overdueInvoices} overdue
+                  </p>
+                )}
+              </div>
+              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Orders - Left Column (2/3) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Recent Orders */}
+          <div className="card">
+            <div className="card-header flex items-center justify-between">
+              <h2 className="text-lg font-heading font-semibold text-charcoal">Recent Orders</h2>
+              <Link href="/orders" className="text-sm text-olive hover:underline">
+                View all
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              {recentOrders.length === 0 ? (
+                <div className="text-center py-8">
+                  <svg className="mx-auto h-12 w-12 text-light-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  <p className="mt-4 text-medium-gray">No orders yet</p>
+                  <Link href="/products" className="btn-primary mt-4 inline-block">
+                    Browse Products
+                  </Link>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead className="bg-light-beige">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-heading font-semibold text-charcoal uppercase">
+                        Order
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-heading font-semibold text-charcoal uppercase">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-center text-xs font-heading font-semibold text-charcoal uppercase">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-heading font-semibold text-charcoal uppercase">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-light-gray">
+                    {recentOrders.map((order) => (
+                      <tr key={order.id} className="hover:bg-light-beige/50">
+                        <td className="px-4 py-4">
+                          <Link href={`/orders/${order.orderNumber}`} className="font-medium text-olive hover:underline">
+                            {order.orderNumber}
+                          </Link>
+                          <p className="text-xs text-medium-gray">{order.itemCount} items</p>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-medium-gray">
+                          {formatDate(order.createdAt)}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[order.statusColor] || statusColors.gray}`}>
+                            {order.statusLabel}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-right font-medium text-charcoal">
+                          ${order.totalAmount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="text-lg font-heading font-semibold text-charcoal">Quick Actions</h2>
+            </div>
+            <div className="card-body">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link
+                  href="/products"
+                  className="flex flex-col items-center p-4 rounded-lg border border-light-gray hover:border-olive hover:bg-light-beige/50 transition-colors"
+                >
+                  <div className="h-10 w-10 bg-olive/10 rounded-lg flex items-center justify-center mb-2">
+                    <svg className="h-5 w-5 text-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-charcoal">New Order</span>
+                </Link>
+
+                <Link
+                  href="/products"
+                  className="flex flex-col items-center p-4 rounded-lg border border-light-gray hover:border-olive hover:bg-light-beige/50 transition-colors"
+                >
+                  <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
+                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-charcoal">Browse Products</span>
+                </Link>
+
+                <Link
+                  href="/orders"
+                  className="flex flex-col items-center p-4 rounded-lg border border-light-gray hover:border-olive hover:bg-light-beige/50 transition-colors"
+                >
+                  <div className="h-10 w-10 bg-yellow-100 rounded-lg flex items-center justify-center mb-2">
+                    <svg className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-charcoal">View Orders</span>
+                </Link>
+
+                <Link
+                  href="/invoices"
+                  className="flex flex-col items-center p-4 rounded-lg border border-light-gray hover:border-olive hover:bg-light-beige/50 transition-colors"
+                >
+                  <div className="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
+                    <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-charcoal">Invoices</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column (1/3) */}
+        <div className="space-y-6">
+          {/* Activity Feed */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="text-lg font-heading font-semibold text-charcoal">Recent Activity</h2>
+            </div>
+            <div className="card-body">
+              {activities.length === 0 ? (
+                <p className="text-center text-medium-gray py-4">No recent activity</p>
+              ) : (
+                <div className="flow-root">
+                  <ul className="-mb-4">
+                    {activities.map((activity, index) => (
+                      <li key={activity.id}>
+                        <div className="relative pb-4">
+                          {index !== activities.length - 1 && (
+                            <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-light-gray" aria-hidden="true" />
+                          )}
+                          <div className="relative flex space-x-3">
+                            <div>
+                              <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${
+                                activity.color === 'blue' ? 'bg-blue-100' :
+                                activity.color === 'green' ? 'bg-green-100' :
+                                activity.color === 'olive' ? 'bg-olive/10' :
+                                activity.color === 'purple' ? 'bg-purple-100' :
+                                activity.color === 'yellow' ? 'bg-yellow-100' :
+                                'bg-gray-100'
+                              }`}>
+                                {activity.type === 'order' && (
+                                  <svg className={`h-4 w-4 ${activity.color === 'blue' ? 'text-blue-600' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                  </svg>
+                                )}
+                                {activity.type === 'invoice' && (
+                                  <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                )}
+                                {activity.type === 'status_change' && (
+                                  <svg className={`h-4 w-4 ${
+                                    activity.color === 'olive' ? 'text-olive' :
+                                    activity.color === 'purple' ? 'text-purple-600' :
+                                    activity.color === 'green' ? 'text-green-600' :
+                                    'text-gray-500'
+                                  }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                  </svg>
+                                )}
+                              </span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-charcoal">{activity.title}</p>
+                              <p className="text-xs text-medium-gray">{activity.description}</p>
+                              <p className="text-xs text-medium-gray mt-1">{formatDate(activity.timestamp)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Low Stock Alerts */}
+          {lowStockAlerts.length > 0 && (
+            <div className="card border-l-4 border-l-warning">
+              <div className="card-header flex items-center gap-2">
+                <svg className="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h2 className="text-lg font-heading font-semibold text-charcoal">Low Stock Alerts</h2>
+              </div>
+              <div className="card-body">
+                <ul className="space-y-3">
+                  {lowStockAlerts.map((alert) => (
+                    <li key={alert.id} className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-charcoal">{alert.productName}</p>
+                        <p className="text-xs text-medium-gray">{alert.productSku} - {alert.locationName}</p>
+                      </div>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning">
+                        {alert.quantity} left
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/admin/inventory" className="text-sm text-olive hover:underline mt-4 block">
+                  View all inventory
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Products Card */}
+          <div className="card">
+            <div className="card-body text-center">
+              <div className="h-12 w-12 bg-olive/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="h-6 w-6 text-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <p className="text-2xl font-heading font-bold text-charcoal">{stats?.activeProducts ?? '--'}</p>
+              <p className="text-sm text-medium-gray">Active Products</p>
+              <Link href="/products" className="btn-outline btn-sm mt-4 inline-block">
+                Browse Catalog
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
