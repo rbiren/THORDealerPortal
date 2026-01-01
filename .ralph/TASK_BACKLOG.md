@@ -146,7 +146,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 2.3.2 | 🟠 | ✅ | Implement inventory list | Manual | *Completed 2026-01-01 (464 tests passing)* |
 | 2.3.3 | 🟠 | ✅ | Build location management | Manual | *Completed 2026-01-01 (487 tests passing)* |
 | 2.3.4 | 🟠 | ✅ | Add inventory adjustments | Manual | *Completed 2026-01-01 (506 tests passing)* |
-| 2.3.5 | 🟡 | ⏳ | Create low stock alerts | 10 | `/ralph-loop "Implement configurable low stock thresholds. Create alert system that notifies via in-app and email. Add alert acknowledgment" --max-iterations 10` |
+| 2.3.5 | 🟡 | ✅ | Create low stock alerts | Manual | *Completed 2026-01-01 (533 tests passing)* |
 
 ### 2.4 Inventory Sync Service
 
@@ -422,6 +422,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 2.3.2 | Inventory List | Manual | 2026-01-01 | 464 tests, filterable table, search/sort, pagination, CSV export |
 | 2.3.3 | Location Management | Manual | 2026-01-01 | 487 tests, CRUD for warehouse/store/DC, toggle active status |
 | 2.3.4 | Inventory Adjustments | Manual | 2026-01-01 | 506 tests, add/remove/set stock, reason codes, audit trail |
+| 2.3.5 | Low Stock Alerts | Manual | 2026-01-01 | 533 tests, severity levels, notification preferences, bulk acknowledge |
 
 ---
 
