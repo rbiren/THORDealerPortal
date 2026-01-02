@@ -91,6 +91,7 @@ model Dealer {
   addresses       DealerAddress[]
   orders          Order[]
   documents       Document[]
+  forecastConfig  ForecastConfig?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -173,9 +174,11 @@ model Product {
   // Specifications stored as JSON string (SQLite doesn't have native JSON)
   specifications String? // JSON string
 
-  images      ProductImage[]
-  inventory   Inventory[]
-  orderItems  OrderItem[]
+  images          ProductImage[]
+  inventory       Inventory[]
+  orderItems      OrderItem[]
+  demandForecasts DemandForecast[]
+  suggestedOrders SuggestedOrder[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -383,4 +386,200 @@ model AuditLog {
   @@index([userId])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+// ============================================================================
+// INVENTORY FORECASTING
+// ============================================================================
+
+model ForecastConfig {
+  id                  String   @id @default(cuid())
+  dealerId            String
+  dealer              Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+
+  // Forecasting parameters
+  forecastHorizon     Int      @default(18) // Months to forecast ahead
+  historyPeriod       Int      @default(24) // Months of history to analyze
+  confidenceLevel     Float    @default(0.95) // 95% confidence interval
+
+  // Seasonal adjustments
+  useSeasonality      Boolean  @default(true)
+  seasonalityType     String   @default("multiplicative") // additive, multiplicative
+
+  // Safety stock settings
+  safetyStockDays     Int      @default(14) // Days of safety stock
+  leadTimeDays        Int      @default(7)  // Average lead time for orders
+
+  // Reorder settings
+  reorderPointMethod  String   @default("dynamic") // fixed, dynamic, min_max
+  minOrderQuantity    Int      @default(1)
+  orderMultiple       Int      @default(1) // Order in multiples of this
+
+  // Market factors
+  marketGrowthRate    Float    @default(0) // Annual market growth %
+  localMarketFactor   Float    @default(1.0) // Local market adjustment
+
+  isActive            Boolean  @default(true)
+  lastCalculatedAt    DateTime?
+
+  demandForecasts     DemandForecast[]
+  suggestedOrders     SuggestedOrder[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([dealerId])
+  @@index([dealerId])
+}
+
+model DemandForecast {
+  id              String   @id @default(cuid())
+  forecastConfigId String
+  forecastConfig  ForecastConfig @relation(fields: [forecastConfigId], references: [id], onDelete: Cascade)
+
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Period information
+  periodStart     DateTime // Start of forecast period
+  periodEnd       DateTime // End of forecast period
+  periodType      String   @default("month") // week, month, quarter
+
+  // Forecast values
+  forecastedDemand    Float   // Expected demand quantity
+  lowerBound          Float   // Lower confidence bound
+  upperBound          Float   // Upper confidence bound
+
+  // Historical comparison
+  historicalAverage   Float?  // Average from same period in history
+  yearOverYearChange  Float?  // % change vs same period last year
+
+  // Trend and seasonality components
+  trendComponent      Float?  // Trend contribution
+  seasonalComponent   Float?  // Seasonal contribution
+
+  // Accuracy (filled in after actuals are known)
+  actualDemand        Float?  // Actual demand (updated later)
+  forecastError       Float?  // % error = (actual - forecast) / actual
+
+  // Metadata
+  modelVersion        String  @default("v1.0")
+  calculatedAt        DateTime @default(now())
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([forecastConfigId, productId, periodStart])
+  @@index([forecastConfigId])
+  @@index([productId])
+  @@index([periodStart])
+}
+
+model SuggestedOrder {
+  id              String   @id @default(cuid())
+  forecastConfigId String
+  forecastConfig  ForecastConfig @relation(fields: [forecastConfigId], references: [id], onDelete: Cascade)
+
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Order timing
+  suggestedOrderDate  DateTime // When to place the order
+  expectedDeliveryDate DateTime // When inventory will arrive
+
+  // Order quantities
+  suggestedQuantity   Int     // Recommended order quantity
+  minimumQuantity     Int     // Minimum to maintain service level
+  economicOrderQty    Int?    // EOQ if calculated
+
+  // Inventory projections
+  currentStock        Int     // Stock at time of calculation
+  projectedStock      Int     // Stock at order date (before order)
+  projectedDemand     Int     // Expected demand until next order
+
+  // Financial
+  estimatedCost       Float?  // Estimated order cost
+  estimatedValue      Float?  // Retail value of order
+
+  // Urgency and status
+  priority            String  @default("normal") // critical, high, normal, low
+  status              String  @default("pending") // pending, accepted, ordered, skipped
+
+  // Reasoning
+  reasoning           String? // JSON: why this recommendation was made
+
+  // Tracking
+  acceptedAt          DateTime?
+  orderedAt           DateTime?
+  actualOrderId       String?  // Link to actual order if placed
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([forecastConfigId])
+  @@index([productId])
+  @@index([suggestedOrderDate])
+  @@index([status])
+}
+
+model SeasonalPattern {
+  id          String   @id @default(cuid())
+  dealerId    String?  // null = global pattern
+  productId   String?  // null = category-wide pattern
+  categoryId  String?  // null = all categories
+
+  // Pattern definition
+  patternName String   // e.g., "Holiday Season", "Summer Peak"
+  patternType String   @default("monthly") // weekly, monthly, quarterly
+
+  // Seasonal factors (JSON array of 12 monthly factors or 52 weekly factors)
+  // e.g., [0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.3, 1.1, 1.0, 0.9, 1.5] for monthly
+  factors     String   // JSON array of seasonal multipliers
+
+  // Validity
+  validFrom   DateTime?
+  validTo     DateTime?
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([dealerId])
+  @@index([productId])
+  @@index([categoryId])
+}
+
+model MarketIndicator {
+  id              String   @id @default(cuid())
+
+  // Geographic scope
+  region          String   // e.g., "Northeast", "CA", "90210"
+  regionType      String   // state, zipcode, region, national
+
+  // Indicator details
+  indicatorName   String   // e.g., "Housing Starts", "Consumer Confidence"
+  indicatorType   String   // economic, demographic, industry, weather
+
+  // Time series data
+  periodStart     DateTime
+  periodEnd       DateTime
+  value           Float
+  previousValue   Float?
+  percentChange   Float?
+
+  // Impact assessment
+  impactFactor    Float    @default(1.0) // Multiplier effect on demand
+  confidence      Float    @default(0.8) // Confidence in the indicator
+
+  // Source
+  source          String?  // Data source
+  sourceUrl       String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([region, indicatorName, periodStart])
+  @@index([region])
+  @@index([indicatorType])
+  @@index([periodStart])
 }
