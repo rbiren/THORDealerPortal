@@ -9,15 +9,25 @@ const prisma = new PrismaClient({
   },
 })
 
-// Clean database before each test
-beforeEach(async () => {
+// Clean database once before all tests (not before each test)
+beforeAll(async () => {
   // Delete in order of dependencies
   await prisma.auditLog.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.document.deleteMany()
+
+  // Invoice before Order
+  await prisma.invoice.deleteMany()
+
+  // Order related
+  await prisma.orderNote.deleteMany()
   await prisma.orderStatusHistory.deleteMany()
   await prisma.orderItem.deleteMany()
   await prisma.order.deleteMany()
+
+  // Cart related
+  await prisma.cartItem.deleteMany()
+  await prisma.cart.deleteMany()
 
   // Forecasting tables
   await prisma.suggestedOrder.deleteMany()
