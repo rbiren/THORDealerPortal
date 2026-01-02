@@ -18,6 +18,14 @@ beforeEach(async () => {
   await prisma.orderStatusHistory.deleteMany()
   await prisma.orderItem.deleteMany()
   await prisma.order.deleteMany()
+
+  // Forecasting tables
+  await prisma.suggestedOrder.deleteMany()
+  await prisma.demandForecast.deleteMany()
+  await prisma.forecastConfig.deleteMany()
+  await prisma.seasonalPattern.deleteMany()
+  await prisma.marketIndicator.deleteMany()
+
   await prisma.inventory.deleteMany()
   await prisma.inventoryLocation.deleteMany()
   await prisma.productImage.deleteMany()

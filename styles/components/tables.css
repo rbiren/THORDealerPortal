@@ -1,0 +1,403 @@
+/**
+ * Thor Dealer Portal - Table Components
+ *
+ * Table styles following Thor Industries brand guidelines.
+ *
+ * @see docs/STYLE_GUIDE.md for complete documentation
+ */
+
+/* ============================================
+   TABLE WRAPPER
+   ============================================ */
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   BASE TABLE
+   ============================================ */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+}
+
+/* ============================================
+   TABLE HEADER
+   ============================================ */
+
+.table thead {
+  background-color: var(--color-bg-secondary);
+}
+
+.table th {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text-secondary);
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 2px solid var(--color-border-default);
+  white-space: nowrap;
+}
+
+.table th:first-child {
+  padding-left: var(--space-6);
+}
+
+.table th:last-child {
+  padding-right: var(--space-6);
+}
+
+/* Sortable columns */
+.table-sort {
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.table-sort:hover {
+  color: var(--color-text-primary);
+}
+
+.table-sort::after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: var(--space-2);
+  vertical-align: middle;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.3;
+}
+
+.table-sort-asc::after {
+  border-top: none;
+  border-bottom: 4px solid currentColor;
+  opacity: 1;
+}
+
+.table-sort-desc::after {
+  opacity: 1;
+}
+
+/* ============================================
+   TABLE BODY
+   ============================================ */
+
+.table td {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border-default);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+
+.table td:first-child {
+  padding-left: var(--space-6);
+}
+
+.table td:last-child {
+  padding-right: var(--space-6);
+}
+
+/* Hover effect */
+.table-hover tbody tr:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+/* Clickable rows */
+.table-clickable tbody tr {
+  cursor: pointer;
+}
+
+/* Selected row */
+.table tbody tr.selected {
+  background-color: var(--color-light-beige);
+}
+
+/* ============================================
+   TABLE VARIANTS
+   ============================================ */
+
+/* Striped table */
+.table-striped tbody tr:nth-child(even) {
+  background-color: var(--color-bg-secondary);
+}
+
+/* Bordered table */
+.table-bordered {
+  border: 1px solid var(--color-border-default);
+}
+
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid var(--color-border-default);
+}
+
+/* Compact table */
+.table-compact th,
+.table-compact td {
+  padding: var(--space-2) var(--space-3);
+}
+
+.table-compact th:first-child,
+.table-compact td:first-child {
+  padding-left: var(--space-4);
+}
+
+.table-compact th:last-child,
+.table-compact td:last-child {
+  padding-right: var(--space-4);
+}
+
+/* Large table */
+.table-lg th,
+.table-lg td {
+  padding: var(--space-5) var(--space-4);
+}
+
+/* ============================================
+   TABLE CELL UTILITIES
+   ============================================ */
+
+.table-cell-nowrap {
+  white-space: nowrap;
+}
+
+.table-cell-truncate {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-cell-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-cell-center {
+  text-align: center;
+}
+
+.table-cell-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* ============================================
+   TABLE EMPTY STATE
+   ============================================ */
+
+.table-empty {
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.table-empty-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-4);
+  color: var(--color-light-gray);
+}
+
+.table-empty-title {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.table-empty-description {
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-6);
+}
+
+/* ============================================
+   TABLE LOADING STATE
+   ============================================ */
+
+.table-loading {
+  position: relative;
+}
+
+.table-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-skeleton-row td {
+  padding: var(--space-4);
+}
+
+.table-skeleton {
+  height: 16px;
+  background: linear-gradient(
+    90deg,
+    var(--color-light-gray) 25%,
+    var(--color-bg-secondary) 50%,
+    var(--color-light-gray) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border-default);
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.table-pagination-info {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.table-pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.table-pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-white);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-default),
+              background-color var(--duration-fast) var(--ease-default);
+}
+
+.table-pagination-btn:hover:not(:disabled) {
+  border-color: var(--color-charcoal);
+}
+
+.table-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.table-pagination-btn-active {
+  background-color: var(--color-charcoal);
+  border-color: var(--color-charcoal);
+  color: var(--color-off-white);
+}
+
+/* ============================================
+   TABLE WITH SELECTION
+   ============================================ */
+
+.table-selectable th:first-child,
+.table-selectable td:first-child {
+  width: 48px;
+  padding-right: 0;
+}
+
+.table-select-all,
+.table-select-row {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-default),
+              background-color var(--duration-fast) var(--ease-default);
+}
+
+.table-select-all:checked,
+.table-select-row:checked {
+  background-color: var(--color-charcoal);
+  border-color: var(--color-charcoal);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FFFDFA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* ============================================
+   TABLE ACTIONS BAR
+   ============================================ */
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-default);
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.table-actions-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.table-actions-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.table-search {
+  position: relative;
+  width: 280px;
+}
+
+.table-search-input {
+  width: 100%;
+  padding-left: var(--space-10);
+}
+
+.table-search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
