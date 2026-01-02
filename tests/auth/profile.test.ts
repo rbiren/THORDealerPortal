@@ -102,6 +102,10 @@ describe('Profile Database Operations', () => {
   const testEmail = 'profile-test@example.com'
 
   beforeEach(async () => {
+    // Clean up existing test data first
+    await prisma.user.deleteMany({ where: { email: testEmail } })
+    await prisma.dealer.deleteMany({ where: { code: 'PROF-DLR' } })
+
     const passwordHash = await bcrypt.hash('TestPassword123!', 12)
     await prisma.user.create({
       data: {

@@ -9,6 +9,10 @@ describe('Password Reset Flow', () => {
   const testPassword = 'OldPassword123!'
 
   beforeEach(async () => {
+    // Clean up existing test data first
+    await prisma.passwordReset.deleteMany({ where: { email: testEmail } })
+    await prisma.user.deleteMany({ where: { email: testEmail } })
+
     // Create a test user
     const passwordHash = await bcrypt.hash(testPassword, 12)
     await prisma.user.create({

@@ -5,6 +5,13 @@ describe('Order Model', () => {
   let testProduct: Awaited<ReturnType<typeof prisma.product.create>>
 
   beforeEach(async () => {
+    // Clean up any existing test data first
+    await prisma.orderItem.deleteMany({ where: { order: { orderNumber: { startsWith: 'ORD-' } } } })
+    await prisma.orderStatusHistory.deleteMany({ where: { order: { orderNumber: { startsWith: 'ORD-' } } } })
+    await prisma.order.deleteMany({ where: { orderNumber: { startsWith: 'ORD-' } } })
+    await prisma.product.deleteMany({ where: { sku: 'ORDER-PROD' } })
+    await prisma.dealer.deleteMany({ where: { code: 'ORDER-DLR' } })
+
     testDealer = await prisma.dealer.create({
       data: {
         code: 'ORDER-DLR',
