@@ -1,0 +1,152 @@
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { getUsers, getDealers } from './actions'
+import { UserTable } from './UserTable'
+import { userFilterSchema } from '@/lib/validations/user'
+
+export const metadata = {
+  title: 'User Management - THOR Dealer Portal Admin',
+  description: 'Manage users in the THOR Dealer Portal',
+}
+
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+async function UserTableWrapper({ searchParams }: Props) {
+  const params = await searchParams
+
+  // Parse search params with defaults
+  const filters = userFilterSchema.parse({
+    search: typeof params.search === 'string' ? params.search : undefined,
+    role: typeof params.role === 'string' ? params.role : undefined,
+    status: typeof params.status === 'string' ? params.status : undefined,
+    dealerId: typeof params.dealerId === 'string' ? params.dealerId : undefined,
+    page: typeof params.page === 'string' ? params.page : undefined,
+    pageSize: typeof params.pageSize === 'string' ? params.pageSize : undefined,
+    sortBy: typeof params.sortBy === 'string' ? params.sortBy : undefined,
+    sortOrder: typeof params.sortOrder === 'string' ? params.sortOrder : undefined,
+  })
+
+  const [data, dealers] = await Promise.all([getUsers(filters), getDealers()])
+
+  return <UserTable data={data} dealers={dealers} />
+}
+
+function TableSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="bg-white p-4 rounded-lg shadow animate-pulse">
+        <div className="h-10 bg-gray-200 rounded" />
+      </div>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="divide-y divide-gray-200">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="p-4 animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="h-4 w-4 bg-gray-200 rounded" />
+                <div className="h-4 w-48 bg-gray-200 rounded" />
+                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="h-4 w-24 bg-gray-200 rounded" />
+                <div className="h-4 w-20 bg-gray-200 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default async function UsersPage({ searchParams }: Props) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between">
+            <div className="flex">
+              <div className="flex flex-shrink-0 items-center">
+                <Link href="/dashboard" className="flex items-center">
+                  <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
+                    <svg
+                      className="h-5 w-5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"
+                      />
+                    </svg>
+                  </div>
+                  <span className="ml-2 text-lg font-semibold text-gray-900">
+                    THOR Dealer Portal
+                  </span>
+                </Link>
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/admin/users"
+                  className="inline-flex items-center border-b-2 border-blue-500 px-1 pt-1 text-sm font-medium text-gray-900"
+                >
+                  Users
+                </Link>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/profile"
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Profile
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Manage users, roles, and permissions
+            </p>
+          </div>
+          <Link
+            href="/admin/users/new"
+            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          >
+            <svg
+              className="-ml-0.5 mr-1.5 h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            Add User
+          </Link>
+        </div>
+
+        <Suspense fallback={<TableSkeleton />}>
+          <UserTableWrapper searchParams={searchParams} />
+        </Suspense>
+      </main>
+    </div>
+  )
+}

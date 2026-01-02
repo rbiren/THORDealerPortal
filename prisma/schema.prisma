@@ -20,6 +20,7 @@ model User {
   passwordHash  String
   firstName     String
   lastName      String
+  phone         String?
   role          String    @default("dealer_user") // super_admin, admin, dealer_admin, dealer_user, readonly
   status        String    @default("active") // active, inactive, pending, suspended
   mfaEnabled    Boolean   @default(false)
@@ -31,6 +32,7 @@ model User {
   sessions      Session[]
   notifications Notification[]
   auditLogs     AuditLog[]
+  orderNotes    OrderNote[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -89,9 +91,11 @@ model Dealer {
   users           User[]
   contacts        DealerContact[]
   addresses       DealerAddress[]
+  carts           Cart[]
   orders          Order[]
   documents       Document[]
   forecastConfig  ForecastConfig?
+  invoices        Invoice[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -176,6 +180,7 @@ model Product {
 
   images          ProductImage[]
   inventory       Inventory[]
+  cartItems       CartItem[]
   orderItems      OrderItem[]
   demandForecasts DemandForecast[]
   suggestedOrders SuggestedOrder[]
@@ -238,6 +243,43 @@ model Inventory {
 }
 
 // ============================================================================
+// SHOPPING CART
+// ============================================================================
+
+model Cart {
+  id        String   @id @default(cuid())
+  dealerId  String
+  dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  userId    String?  // Optional - which user created the cart
+  name      String?  // For saved carts
+  isSaved   Boolean  @default(false) // true for saved carts, false for active cart
+
+  items     CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealerId])
+  @@index([userId])
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+// ============================================================================
 // ORDERS
 // ============================================================================
 
@@ -265,6 +307,8 @@ model Order {
 
   items         OrderItem[]
   statusHistory OrderStatusHistory[]
+  invoices      Invoice[]
+  orderNotes    OrderNote[]
 
   submittedAt   DateTime?
   confirmedAt   DateTime?
@@ -309,6 +353,62 @@ model OrderStatusHistory {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+}
+
+model OrderNote {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  content    String
+  isInternal Boolean  @default(true)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
+}
+
+// ============================================================================
+// INVOICES
+// ============================================================================
+
+model Invoice {
+  id              String    @id @default(cuid())
+  invoiceNumber   String    @unique
+  orderId         String
+  order           Order     @relation(fields: [orderId], references: [id])
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  status          String    @default("draft") // draft, sent, paid, overdue, cancelled
+
+  // Amounts
+  subtotal        Float     @default(0)
+  taxAmount       Float     @default(0)
+  shippingAmount  Float     @default(0)
+  totalAmount     Float     @default(0)
+
+  // Dates
+  dueDate         DateTime?
+  paidDate        DateTime?
+
+  // Details (stored as JSON)
+  items           String?   // JSON array of line items
+  billingAddress  String?   // JSON object
+  shippingAddress String?   // JSON object
+  paymentTerms    String    @default("Net 30")
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([invoiceNumber])
+  @@index([orderId])
+  @@index([dealerId])
+  @@index([status])
 }
 
 // ============================================================================

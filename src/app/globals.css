@@ -1,3 +1,312 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Thor Industries Brand Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600&display=swap');
+
+@layer base {
+  /* Base Typography */
+  html {
+    @apply font-body text-charcoal antialiased;
+  }
+
+  body {
+    @apply bg-light-beige text-charcoal min-h-screen;
+  }
+
+  /* Headings use Montserrat */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-tight text-charcoal;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl;
+  }
+
+  h6 {
+    @apply text-base md:text-lg font-semibold;
+  }
+
+  /* Links */
+  a {
+    @apply text-olive hover:text-olive-800 transition-colors;
+  }
+
+  /* Focus States */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-charcoal/20 ring-offset-2;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-olive/20 text-charcoal;
+  }
+}
+
+@layer components {
+  /* Thor Brand Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2
+           font-heading font-semibold text-sm
+           rounded-md transition-all duration-fast
+           focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-charcoal text-off-white
+           hover:bg-charcoal-800
+           focus:ring-charcoal;
+  }
+
+  .btn-secondary {
+    @apply btn bg-olive text-white
+           hover:bg-olive-800
+           focus:ring-olive;
+  }
+
+  .btn-accent {
+    @apply btn bg-burnt-orange text-white
+           hover:bg-burnt-orange-800
+           focus:ring-burnt-orange;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-charcoal text-charcoal bg-transparent
+           hover:bg-charcoal hover:text-off-white
+           focus:ring-charcoal;
+  }
+
+  .btn-ghost {
+    @apply btn text-charcoal bg-transparent
+           hover:bg-charcoal/5
+           focus:ring-charcoal;
+  }
+
+  /* Button Sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  /* Thor Brand Cards */
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden;
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b border-light-gray;
+  }
+
+  .card-body {
+    @apply px-6 py-4;
+  }
+
+  .card-footer {
+    @apply px-6 py-4 bg-light-beige border-t border-light-gray;
+  }
+
+  /* Thor Brand Form Inputs */
+  .input {
+    @apply block w-full px-3 py-2
+           bg-white border border-light-gray rounded-md
+           text-charcoal placeholder-medium-gray
+           focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal
+           transition-colors duration-fast;
+  }
+
+  .input-error {
+    @apply border-error focus:ring-error/20 focus:border-error;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-charcoal mb-1;
+  }
+
+  .helper-text {
+    @apply text-xs text-medium-gray mt-1;
+  }
+
+  .error-text {
+    @apply text-xs text-error mt-1;
+  }
+
+  /* Thor Brand Select */
+  .select {
+    @apply input appearance-none bg-no-repeat bg-right pr-10;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238C8A7E' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-size: 1.5em 1.5em;
+  }
+
+  /* Thor Brand Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5
+           rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-success-light text-olive-800;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-light text-burnt-orange-800;
+  }
+
+  .badge-error {
+    @apply badge bg-error-light text-error;
+  }
+
+  .badge-info {
+    @apply badge bg-info-light text-info;
+  }
+
+  .badge-neutral {
+    @apply badge bg-light-gray text-charcoal-700;
+  }
+
+  /* Thor Brand Tables */
+  .table {
+    @apply w-full divide-y divide-light-gray;
+  }
+
+  .table thead {
+    @apply bg-light-beige;
+  }
+
+  .table th {
+    @apply px-6 py-3 text-left text-xs font-heading font-semibold
+           text-charcoal uppercase tracking-wider;
+  }
+
+  .table td {
+    @apply px-6 py-4 text-sm text-charcoal;
+  }
+
+  .table tbody tr {
+    @apply hover:bg-light-beige/50 transition-colors;
+  }
+
+  /* Thor Brand Alerts */
+  .alert {
+    @apply p-4 rounded-lg border;
+  }
+
+  .alert-success {
+    @apply alert bg-success-light border-olive/20 text-olive-800;
+  }
+
+  .alert-warning {
+    @apply alert bg-warning-light border-burnt-orange/20 text-burnt-orange-800;
+  }
+
+  .alert-error {
+    @apply alert bg-error-light border-error/20 text-error;
+  }
+
+  .alert-info {
+    @apply alert bg-info-light border-info/20 text-info;
+  }
+
+  /* Thor Brand Navigation */
+  .nav-link {
+    @apply flex items-center px-3 py-2 text-sm font-medium
+           text-medium-gray rounded-md
+           hover:text-charcoal hover:bg-light-beige
+           transition-colors duration-fast;
+  }
+
+  .nav-link-active {
+    @apply nav-link text-charcoal bg-light-beige;
+  }
+
+  /* Thor Brand Modal */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-charcoal/50 z-modal-backdrop;
+  }
+
+  .modal {
+    @apply fixed inset-0 z-modal overflow-y-auto;
+  }
+
+  .modal-content {
+    @apply relative bg-white rounded-lg shadow-xl
+           max-w-lg mx-auto my-8;
+  }
+
+  /* Page Layout */
+  .page-header {
+    @apply mb-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-heading font-bold text-charcoal;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm text-medium-gray;
+  }
+
+  /* Breadcrumbs */
+  .breadcrumb {
+    @apply flex items-center space-x-2 text-sm text-medium-gray mb-2;
+  }
+
+  .breadcrumb a {
+    @apply hover:text-charcoal;
+  }
+
+  .breadcrumb-separator {
+    @apply text-light-gray;
+  }
+}
+
+@layer utilities {
+  /* Thor Brand Text Colors */
+  .text-muted {
+    @apply text-medium-gray;
+  }
+
+  /* Smooth scrolling */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Thor brand gradient backgrounds */
+  .bg-gradient-thor {
+    @apply bg-gradient-to-br from-charcoal via-charcoal-800 to-dark-gray;
+  }
+
+  .bg-gradient-olive {
+    @apply bg-gradient-to-br from-olive via-olive-700 to-olive-900;
+  }
+}

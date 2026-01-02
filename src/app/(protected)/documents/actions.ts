@@ -1,0 +1,375 @@
+'use server'
+
+import { prisma } from '@/lib/prisma'
+
+// Document Types
+export type DocumentCategory =
+  | 'contract'
+  | 'marketing'
+  | 'compliance'
+  | 'training'
+  | 'product_spec'
+  | 'invoice'
+  | 'report'
+  | 'other'
+
+export type DocumentSortBy = 'name' | 'createdAt' | 'size' | 'category'
+
+export interface Document {
+  id: string
+  dealerId: string | null
+  name: string
+  category: string
+  mimeType: string
+  size: number
+  url: string
+  version: number
+  isPublic: boolean
+  expiresAt: Date | null
+  uploadedBy: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface DocumentWithDetails extends Document {
+  dealerName?: string
+  uploaderName?: string
+  isExpired: boolean
+  isExpiringSoon: boolean
+  formattedSize: string
+  fileExtension: string
+}
+
+// Category configuration
+export const DOCUMENT_CATEGORIES: Record<
+  DocumentCategory,
+  { label: string; icon: string; color: string }
+> = {
+  contract: { label: 'Contracts', icon: 'document-text', color: 'blue' },
+  marketing: { label: 'Marketing', icon: 'presentation-chart-bar', color: 'purple' },
+  compliance: { label: 'Compliance', icon: 'shield-check', color: 'green' },
+  training: { label: 'Training', icon: 'academic-cap', color: 'yellow' },
+  product_spec: { label: 'Product Specs', icon: 'clipboard-list', color: 'orange' },
+  invoice: { label: 'Invoices', icon: 'receipt-refund', color: 'gray' },
+  report: { label: 'Reports', icon: 'chart-bar', color: 'indigo' },
+  other: { label: 'Other', icon: 'folder', color: 'gray' },
+}
+
+// File type icons
+export function getFileIcon(mimeType: string): string {
+  if (mimeType.includes('pdf')) return 'document-pdf'
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'document-excel'
+  if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'document-ppt'
+  if (mimeType.includes('word') || mimeType.includes('wordprocessing')) return 'document-word'
+  if (mimeType.includes('image')) return 'photograph'
+  if (mimeType.includes('video')) return 'video-camera'
+  if (mimeType.includes('audio')) return 'music-note'
+  if (mimeType.includes('zip') || mimeType.includes('archive')) return 'archive-box'
+  return 'document'
+}
+
+// Format file size
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+}
+
+// Get file extension
+function getFileExtension(name: string): string {
+  const parts = name.split('.')
+  return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : ''
+}
+
+// Check if document is expired or expiring soon
+function checkExpiration(expiresAt: Date | null): { isExpired: boolean; isExpiringSoon: boolean } {
+  if (!expiresAt) return { isExpired: false, isExpiringSoon: false }
+
+  const now = new Date()
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+  return {
+    isExpired: expiresAt < now,
+    isExpiringSoon: expiresAt >= now && expiresAt <= thirtyDaysFromNow,
+  }
+}
+
+// Get documents list
+export async function getDocuments(options?: {
+  dealerId?: string
+  category?: DocumentCategory
+  search?: string
+  isPublic?: boolean
+  sortBy?: DocumentSortBy
+  sortOrder?: 'asc' | 'desc'
+  limit?: number
+  offset?: number
+}): Promise<{ documents: DocumentWithDetails[]; total: number }> {
+  const where = {
+    ...(options?.dealerId ? { dealerId: options.dealerId } : {}),
+    ...(options?.category ? { category: options.category } : {}),
+    ...(options?.isPublic !== undefined ? { isPublic: options.isPublic } : {}),
+    ...(options?.search
+      ? {
+          OR: [
+            { name: { contains: options.search } },
+            { category: { contains: options.search } },
+          ],
+        }
+      : {}),
+  }
+
+  const [documents, total] = await Promise.all([
+    prisma.document.findMany({
+      where,
+      include: {
+        dealer: { select: { companyName: true } },
+      },
+      orderBy: {
+        [options?.sortBy || 'createdAt']: options?.sortOrder || 'desc',
+      },
+      take: options?.limit || 50,
+      skip: options?.offset || 0,
+    }),
+    prisma.document.count({ where }),
+  ])
+
+  return {
+    documents: documents.map((doc) => {
+      const expiration = checkExpiration(doc.expiresAt)
+      return {
+        ...doc,
+        dealerName: doc.dealer?.companyName,
+        isExpired: expiration.isExpired,
+        isExpiringSoon: expiration.isExpiringSoon,
+        formattedSize: formatFileSize(doc.size),
+        fileExtension: getFileExtension(doc.name),
+      }
+    }),
+    total,
+  }
+}
+
+// Get single document
+export async function getDocument(id: string): Promise<DocumentWithDetails | null> {
+  const doc = await prisma.document.findUnique({
+    where: { id },
+    include: {
+      dealer: { select: { companyName: true } },
+    },
+  })
+
+  if (!doc) return null
+
+  const expiration = checkExpiration(doc.expiresAt)
+  return {
+    ...doc,
+    dealerName: doc.dealer?.companyName,
+    isExpired: expiration.isExpired,
+    isExpiringSoon: expiration.isExpiringSoon,
+    formattedSize: formatFileSize(doc.size),
+    fileExtension: getFileExtension(doc.name),
+  }
+}
+
+// Create document
+export async function createDocument(data: {
+  name: string
+  category: DocumentCategory
+  mimeType: string
+  size: number
+  url: string
+  dealerId?: string
+  isPublic?: boolean
+  expiresAt?: Date
+  uploadedBy?: string
+}): Promise<Document> {
+  return prisma.document.create({
+    data: {
+      name: data.name,
+      category: data.category,
+      mimeType: data.mimeType,
+      size: data.size,
+      url: data.url,
+      dealerId: data.dealerId,
+      isPublic: data.isPublic ?? false,
+      expiresAt: data.expiresAt,
+      uploadedBy: data.uploadedBy,
+    },
+  })
+}
+
+// Update document
+export async function updateDocument(
+  id: string,
+  data: {
+    name?: string
+    category?: DocumentCategory
+    isPublic?: boolean
+    expiresAt?: Date | null
+  }
+): Promise<Document> {
+  return prisma.document.update({
+    where: { id },
+    data,
+  })
+}
+
+// Delete document
+export async function deleteDocument(id: string): Promise<void> {
+  await prisma.document.delete({
+    where: { id },
+  })
+}
+
+// Get documents by category
+export async function getDocumentsByCategory(): Promise<
+  { category: string; count: number; totalSize: number }[]
+> {
+  const documents = await prisma.document.findMany({
+    select: {
+      category: true,
+      size: true,
+    },
+  })
+
+  const categoryMap = new Map<string, { count: number; totalSize: number }>()
+
+  for (const doc of documents) {
+    const existing = categoryMap.get(doc.category) || { count: 0, totalSize: 0 }
+    existing.count++
+    existing.totalSize += doc.size
+    categoryMap.set(doc.category, existing)
+  }
+
+  return Array.from(categoryMap.entries()).map(([category, stats]) => ({
+    category,
+    ...stats,
+  }))
+}
+
+// Get expiring documents
+export async function getExpiringDocuments(
+  daysAhead: number = 30
+): Promise<DocumentWithDetails[]> {
+  const now = new Date()
+  const futureDate = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000)
+
+  const documents = await prisma.document.findMany({
+    where: {
+      expiresAt: {
+        gte: now,
+        lte: futureDate,
+      },
+    },
+    include: {
+      dealer: { select: { companyName: true } },
+    },
+    orderBy: { expiresAt: 'asc' },
+  })
+
+  return documents.map((doc) => ({
+    ...doc,
+    dealerName: doc.dealer?.companyName,
+    isExpired: false,
+    isExpiringSoon: true,
+    formattedSize: formatFileSize(doc.size),
+    fileExtension: getFileExtension(doc.name),
+  }))
+}
+
+// Get document statistics
+export async function getDocumentStats(): Promise<{
+  totalDocuments: number
+  totalSize: number
+  formattedTotalSize: string
+  publicCount: number
+  privateCount: number
+  expiringCount: number
+  expiredCount: number
+}> {
+  const now = new Date()
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+  const [documents, publicCount, expiringCount, expiredCount] = await Promise.all([
+    prisma.document.findMany({
+      select: { size: true },
+    }),
+    prisma.document.count({ where: { isPublic: true } }),
+    prisma.document.count({
+      where: {
+        expiresAt: { gte: now, lte: thirtyDaysFromNow },
+      },
+    }),
+    prisma.document.count({
+      where: {
+        expiresAt: { lt: now },
+      },
+    }),
+  ])
+
+  const totalSize = documents.reduce((sum, doc) => sum + doc.size, 0)
+
+  return {
+    totalDocuments: documents.length,
+    totalSize,
+    formattedTotalSize: formatFileSize(totalSize),
+    publicCount,
+    privateCount: documents.length - publicCount,
+    expiringCount,
+    expiredCount,
+  }
+}
+
+// Search documents
+export async function searchDocuments(query: string): Promise<DocumentWithDetails[]> {
+  const documents = await prisma.document.findMany({
+    where: {
+      OR: [
+        { name: { contains: query } },
+        { category: { contains: query } },
+      ],
+    },
+    include: {
+      dealer: { select: { companyName: true } },
+    },
+    take: 20,
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return documents.map((doc) => {
+    const expiration = checkExpiration(doc.expiresAt)
+    return {
+      ...doc,
+      dealerName: doc.dealer?.companyName,
+      isExpired: expiration.isExpired,
+      isExpiringSoon: expiration.isExpiringSoon,
+      formattedSize: formatFileSize(doc.size),
+      fileExtension: getFileExtension(doc.name),
+    }
+  })
+}
+
+// Get recent documents
+export async function getRecentDocuments(limit: number = 10): Promise<DocumentWithDetails[]> {
+  const documents = await prisma.document.findMany({
+    include: {
+      dealer: { select: { companyName: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  })
+
+  return documents.map((doc) => {
+    const expiration = checkExpiration(doc.expiresAt)
+    return {
+      ...doc,
+      dealerName: doc.dealer?.companyName,
+      isExpired: expiration.isExpired,
+      isExpiringSoon: expiration.isExpiringSoon,
+      formattedSize: formatFileSize(doc.size),
+      fileExtension: getFileExtension(doc.name),
+    }
+  })
+}
