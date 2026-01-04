@@ -38,33 +38,33 @@ async function DealerStats() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">Total Dealers</div>
-        <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+      <div className="card">
+        <div className="card-body">
+          <div className="text-sm font-medium text-medium-gray">Total Dealers</div>
+          <div className="text-2xl font-heading font-bold text-charcoal">{stats.total}</div>
+        </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">Active</div>
-        <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+      <div className="card">
+        <div className="card-body">
+          <div className="text-sm font-medium text-medium-gray">Active</div>
+          <div className="text-2xl font-heading font-bold text-olive">{stats.active}</div>
+        </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">Pending</div>
-        <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+      <div className="card">
+        <div className="card-body">
+          <div className="text-sm font-medium text-medium-gray">Pending</div>
+          <div className="text-2xl font-heading font-bold text-burnt-orange">{stats.pending}</div>
+        </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">By Tier</div>
-        <div className="flex gap-2 mt-1">
-          <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
-            P: {stats.byTier.platinum}
-          </span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800">
-            G: {stats.byTier.gold}
-          </span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-800">
-            S: {stats.byTier.silver}
-          </span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-800">
-            B: {stats.byTier.bronze}
-          </span>
+      <div className="card">
+        <div className="card-body">
+          <div className="text-sm font-medium text-medium-gray">By Tier</div>
+          <div className="flex flex-wrap gap-2 mt-1">
+            <span className="badge badge-info">P: {stats.byTier.platinum}</span>
+            <span className="badge badge-warning">G: {stats.byTier.gold}</span>
+            <span className="badge badge-neutral">S: {stats.byTier.silver}</span>
+            <span className="badge bg-burnt-orange/10 text-burnt-orange">B: {stats.byTier.bronze}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -74,19 +74,21 @@ async function DealerStats() {
 function TableSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow animate-pulse">
-        <div className="h-10 bg-gray-200 rounded" />
+      <div className="card animate-pulse">
+        <div className="card-body">
+          <div className="h-10 bg-light-gray rounded" />
+        </div>
       </div>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="divide-y divide-gray-200">
+      <div className="card overflow-hidden">
+        <div className="divide-y divide-light-gray">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="p-4 animate-pulse">
               <div className="flex items-center gap-4">
-                <div className="h-4 w-4 bg-gray-200 rounded" />
-                <div className="h-4 w-24 bg-gray-200 rounded" />
-                <div className="h-4 w-48 bg-gray-200 rounded" />
-                <div className="h-4 w-20 bg-gray-200 rounded" />
-                <div className="h-4 w-20 bg-gray-200 rounded" />
+                <div className="h-4 w-4 bg-light-gray rounded" />
+                <div className="h-4 w-24 bg-light-gray rounded" />
+                <div className="h-4 w-48 bg-light-gray rounded" />
+                <div className="h-4 w-20 bg-light-gray rounded" />
+                <div className="h-4 w-20 bg-light-gray rounded" />
               </div>
             </div>
           ))}
@@ -98,81 +100,25 @@ function TableSkeleton() {
 
 export default async function DealersPage({ searchParams }: Props) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between">
-            <div className="flex">
-              <div className="flex flex-shrink-0 items-center">
-                <Link href="/dashboard" className="flex items-center">
-                  <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
-                    <svg
-                      className="h-5 w-5 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"
-                      />
-                    </svg>
-                  </div>
-                  <span className="ml-2 text-lg font-semibold text-gray-900">
-                    THOR Dealer Portal
-                  </span>
-                </Link>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/admin/users"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                >
-                  Users
-                </Link>
-                <Link
-                  href="/admin/dealers"
-                  className="inline-flex items-center border-b-2 border-blue-500 px-1 pt-1 text-sm font-medium text-gray-900"
-                >
-                  Dealers
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/profile"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Profile
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="page-header">
+        <nav className="breadcrumb">
+          <Link href="/dashboard">Dashboard</Link>
+          <span className="breadcrumb-separator">/</span>
+          <Link href="/admin/dealers">Admin</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span>Dealers</span>
+        </nav>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dealer Management</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              View and manage dealer accounts
-            </p>
+            <h1 className="page-title">Dealer Management</h1>
+            <p className="page-subtitle">View and manage dealer accounts</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/dealers/hierarchy"
-              className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-            >
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/admin/dealers/hierarchy" className="btn-outline">
               <svg
-                className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-500"
+                className="-ml-0.5 mr-1.5 h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
@@ -186,12 +132,9 @@ export default async function DealersPage({ searchParams }: Props) {
               </svg>
               Hierarchy
             </Link>
-            <Link
-              href="/admin/dealers/onboarding"
-              className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-            >
+            <Link href="/admin/dealers/onboarding" className="btn-outline">
               <svg
-                className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-500"
+                className="-ml-0.5 mr-1.5 h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
@@ -205,10 +148,7 @@ export default async function DealersPage({ searchParams }: Props) {
               </svg>
               Onboard
             </Link>
-            <Link
-              href="/admin/dealers/new"
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-            >
+            <Link href="/admin/dealers/new" className="btn-primary">
               <svg
                 className="-ml-0.5 mr-1.5 h-5 w-5"
                 fill="none"
@@ -226,15 +166,15 @@ export default async function DealersPage({ searchParams }: Props) {
             </Link>
           </div>
         </div>
+      </div>
 
-        <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded-lg" />}>
-          <DealerStats />
-        </Suspense>
+      <Suspense fallback={<div className="animate-pulse h-32 bg-light-gray rounded-lg" />}>
+        <DealerStats />
+      </Suspense>
 
-        <Suspense fallback={<TableSkeleton />}>
-          <DealerTableWrapper searchParams={searchParams} />
-        </Suspense>
-      </main>
+      <Suspense fallback={<TableSkeleton />}>
+        <DealerTableWrapper searchParams={searchParams} />
+      </Suspense>
     </div>
   )
 }
