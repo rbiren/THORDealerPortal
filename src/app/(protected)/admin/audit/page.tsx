@@ -60,16 +60,16 @@ async function AuditStats() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">Total Logs</div>
-        <div className="text-2xl font-bold text-gray-900">{stats.totalLogs.toLocaleString()}</div>
+      <div className="card card-body">
+        <div className="text-sm font-medium text-medium-gray">Total Logs</div>
+        <div className="text-2xl font-bold text-charcoal">{stats.totalLogs.toLocaleString()}</div>
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">Last 24 Hours</div>
-        <div className="text-2xl font-bold text-blue-600">{stats.recentActivity.toLocaleString()}</div>
+      <div className="card card-body">
+        <div className="text-sm font-medium text-medium-gray">Last 24 Hours</div>
+        <div className="text-2xl font-bold text-olive">{stats.recentActivity.toLocaleString()}</div>
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">Top Actions</div>
+      <div className="card card-body">
+        <div className="text-sm font-medium text-medium-gray">Top Actions</div>
         <div className="flex flex-wrap gap-1 mt-1">
           {Object.entries(stats.logsByAction)
             .sort(([, a], [, b]) => b - a)
@@ -77,7 +77,7 @@ async function AuditStats() {
             .map(([action, count]) => (
               <span
                 key={action}
-                className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-800"
+                className="text-xs px-1.5 py-0.5 rounded bg-light-beige text-charcoal"
                 title={`${action}: ${count}`}
               >
                 {action}: {count}
@@ -85,8 +85,8 @@ async function AuditStats() {
             ))}
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="text-sm font-medium text-gray-500">Entity Types</div>
+      <div className="card card-body">
+        <div className="text-sm font-medium text-medium-gray">Entity Types</div>
         <div className="flex flex-wrap gap-1 mt-1">
           {Object.entries(stats.logsByEntityType)
             .sort(([, a], [, b]) => b - a)
@@ -94,7 +94,7 @@ async function AuditStats() {
             .map(([type, count]) => (
               <span
                 key={type}
-                className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-800"
+                className="text-xs px-1.5 py-0.5 rounded bg-olive/10 text-olive"
                 title={`${type}: ${count}`}
               >
                 {type}: {count}
@@ -109,25 +109,25 @@ async function AuditStats() {
 function TableSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow animate-pulse">
+      <div className="card card-body animate-pulse">
         <div className="flex flex-wrap gap-4">
-          <div className="h-10 w-48 bg-gray-200 rounded" />
-          <div className="h-10 w-36 bg-gray-200 rounded" />
-          <div className="h-10 w-36 bg-gray-200 rounded" />
-          <div className="h-10 w-48 bg-gray-200 rounded" />
+          <div className="h-10 w-48 bg-light-beige rounded" />
+          <div className="h-10 w-36 bg-light-beige rounded" />
+          <div className="h-10 w-36 bg-light-beige rounded" />
+          <div className="h-10 w-48 bg-light-beige rounded" />
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="divide-y divide-gray-200">
+      <div className="card overflow-hidden">
+        <div className="divide-y divide-light-beige">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="p-4 animate-pulse">
               <div className="flex items-center gap-4">
-                <div className="h-4 w-4 bg-gray-200 rounded" />
-                <div className="h-4 w-36 bg-gray-200 rounded" />
-                <div className="h-4 w-32 bg-gray-200 rounded" />
-                <div className="h-4 w-20 bg-gray-200 rounded" />
-                <div className="h-4 w-24 bg-gray-200 rounded" />
-                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="h-4 w-4 bg-light-beige rounded" />
+                <div className="h-4 w-36 bg-light-beige rounded" />
+                <div className="h-4 w-32 bg-light-beige rounded" />
+                <div className="h-4 w-20 bg-light-beige rounded" />
+                <div className="h-4 w-24 bg-light-beige rounded" />
+                <div className="h-4 w-32 bg-light-beige rounded" />
               </div>
             </div>
           ))}
@@ -139,14 +139,14 @@ function TableSkeleton() {
 
 export default async function AuditLogsPage({ searchParams }: Props) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-light-beige">
       <nav className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between">
             <div className="flex">
               <div className="flex flex-shrink-0 items-center">
                 <Link href="/dashboard" className="flex items-center">
-                  <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
+                  <div className="flex h-8 w-8 items-center justify-center rounded bg-olive">
                     <svg
                       className="h-5 w-5 text-white"
                       fill="none"
@@ -161,7 +161,7 @@ export default async function AuditLogsPage({ searchParams }: Props) {
                       />
                     </svg>
                   </div>
-                  <span className="ml-2 text-lg font-semibold text-gray-900">
+                  <span className="ml-2 text-lg font-semibold text-charcoal">
                     THOR Dealer Portal
                   </span>
                 </Link>
@@ -169,25 +169,25 @@ export default async function AuditLogsPage({ searchParams }: Props) {
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-medium-gray hover:border-light-beige hover:text-charcoal"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/admin/users"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-medium-gray hover:border-light-beige hover:text-charcoal"
                 >
                   Users
                 </Link>
                 <Link
                   href="/admin/dealers"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-medium-gray hover:border-light-beige hover:text-charcoal"
                 >
                   Dealers
                 </Link>
                 <Link
                   href="/admin/audit"
-                  className="inline-flex items-center border-b-2 border-blue-500 px-1 pt-1 text-sm font-medium text-gray-900"
+                  className="inline-flex items-center border-b-2 border-olive px-1 pt-1 text-sm font-medium text-charcoal"
                 >
                   Audit Logs
                 </Link>
@@ -196,7 +196,7 @@ export default async function AuditLogsPage({ searchParams }: Props) {
             <div className="flex items-center gap-4">
               <Link
                 href="/profile"
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm text-medium-gray hover:text-charcoal"
               >
                 Profile
               </Link>
@@ -206,14 +206,21 @@ export default async function AuditLogsPage({ searchParams }: Props) {
       </nav>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
-          <p className="mt-1 text-sm text-gray-600">
+        <div className="page-header">
+          <nav className="breadcrumb">
+            <Link href="/dashboard">Dashboard</Link>
+            <span>/</span>
+            <Link href="/admin/users">Admin</Link>
+            <span>/</span>
+            <span>Audit Log</span>
+          </nav>
+          <h1 className="page-title">Audit Logs</h1>
+          <p className="page-subtitle">
             View and search the audit trail for all system activities
           </p>
         </div>
 
-        <Suspense fallback={<div className="animate-pulse h-32 bg-gray-200 rounded-lg mb-6" />}>
+        <Suspense fallback={<div className="animate-pulse h-32 bg-light-beige rounded-lg mb-6" />}>
           <AuditStats />
         </Suspense>
 
