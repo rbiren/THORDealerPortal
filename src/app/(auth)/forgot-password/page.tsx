@@ -7,10 +7,10 @@ export const metadata = {
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-light-beige py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-olive">
             <svg
               className="h-8 w-8 text-white"
               fill="none"
@@ -26,17 +26,19 @@ export default function ForgotPasswordPage() {
             </svg>
           </div>
         </div>
-        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-charcoal">
           Reset your password
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-medium-gray">
           Enter your email and we&apos;ll send you a reset link
         </p>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-          <ForgotPasswordForm />
+        <div className="card">
+          <div className="card-body">
+            <ForgotPasswordForm />
+          </div>
         </div>
       </div>
     </div>

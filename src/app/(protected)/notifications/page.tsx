@@ -70,13 +70,13 @@ const mockNotifications: NotificationDisplay[] = [
 // Icon component
 function NotificationIcon({ type, color }: { type: string; color: string }) {
   const colorClasses: Record<string, string> = {
-    blue: 'text-blue-500 bg-blue-100',
+    blue: 'text-olive bg-olive/10',
     green: 'text-green-500 bg-green-100',
     purple: 'text-purple-500 bg-purple-100',
     orange: 'text-orange-500 bg-orange-100',
     red: 'text-red-500 bg-red-100',
     yellow: 'text-yellow-500 bg-yellow-100',
-    gray: 'text-gray-500 bg-gray-100',
+    gray: 'text-medium-gray bg-light-beige',
     olive: 'text-olive bg-olive/10',
   }
 
@@ -96,7 +96,7 @@ function NotificationIcon({ type, color }: { type: string; color: string }) {
   }
 
   return (
-    <div className={`p-2 rounded-full ${colorClasses[color] || 'text-gray-500 bg-gray-100'}`}>
+    <div className={`p-2 rounded-full ${colorClasses[color] || 'text-medium-gray bg-light-beige'}`}>
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
@@ -125,13 +125,13 @@ function NotificationGroup({
 
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-medium text-gray-500 mb-3">{title}</h3>
+      <h3 className="text-sm font-medium text-medium-gray mb-3">{title}</h3>
       <div className="space-y-2">
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className={`bg-white rounded-lg border p-4 flex items-start gap-4 ${
-              !notification.readAt ? 'border-l-4 border-l-blue-500' : ''
+            className={`card card-body flex items-start gap-4 ${
+              !notification.readAt ? 'border-l-4 border-l-olive' : ''
             }`}
           >
             <NotificationIcon type={notification.icon} color={notification.color} />
@@ -141,14 +141,14 @@ function NotificationGroup({
                   <p className={`text-sm ${!notification.readAt ? 'font-medium' : ''}`}>
                     {notification.title}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">{notification.body}</p>
+                  <p className="text-sm text-medium-gray mt-1">{notification.body}</p>
                 </div>
-                <span className="text-xs text-gray-400 whitespace-nowrap">
+                <span className="text-xs text-medium-gray whitespace-nowrap">
                   {notification.relativeTime}
                 </span>
               </div>
               <div className="flex items-center gap-3 mt-2">
-                <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">
+                <span className="text-xs px-2 py-0.5 bg-light-beige rounded">
                   {notification.typeLabel}
                 </span>
                 {!notification.readAt && (
@@ -161,7 +161,7 @@ function NotificationGroup({
                 )}
                 <button
                   onClick={() => onDelete(notification.id)}
-                  className="text-xs text-gray-400 hover:text-red-500"
+                  className="text-xs text-medium-gray hover:text-red-500"
                 >
                   Delete
                 </button>
@@ -252,18 +252,29 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Breadcrumb */}
+      <div className="page-header">
+        <nav className="text-sm text-medium-gray mb-2">
+          <Link href="/dashboard" className="hover:text-olive">
+            Dashboard
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-charcoal">Notifications</span>
+        </nav>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="page-title">Notifications</h1>
+          <p className="page-subtitle">
             {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
           </p>
         </div>
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllAsRead}
-            className="px-4 py-2 text-sm bg-olive text-white rounded-lg hover:bg-olive/90"
+            className="btn-primary"
           >
             Mark all as read
           </button>
@@ -271,9 +282,9 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border p-4 mb-6 flex flex-wrap items-center gap-4">
+      <div className="card card-body mb-6 flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Show:</span>
+          <span className="text-sm text-medium-gray">Show:</span>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as 'all' | 'unread')}
@@ -285,7 +296,7 @@ export default function NotificationsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Type:</span>
+          <span className="text-sm text-medium-gray">Type:</span>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -325,9 +336,9 @@ export default function NotificationsPage() {
 
       {/* Notification List */}
       {totalFiltered === 0 ? (
-        <div className="bg-white rounded-lg border p-12 text-center">
+        <div className="card card-body p-12 text-center">
           <svg
-            className="h-16 w-16 mx-auto text-gray-300 mb-4"
+            className="h-16 w-16 mx-auto text-light-beige mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -339,8 +350,8 @@ export default function NotificationsPage() {
               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
             />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No notifications</h3>
-          <p className="text-gray-500">
+          <h3 className="text-lg font-medium text-charcoal mb-1">No notifications</h3>
+          <p className="text-medium-gray">
             {filter === 'unread'
               ? "You've read all your notifications."
               : "You don't have any notifications yet."}
