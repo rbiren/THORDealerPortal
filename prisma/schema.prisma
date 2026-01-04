@@ -34,6 +34,11 @@ model User {
   auditLogs     AuditLog[]
   orderNotes    OrderNote[]
 
+  // Warranty relations
+  warrantyClaimsSubmitted WarrantyClaim[] @relation("WarrantySubmitter")
+  warrantyClaimsAssigned  WarrantyClaim[] @relation("WarrantyAssignee")
+  warrantyClaimNotes      WarrantyClaimNote[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -96,6 +101,7 @@ model Dealer {
   documents       Document[]
   forecastConfig  ForecastConfig?
   invoices        Invoice[]
+  warrantyClaims  WarrantyClaim[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -184,6 +190,7 @@ model Product {
   orderItems      OrderItem[]
   demandForecasts DemandForecast[]
   suggestedOrders SuggestedOrder[]
+  warrantyClaims  WarrantyClaim[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -682,4 +689,161 @@ model MarketIndicator {
   @@index([region])
   @@index([indicatorType])
   @@index([periodStart])
+}
+
+// ============================================================================
+// WARRANTY CLAIMS
+// ============================================================================
+
+model WarrantyClaim {
+  id              String    @id @default(cuid())
+  claimNumber     String    @unique // WC-2025-00001 format
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+  submittedById   String
+  submittedBy     User      @relation("WarrantySubmitter", fields: [submittedById], references: [id])
+  assignedToId    String?
+  assignedTo      User?     @relation("WarrantyAssignee", fields: [assignedToId], references: [id])
+
+  // Status workflow: draft -> submitted -> under_review -> info_requested -> approved/denied/partial
+  status          String    @default("draft")
+
+  // Claim type
+  claimType       String    // product_defect, shipping_damage, missing_parts, other
+
+  // Product information
+  productId       String?
+  product         Product?  @relation(fields: [productId], references: [id])
+  productName     String    // Store name even if product deleted
+  serialNumber    String?
+  modelNumber     String?
+  purchaseDate    DateTime?
+  installDate     DateTime?
+
+  // Customer information (end user who experienced the issue)
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  customerAddress String?   // JSON string
+
+  // Issue details
+  issueDescription    String
+  failureDate         DateTime?
+  isUnderWarranty     Boolean   @default(true)
+
+  // Resolution
+  resolutionType      String?   // replacement, repair, credit, denial
+  resolutionNotes     String?
+
+  // Amounts
+  laborHours          Float?
+  laborRate           Float?
+  partsAmount         Float     @default(0)
+  laborAmount         Float     @default(0)
+  shippingAmount      Float     @default(0)
+  totalRequested      Float     @default(0)
+  totalApproved       Float?
+
+  // Tracking
+  priority            String    @default("normal") // low, normal, high, urgent
+
+  items               WarrantyClaimItem[]
+  attachments         WarrantyClaimAttachment[]
+  notes               WarrantyClaimNote[]
+  statusHistory       WarrantyClaimStatusHistory[]
+
+  submittedAt         DateTime?
+  reviewedAt          DateTime?
+  resolvedAt          DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([claimNumber])
+  @@index([dealerId])
+  @@index([status])
+  @@index([submittedById])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model WarrantyClaimItem {
+  id              String    @id @default(cuid())
+  claimId         String
+  claim           WarrantyClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  partNumber      String?
+  partName        String
+  quantity        Int       @default(1)
+  unitCost        Float     @default(0)
+  totalCost       Float     @default(0)
+
+  issueType       String    // defective, damaged, missing, worn, other
+  issueDescription String?
+
+  // Resolution for this specific item
+  approved        Boolean?
+  approvedQty     Int?
+  approvedAmount  Float?
+  denialReason    String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([claimId])
+}
+
+model WarrantyClaimAttachment {
+  id              String    @id @default(cuid())
+  claimId         String
+  claim           WarrantyClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int       // bytes
+  url             String    // Storage URL
+
+  category        String    @default("photo") // photo, receipt, invoice, document, other
+  description     String?
+
+  uploadedById    String?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([claimId])
+}
+
+model WarrantyClaimNote {
+  id              String    @id @default(cuid())
+  claimId         String
+  claim           WarrantyClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  content         String
+  isInternal      Boolean   @default(false) // Internal notes only visible to manufacturer
+  isSystemNote    Boolean   @default(false) // Auto-generated status change notes
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([claimId])
+  @@index([userId])
+}
+
+model WarrantyClaimStatusHistory {
+  id              String    @id @default(cuid())
+  claimId         String
+  claim           WarrantyClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  fromStatus      String?
+  toStatus        String
+  changedById     String?
+  note            String?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([claimId])
+  @@index([createdAt])
 }
