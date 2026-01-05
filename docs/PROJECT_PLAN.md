@@ -162,6 +162,7 @@ THORDealerPortal is a comprehensive B2B platform enabling dealers to manage inve
 │                        THORDealerPortal Modules                          │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
+│  TRANSACTION LAYER (Built)                                               │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐          │
 │  │ Authentication  │  │     Dealer      │  │    Inventory    │          │
 │  │ & Authorization │  │   Management    │  │   Management    │          │
@@ -177,8 +178,54 @@ THORDealerPortal is a comprehensive B2B platform enabling dealers to manage inve
 │  │     System      │  │     Panel       │  │      Hub        │          │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘          │
 │                                                                          │
+│  RELATIONSHIP LAYER (Planned - Phase 8)                                  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐          │
+│  │  Communication  │  │   Incentives    │  │    Training &   │          │
+│  │      Hub        │  │   & Programs    │  │  Certification  │          │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘          │
+│                                                                          │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐          │
+│  │   Performance   │  │    Parts &      │  │   Marketing     │          │
+│  │   Scorecard     │  │    Service      │  │  Asset Library  │          │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘          │
+│                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Dealer/OEM Relationship Strategy
+
+### The "Connective Tissue" Vision
+
+The THORDealerPortal aims to capture **all elements of dealer/OEM connectivity** in a single, intuitive platform. While the Transaction Layer handles day-to-day operations, the **Relationship Layer** strengthens the partnership between THOR and its dealer network.
+
+### What's Built vs. What's Missing
+
+```
+TRANSACTION LAYER (Complete)          RELATIONSHIP LAYER (Planned)
+├── Dealer Management     ✅          ├── Communication Hub      ⏳
+├── Product Catalog       ✅          ├── Incentives & Programs  ⏳
+├── Order Processing      ✅          ├── Training Portal        ⏳
+├── Inventory Management  ✅          ├── Performance Scorecard  ⏳
+├── Warranty Claims       ✅          ├── Parts & Service        ⏳
+├── Invoicing             ✅          └── Marketing Assets       ⏳
+├── Forecasting           ✅
+└── Document Library      ✅
+```
+
+### Strategic Priority Matrix
+
+| Module | Business Impact | Dealer Value | Implementation Effort | Priority |
+|--------|-----------------|--------------|----------------------|----------|
+| Communication Hub | High | High | Medium | **P1** |
+| Incentives & Programs | Very High | Very High | High | **P1** |
+| Training Portal | High | High | Medium | **P1** |
+| Performance Scorecard | High | Medium | Medium | **P1** |
+| Parts & Service | Medium | High | High | P2 |
+| Marketing Assets | Medium | High | Low | P2 |
+| Floor Plan Dashboard | Medium | Medium | Medium | P3 |
+| Territory Management | Low | Medium | Medium | P3 |
 
 ### Module Details
 
@@ -371,6 +418,202 @@ Draft ──▶ Submitted ──▶ Confirmed ──▶ Processing ──▶ Shi
 | Shipping Carriers | Outbound | Tracking |
 | Email Service | Outbound | Notifications |
 | Analytics | Outbound | Metrics |
+
+---
+
+### Relationship Layer Modules (Phase 8)
+
+These modules represent the "connective tissue" that transforms the portal from a transaction system into a true dealer-OEM relationship platform.
+
+#### 10. Communication Hub
+
+**Purpose**: Centralized dealer-OEM communication channel
+
+**Features**:
+- Support ticket system (dealer → OEM requests)
+- OEM announcements/bulletins (broadcast to dealers)
+- Product alerts (recalls, updates, discontinuations)
+- Direct messaging (assigned rep ↔ dealer)
+- Knowledge base (FAQs, self-service articles)
+- Ticket categorization and routing
+- SLA tracking and escalation
+
+**Data Model**:
+```
+SupportTicket
+├── id, ticketNumber, dealerId
+├── category (product, warranty, order, billing, other)
+├── priority (low, normal, high, urgent)
+├── status (open, in_progress, pending_dealer, resolved, closed)
+├── subject, description
+├── assignedTo (OEM rep user)
+├── messages[], attachments[]
+└── SLA tracking (responseTime, resolutionTime)
+
+Announcement
+├── id, title, content
+├── type (news, alert, recall, promotion)
+├── priority (normal, important, critical)
+├── targetTiers[] (which dealer tiers see this)
+├── publishAt, expiresAt
+└── readReceipts[]
+```
+
+#### 11. Incentives & Programs Module
+
+**Purpose**: Manage the financial relationship that drives dealer loyalty
+
+**Features**:
+- Volume rebate program management
+- Co-op marketing fund tracking (accrual/claim)
+- Sales contests and spiffs
+- Dealer tier benefits display
+- Rebate dashboard (earned, pending, paid)
+- Program enrollment and compliance
+- Payout history and forecasting
+
+**Data Model**:
+```
+IncentiveProgram
+├── id, name, type (rebate, coop, contest, spiff)
+├── startDate, endDate, status
+├── rules (JSON - tiers, thresholds, rates)
+├── eligibleTiers[]
+└── enrollments[]
+
+DealerProgramEnrollment
+├── dealerId, programId
+├── enrolledAt, status
+├── accruedAmount, paidAmount
+└── claims[]
+
+IncentiveClaim
+├── id, dealerId, programId
+├── amount, status (pending, approved, denied, paid)
+├── supportingDocs[]
+└── payoutDate
+```
+
+**Key Reports**:
+| Report | Purpose |
+|--------|---------|
+| Rebate Accrual Summary | What dealers have earned |
+| Co-op Fund Balance | Available marketing funds |
+| Program ROI Analysis | Effectiveness of incentives |
+| Tier Progression Tracker | Dealers close to next tier |
+
+#### 12. Training & Certification Portal
+
+**Purpose**: Ensure dealers are properly trained to sell and service products
+
+**Features**:
+- Course catalog (product, sales, service training)
+- Certification tracking (required vs optional)
+- Expiration alerts and re-certification reminders
+- Video/PDF content delivery
+- Quiz and assessment system
+- Compliance reports (who's certified, who's not)
+- Dealer staff management (assign training to staff)
+- Training history and transcripts
+
+**Data Model**:
+```
+TrainingCourse
+├── id, title, description
+├── category (product, sales, service, compliance)
+├── type (video, document, quiz, webinar)
+├── duration, requiredFor[] (dealer tiers/roles)
+├── content (URL, embedded, SCORM)
+└── expirationMonths (cert validity)
+
+Certification
+├── id, userId, courseId
+├── status (in_progress, completed, expired)
+├── completedAt, expiresAt
+├── score (if quiz-based)
+└── certificate (PDF URL)
+
+TrainingAssignment
+├── dealerId, userId, courseId
+├── assignedBy, dueDate
+└── status
+```
+
+**Compliance Dashboard**:
+- Certification coverage by dealer
+- Expiring certifications (30/60/90 day view)
+- Training completion trends
+- Dealer compliance score
+
+#### 13. Dealer Performance Scorecard
+
+**Purpose**: Data-driven dealer evaluation and tier management
+
+**Features**:
+- Sales performance vs. quota and prior year
+- Customer satisfaction (CSI) scores
+- Warranty claim rates (quality indicator)
+- Training compliance percentage
+- Inventory turn metrics
+- Payment history (days to pay)
+- Composite score calculation
+- 12-month trend visualization
+- Automatic tier promotion/demotion recommendations
+
+**Data Model**:
+```
+DealerScorecard
+├── dealerId, periodStart, periodEnd
+├── salesScore, salesTarget, salesActual
+├── csiScore, warrantyClaimRate
+├── trainingComplianceRate
+├── inventoryTurnRate
+├── avgDaysToPay
+├── compositeScore (0-100)
+└── tierRecommendation
+
+PerformanceMetric
+├── dealerId, metricType
+├── period, value
+├── trend (up, down, stable)
+└── benchmark (industry/network average)
+```
+
+**Scorecard Components**:
+| Metric | Weight | Source |
+|--------|--------|--------|
+| Sales vs Target | 30% | Orders |
+| YoY Growth | 15% | Orders |
+| CSI Score | 20% | External/Survey |
+| Warranty Rate | 10% | Warranty Claims |
+| Training Compliance | 10% | Training Module |
+| Inventory Turn | 10% | Inventory |
+| Payment Terms | 5% | Invoices |
+
+#### 14. Parts & Service Module (Future)
+
+**Purpose**: Post-sale support and parts ordering
+
+**Features**:
+- Parts catalog (separate from unit ordering)
+- Quick order / repeat order templates
+- Service bulletins (TSBs)
+- Technical support requests
+- Recall management
+- Parts return authorization (RMA)
+- Service history tracking
+
+#### 15. Marketing Asset Library (Future)
+
+**Purpose**: Help dealers sell more effectively
+
+**Features**:
+- Co-branded materials (flyers, signage)
+- Digital assets (logos, photos, videos)
+- Customization tools (add dealer info)
+- Campaign templates (email, social)
+- Asset usage analytics
+- Market intelligence / competitive data
 
 ---
 
@@ -760,6 +1003,64 @@ PATCH  /api/notifications/preferences  # Update preferences
 - [ ] User training materials
 - [ ] Support documentation
 - [ ] Go-live plan
+
+### Phase 8: Relationship Layer (Post-Launch)
+
+**Goal**: Dealer/OEM "Connective Tissue" - Transform from transaction portal to relationship platform
+
+**8.1 Communication Hub** (Priority 1)
+- [ ] Database schema (SupportTicket, TicketMessage, Announcement, KnowledgeArticle)
+- [ ] Support ticket submission and tracking
+- [ ] Ticket assignment and routing
+- [ ] OEM rep ticket management
+- [ ] Announcement creation and publishing
+- [ ] Dealer announcement feed
+- [ ] Knowledge base articles
+- [ ] SLA tracking and escalation alerts
+
+**8.2 Incentives & Programs** (Priority 1)
+- [ ] Database schema (IncentiveProgram, Enrollment, Claim, Payout)
+- [ ] Program management admin UI
+- [ ] Dealer program enrollment
+- [ ] Rebate accrual calculation engine
+- [ ] Co-op fund tracking
+- [ ] Claim submission and approval workflow
+- [ ] Dealer incentives dashboard
+- [ ] Payout history and forecasting
+
+**8.3 Training & Certification Portal** (Priority 1)
+- [ ] Database schema (Course, Certification, Assignment, Quiz)
+- [ ] Course catalog and content management
+- [ ] Video/document content delivery
+- [ ] Quiz/assessment engine
+- [ ] Certification tracking
+- [ ] Expiration alerts
+- [ ] Training assignment workflow
+- [ ] Compliance dashboard
+
+**8.4 Dealer Performance Scorecard** (Priority 1)
+- [ ] Database schema (Scorecard, Metric, Target)
+- [ ] Metric calculation engine
+- [ ] Scorecard dashboard (dealer view)
+- [ ] Network performance view (admin)
+- [ ] Trend visualization
+- [ ] Tier recommendation engine
+- [ ] Benchmark comparisons
+
+**8.5 Parts & Service Module** (Priority 2)
+- [ ] Parts catalog (separate from RV units)
+- [ ] Quick order / templates
+- [ ] Service bulletin management
+- [ ] Technical support ticketing
+- [ ] Recall tracking
+- [ ] Parts RMA workflow
+
+**8.6 Marketing Asset Library** (Priority 2)
+- [ ] Asset upload and management
+- [ ] Co-branding tools
+- [ ] Asset search and filtering
+- [ ] Usage analytics
+- [ ] Campaign template library
 
 ---
 

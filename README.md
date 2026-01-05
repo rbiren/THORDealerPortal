@@ -1,10 +1,16 @@
 # THORDealerPortal
 
-A comprehensive B2B dealer portal platform for inventory management, order processing, analytics, and dealer communication.
+A comprehensive B2B dealer portal platform capturing **all elements of dealer/OEM connective tissue** in a simple, digestible, intuitive platform.
+
+## Vision
+
+Transform from a transaction portal into a true **dealer-OEM relationship platform** by combining:
+- **Transaction Layer** - Day-to-day operations (ordering, inventory, warranty)
+- **Relationship Layer** - Partnership building (communication, incentives, training, performance)
 
 ## Status
 
-🚧 **In Development** - Core modules complete, advanced features in progress
+🚧 **In Development** - Transaction layer complete, Relationship layer in planning
 
 ## Tech Stack
 
@@ -70,16 +76,73 @@ THORDealerPortal/
 
 ## Core Features
 
-- **Authentication** - Login, sessions, role-based access ✅
-- **Dashboard** - Overview metrics, recent activity, quick actions ✅
-- **Dealer Management** - Registration, onboarding, profiles ✅
-- **Inventory** - Real-time stock visibility, adjustments, locations ✅
-- **Orders** - Cart, checkout, tracking, order management ✅
-- **Invoices** - Invoice generation, status tracking, payment info ✅
-- **Warranty Claims** - Claim submission, review workflow, dealer-manufacturer communication ✅
-- **Reporting** - Dashboards, analytics, exports (In Progress)
-- **Documents** - Upload, versioning, access control (Planned)
-- **Notifications** - In-app, email, preferences (Planned)
+### Transaction Layer (Complete)
+
+| Module | Description | Status |
+|--------|-------------|--------|
+| **Authentication** | Login, sessions, role-based access | ✅ |
+| **Dashboard** | Overview metrics, recent activity, quick actions | ✅ |
+| **Dealer Management** | Registration, onboarding, hierarchy, profiles | ✅ |
+| **Inventory** | Real-time stock, adjustments, locations, forecasting | ✅ |
+| **Orders** | Cart, checkout, tracking, order management | ✅ |
+| **Invoices** | Invoice generation, status tracking, payment info | ✅ |
+| **Warranty Claims** | Claim submission, review workflow, approvals | ✅ |
+| **Reporting** | Dashboards, analytics, exports | ✅ |
+| **Documents** | Upload, preview, library | ✅ |
+| **Notifications** | In-app notifications, bell icon | ✅ |
+
+### Relationship Layer (Planned - Phase 8)
+
+| Module | Description | Priority | Status |
+|--------|-------------|----------|--------|
+| **Communication Hub** | Support tickets, OEM announcements, knowledge base | P1 | ⏳ |
+| **Incentives & Programs** | Volume rebates, co-op funds, sales contests | P1 | ⏳ |
+| **Training Portal** | Course catalog, certifications, compliance | P1 | ⏳ |
+| **Performance Scorecard** | KPIs, tier management, benchmarks | P1 | ⏳ |
+| **Parts & Service** | Parts catalog, service bulletins, recalls | P2 | ⏳ |
+| **Marketing Assets** | Co-branded materials, digital assets | P2 | ⏳ |
+
+### Why the Relationship Layer Matters
+
+```
+TRANSACTION LAYER              RELATIONSHIP LAYER
+"What dealers DO"      +       "Why dealers STAY"
+─────────────────────────────────────────────────
+Order products                 Get rebates & incentives
+Submit warranty claims         Talk to OEM support
+Check inventory                Complete training
+Pay invoices                   See performance score
+```
+
+The Relationship Layer transforms dealers from **customers** into **partners**.
+
+## Recommended Build Sequence
+
+**Start with Communication Hub** - it provides immediate value and is foundational:
+
+```
+Phase 8.1: Communication Hub
+├── Support ticket system (dealer → OEM)
+├── OEM announcements (OEM → dealers)
+└── Knowledge base (self-service)
+
+Phase 8.2: Incentives & Programs
+├── Rebate program management
+├── Co-op fund tracking
+└── Dealer tier benefits
+
+Phase 8.3: Training Portal
+├── Course catalog
+├── Certification tracking
+└── Compliance dashboard
+
+Phase 8.4: Performance Scorecard
+├── KPI dashboard
+├── Trend visualization
+└── Tier management
+```
+
+See `.ralph/TASK_BACKLOG.md` for detailed tasks with Ralph Wiggum commands.
 
 ## Style Guide
 

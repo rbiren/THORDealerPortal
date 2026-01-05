@@ -435,6 +435,118 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 ---
 
+## Phase 8: Relationship Layer (Dealer/OEM Connective Tissue)
+
+**Timeline**: Post-Launch
+**Goal**: Transform from transaction portal to relationship platform
+
+> **Strategic Context**: This phase adds the "soft relationship layer" that makes dealers feel like partners, not just customers. These modules capture:
+> - **Communication** - How dealers and OEM talk
+> - **Incentives** - Why dealers stay loyal
+> - **Training** - How dealers learn products
+> - **Performance** - How OEM evaluates dealers
+
+---
+
+### 8.1 Communication Hub
+
+**Purpose**: Centralized dealer-OEM communication channel
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 8.1.1 | 🔴 | ⏳ | Design communication schema | 15 | `/ralph-loop "Create Prisma schema for Communication Hub: SupportTicket, TicketMessage, TicketAttachment, Announcement, AnnouncementReadReceipt, KnowledgeArticle. Add relations, indexes. Run migration" --max-iterations 15` |
+| 8.1.2 | 🔴 | ⏳ | Build ticket submission flow | 15 | `/ralph-loop "Create ticket submission: /support/new page, form with category/priority/subject/description, file attachments, Zod validation, server action to create ticket. Generate ticket number" --max-iterations 15` |
+| 8.1.3 | 🔴 | ⏳ | Create dealer ticket list | 12 | `/ralph-loop "Build dealer support ticket list: /support page, filter by status/category, search by ticket number, pagination, status badges, link to detail" --max-iterations 12` |
+| 8.1.4 | 🔴 | ⏳ | Build ticket detail page | 15 | `/ralph-loop "Create ticket detail: /support/[ticketNumber] page, show ticket info, message thread, add reply, file attachments, status timeline. Real-time feel" --max-iterations 15` |
+| 8.1.5 | 🟠 | ⏳ | Build admin ticket queue | 15 | `/ralph-loop "Create admin ticket management: /admin/support page, all tickets across dealers, assign to OEM rep, filter by status/priority/assignee, bulk actions" --max-iterations 15` |
+| 8.1.6 | 🟠 | ⏳ | Add ticket assignment/routing | 12 | `/ralph-loop "Implement ticket routing: auto-assign by category, manual reassign, assignment notifications, workload balancing view" --max-iterations 12` |
+| 8.1.7 | 🟠 | ⏳ | Create announcement system | 15 | `/ralph-loop "Build announcements: admin create/edit form, target dealer tiers, schedule publish, announcement feed on dealer dashboard, mark as read, critical banner" --max-iterations 15` |
+| 8.1.8 | 🟡 | ⏳ | Build knowledge base | 15 | `/ralph-loop "Create knowledge base: /support/kb page, article list by category, article detail, search, admin article CRUD, view count tracking" --max-iterations 15` |
+| 8.1.9 | 🟡 | ⏳ | Add SLA tracking | 10 | `/ralph-loop "Implement SLA tracking: configure response/resolution times by priority, track elapsed time, escalation alerts, SLA dashboard for admins" --max-iterations 10` |
+
+---
+
+### 8.2 Incentives & Programs Module
+
+**Purpose**: Manage the financial relationship that drives dealer loyalty
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 8.2.1 | 🔴 | ⏳ | Design incentives schema | 15 | `/ralph-loop "Create Prisma schema for Incentives: IncentiveProgram, ProgramRule, DealerEnrollment, RebateAccrual, IncentiveClaim, ClaimDocument, Payout. Add relations, indexes" --max-iterations 15` |
+| 8.2.2 | 🔴 | ⏳ | Build program admin CRUD | 15 | `/ralph-loop "Create program management: /admin/incentives page, list programs, create/edit form with rules (tiers, thresholds, rates), activation, program types (rebate, coop, spiff)" --max-iterations 15` |
+| 8.2.3 | 🔴 | ⏳ | Create dealer enrollment flow | 12 | `/ralph-loop "Build dealer program enrollment: /incentives page, available programs, enroll button, terms acceptance, enrollment status, unenroll option" --max-iterations 12` |
+| 8.2.4 | 🔴 | ⏳ | Implement rebate calculation engine | 18 | `/ralph-loop "Create rebate engine: calculate accruals from orders, tiered rate logic, monthly/quarterly accrual runs, accrual history per dealer, projected rebates" --max-iterations 18` |
+| 8.2.5 | 🟠 | ⏳ | Build dealer incentives dashboard | 15 | `/ralph-loop "Create incentives dashboard: /incentives/dashboard, enrolled programs, accrued amounts, pending claims, paid history, program progress visualization" --max-iterations 15` |
+| 8.2.6 | 🟠 | ⏳ | Create co-op fund tracking | 15 | `/ralph-loop "Build co-op module: fund balance per dealer, accrual rules, claim submission with receipts, approval workflow, payout tracking" --max-iterations 15` |
+| 8.2.7 | 🟠 | ⏳ | Build claim submission workflow | 15 | `/ralph-loop "Create claim flow: /incentives/claims/new, select program, enter amount/details, upload supporting docs, submit for review, track status" --max-iterations 15` |
+| 8.2.8 | 🟠 | ⏳ | Add claim approval workflow | 12 | `/ralph-loop "Build admin claim review: /admin/incentives/claims, pending claims queue, review details, approve/deny with notes, batch approval, payout scheduling" --max-iterations 12` |
+| 8.2.9 | 🟡 | ⏳ | Create payout reporting | 10 | `/ralph-loop "Build payout reports: payout history, scheduled payouts, export for finance, dealer payout statements" --max-iterations 10` |
+
+---
+
+### 8.3 Training & Certification Portal
+
+**Purpose**: Ensure dealers are properly trained to sell and service products
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 8.3.1 | 🔴 | ⏳ | Design training schema | 15 | `/ralph-loop "Create Prisma schema for Training: TrainingCourse, CourseContent, Quiz, QuizQuestion, Certification, TrainingAssignment, CourseProgress. Add relations, indexes" --max-iterations 15` |
+| 8.3.2 | 🔴 | ⏳ | Build course catalog | 15 | `/ralph-loop "Create course catalog: /training page, course cards with thumbnail/duration/category, filter by category/required, search, course detail page" --max-iterations 15` |
+| 8.3.3 | 🔴 | ⏳ | Create course content viewer | 15 | `/ralph-loop "Build content viewer: /training/[courseId] page, video player, PDF viewer, progress tracking, mark complete, next/prev navigation" --max-iterations 15` |
+| 8.3.4 | 🔴 | ⏳ | Implement quiz engine | 18 | `/ralph-loop "Build quiz system: question types (multiple choice, true/false), timed quizzes, score calculation, passing threshold, retry logic, certificate generation on pass" --max-iterations 18` |
+| 8.3.5 | 🟠 | ⏳ | Build certification tracking | 12 | `/ralph-loop "Create cert tracking: /training/certifications page, my certifications, expiration dates, renewal reminders, download certificate PDF" --max-iterations 12` |
+| 8.3.6 | 🟠 | ⏳ | Add training assignment workflow | 12 | `/ralph-loop "Build assignments: dealer admin assigns courses to staff, due dates, progress tracking, reminder emails, completion notifications" --max-iterations 12` |
+| 8.3.7 | 🟠 | ⏳ | Create compliance dashboard | 15 | `/ralph-loop "Build compliance view: /admin/training/compliance, dealer certification rates, expiring certs (30/60/90 days), required course completion, export compliance report" --max-iterations 15` |
+| 8.3.8 | 🟠 | ⏳ | Build course admin CRUD | 12 | `/ralph-loop "Create course management: /admin/training/courses, create/edit courses, upload content, set requirements, set expiration, quiz builder" --max-iterations 12` |
+| 8.3.9 | 🟡 | ⏳ | Add training analytics | 10 | `/ralph-loop "Build training analytics: completion rates, avg quiz scores, most/least popular courses, time to complete, dealer training trends" --max-iterations 10` |
+
+---
+
+### 8.4 Dealer Performance Scorecard
+
+**Purpose**: Data-driven dealer evaluation and tier management
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 8.4.1 | 🔴 | ⏳ | Design scorecard schema | 12 | `/ralph-loop "Create Prisma schema: DealerScorecard, PerformanceMetric, SalesTarget, ScoreWeight, TierThreshold. Monthly scorecard snapshots with all KPIs" --max-iterations 12` |
+| 8.4.2 | 🔴 | ⏳ | Build metric calculation engine | 18 | `/ralph-loop "Create scorecard engine: calculate sales vs target, YoY growth, warranty rate, training compliance, inventory turn, payment terms. Composite score with configurable weights" --max-iterations 18` |
+| 8.4.3 | 🔴 | ⏳ | Create dealer scorecard view | 15 | `/ralph-loop "Build dealer scorecard: /performance page, current scores with gauges, 12-month trend charts, metric breakdowns, tier status, improvement suggestions" --max-iterations 15` |
+| 8.4.4 | 🟠 | ⏳ | Build admin network view | 15 | `/ralph-loop "Create network performance: /admin/performance page, all dealers ranked, filter by tier/region, export rankings, identify at-risk dealers, top performers" --max-iterations 15` |
+| 8.4.5 | 🟠 | ⏳ | Add tier recommendation engine | 12 | `/ralph-loop "Build tier logic: automatic tier promotion/demotion recommendations based on sustained performance, tier change notifications, admin override" --max-iterations 12` |
+| 8.4.6 | 🟠 | ⏳ | Create target management | 12 | `/ralph-loop "Build target setting: /admin/performance/targets, set sales targets by dealer/region, import targets from CSV, target vs actual tracking" --max-iterations 12` |
+| 8.4.7 | 🟡 | ⏳ | Add benchmark comparisons | 10 | `/ralph-loop "Build benchmarking: compare dealer to tier average, regional average, network average. Percentile rankings. Peer group analysis" --max-iterations 10` |
+| 8.4.8 | 🟡 | ⏳ | Create scorecard history | 10 | `/ralph-loop "Build historical view: monthly scorecard archive, trend analysis, improvement trajectory, YoY comparisons" --max-iterations 10` |
+
+---
+
+### 8.5 Parts & Service Module (Priority 2)
+
+**Purpose**: Post-sale support and parts ordering
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 8.5.1 | 🟠 | ⏳ | Design parts schema | 12 | `/ralph-loop "Create schema: Part (separate from Product), PartCategory, PartsOrder, ServiceBulletin, TechnicalSupportRequest, RecallNotice" --max-iterations 12` |
+| 8.5.2 | 🟠 | ⏳ | Build parts catalog | 15 | `/ralph-loop "Create parts catalog: /parts page, search by part number/name/VIN, filter by category, add to cart, quick order from history" --max-iterations 15` |
+| 8.5.3 | 🟡 | ⏳ | Create service bulletins | 12 | `/ralph-loop "Build TSB module: /parts/bulletins page, list by severity/date, detail view with PDF, affected units, acknowledge read" --max-iterations 12` |
+| 8.5.4 | 🟡 | ⏳ | Add recall management | 12 | `/ralph-loop "Build recall tracking: /parts/recalls, active recalls, affected inventory, completion tracking, dealer action required" --max-iterations 12` |
+| 8.5.5 | 🟢 | ⏳ | Create parts RMA | 10 | `/ralph-loop "Build RMA workflow: request return authorization, reason codes, approval workflow, return shipping, credit tracking" --max-iterations 10` |
+
+---
+
+### 8.6 Marketing Asset Library (Priority 2)
+
+**Purpose**: Help dealers sell more effectively
+
+| ID | Priority | Status | Task | Iterations | Command |
+|----|----------|--------|------|------------|---------|
+| 8.6.1 | 🟠 | ⏳ | Design assets schema | 10 | `/ralph-loop "Create schema: MarketingAsset, AssetCategory, AssetDownload, CampaignTemplate. Support images, videos, PDFs, branding files" --max-iterations 10` |
+| 8.6.2 | 🟠 | ⏳ | Build asset library | 15 | `/ralph-loop "Create asset library: /marketing page, browse by category, search, preview, download, filter by asset type/brand/campaign" --max-iterations 15` |
+| 8.6.3 | 🟡 | ⏳ | Add co-branding tools | 15 | `/ralph-loop "Build co-branding: select template, add dealer logo/info, preview, generate PDF/image, download. Basic customization UI" --max-iterations 15` |
+| 8.6.4 | 🟡 | ⏳ | Create asset admin | 12 | `/ralph-loop "Build asset management: /admin/marketing, upload assets, set categories/tags, set availability (all dealers vs tier-specific), usage tracking" --max-iterations 12` |
+| 8.6.5 | 🟢 | ⏳ | Add usage analytics | 8 | `/ralph-loop "Build analytics: most downloaded assets, downloads by dealer, asset performance, popular campaigns" --max-iterations 8` |
+
+---
+
 ## Completed Tasks
 
 | ID | Task | Iterations Used | Date | Notes |
@@ -549,10 +661,12 @@ Phase 0 ──┬──▶ Phase 1 ──┬──▶ Phase 3 ──▶ Phase 4
 | Phase 5 | 14 | 160 | 40 |
 | Phase 6 | 13 | 165 | 41 |
 | Phase 7 | 10 | 130 | 33 |
-| **Total** | **145** | **1647** | **413** |
+| Phase 8 | 48 | 600 | 150 |
+| **Total** | **193** | **2247** | **563** |
 
 *Assuming ~4 iterations per hour with Ralph Wiggum
 *Phase 4.6 Inventory Forecasting: 8 completed, 20 pending (includes 17 enhancement tasks)
+*Phase 8: Relationship Layer - 48 new tasks for dealer/OEM connective tissue
 
 ---
 
