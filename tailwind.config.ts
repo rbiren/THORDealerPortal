@@ -183,6 +183,12 @@ const config: Config = {
         'header': '72px',
         'header-mobile': '64px',
       },
+
+      // Margin for sidebar offset
+      margin: {
+        'sidebar': '260px',
+        'sidebar-collapsed': '72px',
+      },
     },
   },
   plugins: [],

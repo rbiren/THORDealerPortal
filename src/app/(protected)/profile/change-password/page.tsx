@@ -17,35 +17,26 @@ export default async function ChangePasswordPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link
-          href="/profile"
-          className="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4"
-        >
-          <svg
-            className="h-4 w-4 mr-1"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
-          Back to profile
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Change Password</h1>
-        <p className="mt-1 text-sm text-gray-600">
+      {/* Page Header */}
+      <div className="page-header">
+        <nav className="breadcrumb">
+          <Link href="/dashboard">Dashboard</Link>
+          <span className="breadcrumb-separator">/</span>
+          <Link href="/profile">Profile</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span>Change Password</span>
+        </nav>
+        <h1 className="page-title">Change Password</h1>
+        <p className="page-subtitle">
           Update your password to keep your account secure
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-lg bg-white shadow">
-        <div className="px-4 py-5 sm:p-6">
-          <ChangePasswordForm />
+      <div className="mx-auto max-w-lg">
+        <div className="card">
+          <div className="card-body">
+            <ChangePasswordForm />
+          </div>
         </div>
       </div>
     </div>

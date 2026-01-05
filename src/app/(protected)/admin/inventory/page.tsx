@@ -74,47 +74,54 @@ export default function InventoryDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Monitor stock levels, alerts, and inventory value across locations
-          </p>
+      <div className="page-header">
+        <nav className="breadcrumb">
+          <Link href="/dashboard">Dashboard</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span>Inventory</span>
+        </nav>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="page-title">Inventory Dashboard</h1>
+            <p className="page-subtitle">
+              Monitor stock levels, alerts, and inventory value across locations
+            </p>
+          </div>
+          <Link
+            href="/admin/inventory/list"
+            className="btn-primary"
+          >
+            View All Inventory
+          </Link>
         </div>
-        <Link
-          href="/admin/inventory/list"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-        >
-          View All Inventory
-        </Link>
       </div>
 
       {/* Summary Cards */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-              <div className="h-4 w-24 bg-gray-200 rounded mb-4" />
-              <div className="h-8 w-32 bg-gray-200 rounded" />
+            <div key={i} className="card animate-pulse">
+              <div className="h-4 w-24 bg-light-gray rounded mb-4" />
+              <div className="h-8 w-32 bg-light-gray rounded" />
             </div>
           ))}
         </div>
       ) : summary ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total Stock */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Stock</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-medium-gray">Total Stock</p>
+                <p className="text-2xl font-bold text-charcoal">
                   {formatNumber(summary.totalStock)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-medium-gray mt-1">
                   {summary.totalProducts} products
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-3 bg-olive/10 rounded-full">
+                <svg className="w-6 h-6 text-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
               </div>
@@ -122,19 +129,19 @@ export default function InventoryDashboardPage() {
           </div>
 
           {/* Available Stock */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-medium-gray">Available</p>
+                <p className="text-2xl font-bold text-charcoal">
                   {formatNumber(summary.totalAvailable)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-medium-gray mt-1">
                   {formatNumber(summary.totalReserved)} reserved
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-3 bg-olive/10 rounded-full">
+                <svg className="w-6 h-6 text-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -142,19 +149,19 @@ export default function InventoryDashboardPage() {
           </div>
 
           {/* Inventory Value */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Value</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-medium-gray">Total Value</p>
+                <p className="text-2xl font-bold text-charcoal">
                   {formatCurrency(summary.totalValue)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-medium-gray mt-1">
                   at cost basis
                 </p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-3 bg-rust/10 rounded-full">
+                <svg className="w-6 h-6 text-rust" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -162,23 +169,23 @@ export default function InventoryDashboardPage() {
           </div>
 
           {/* Alerts */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Stock Alerts</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-medium-gray">Stock Alerts</p>
+                <p className="text-2xl font-bold text-charcoal">
                   {summary.lowStockCount + summary.outOfStockCount}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-medium-gray mt-1">
                   {summary.lowStockCount} low, {summary.outOfStockCount} out
                 </p>
               </div>
               <div className={`p-3 rounded-full ${
-                summary.outOfStockCount > 0 ? 'bg-red-100' : summary.lowStockCount > 0 ? 'bg-yellow-100' : 'bg-gray-100'
+                summary.outOfStockCount > 0 ? 'bg-red-100' : summary.lowStockCount > 0 ? 'bg-yellow-100' : 'bg-light-gray'
               }`}>
                 <svg
                   className={`w-6 h-6 ${
-                    summary.outOfStockCount > 0 ? 'text-red-600' : summary.lowStockCount > 0 ? 'text-yellow-600' : 'text-gray-600'
+                    summary.outOfStockCount > 0 ? 'text-red-600' : summary.lowStockCount > 0 ? 'text-yellow-600' : 'text-medium-gray'
                   }`}
                   fill="none"
                   viewBox="0 0 24 24"
@@ -193,7 +200,7 @@ export default function InventoryDashboardPage() {
       ) : null}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-light-gray">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
             <button
@@ -201,8 +208,8 @@ export default function InventoryDashboardPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-olive text-olive'
+                  : 'border-transparent text-medium-gray hover:text-charcoal hover:border-light-gray'
               }`}
             >
               {tab.label}
@@ -213,10 +220,10 @@ export default function InventoryDashboardPage() {
 
       {/* Tab Content */}
       {isLoading ? (
-        <div className="bg-white rounded-lg shadow p-6 animate-pulse">
+        <div className="card card-body animate-pulse">
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded" />
+              <div key={i} className="h-16 bg-light-gray rounded" />
             ))}
           </div>
         </div>
@@ -259,24 +266,24 @@ function OverviewTab({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Location Overview */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Locations</h3>
+      <div className="card">
+        <div className="px-6 py-4 border-b border-light-gray">
+          <h3 className="text-lg font-medium text-charcoal">Locations</h3>
         </div>
-        <div className="p-6">
+        <div className="card-body">
           {locations.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No locations configured</p>
+            <p className="text-medium-gray text-center py-4">No locations configured</p>
           ) : (
             <div className="space-y-4">
               {locations.slice(0, 5).map((location) => (
                 <div key={location.id} className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{location.name}</p>
-                    <p className="text-sm text-gray-500">{location.code} • {location.type}</p>
+                    <p className="font-medium text-charcoal">{location.name}</p>
+                    <p className="text-sm text-medium-gray">{location.code} • {location.type}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">{formatNumber(location.totalStock)}</p>
-                    <p className="text-sm text-gray-500">{formatCurrency(location.totalValue)}</p>
+                    <p className="font-medium text-charcoal">{formatNumber(location.totalStock)}</p>
+                    <p className="text-sm text-medium-gray">{formatCurrency(location.totalValue)}</p>
                   </div>
                 </div>
               ))}
@@ -286,17 +293,17 @@ function OverviewTab({
       </div>
 
       {/* Critical Alerts */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Critical Alerts</h3>
+      <div className="card">
+        <div className="px-6 py-4 border-b border-light-gray">
+          <h3 className="text-lg font-medium text-charcoal">Critical Alerts</h3>
         </div>
-        <div className="p-6">
+        <div className="card-body">
           {outOfStockItems.length === 0 && lowStockItems.length === 0 ? (
             <div className="text-center py-8">
-              <svg className="mx-auto h-12 w-12 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="mx-auto h-12 w-12 text-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="mt-2 text-gray-500">No stock alerts</p>
+              <p className="mt-2 text-medium-gray">No stock alerts</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -338,62 +345,62 @@ function OverviewTab({
 
 function LocationsTab({ locations }: { locations: LocationSummary[] }) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="card overflow-hidden">
       {locations.length === 0 ? (
-        <div className="p-6 text-center text-gray-500">
+        <div className="p-6 text-center text-medium-gray">
           No inventory locations configured
         </div>
       ) : (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-light-gray">
+          <thead className="bg-light-beige">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Location
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Products
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Total Stock
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Available
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Value
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Low Stock
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-light-gray">
             {locations.map((location) => (
-              <tr key={location.id} className="hover:bg-gray-50">
+              <tr key={location.id} className="hover:bg-light-beige">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{location.name}</div>
-                    <div className="text-sm text-gray-500">{location.code}</div>
+                    <div className="text-sm font-medium text-charcoal">{location.name}</div>
+                    <div className="text-sm text-medium-gray">{location.code}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
+                  <span className="badge capitalize">
                     {location.type.replace('_', ' ')}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-medium-gray text-right">
                   {formatNumber(location.productCount)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-charcoal text-right font-medium">
                   {formatNumber(location.totalStock)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-charcoal text-right">
                   {formatNumber(location.totalAvailable)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-charcoal text-right">
                   {formatCurrency(location.totalValue)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -402,7 +409,7 @@ function LocationsTab({ locations }: { locations: LocationSummary[] }) {
                       {location.lowStockCount}
                     </span>
                   ) : (
-                    <span className="text-sm text-gray-500">-</span>
+                    <span className="text-sm text-medium-gray">-</span>
                   )}
                 </td>
               </tr>
@@ -424,41 +431,41 @@ function AlertsTab({
   return (
     <div className="space-y-6">
       {/* Out of Stock */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-red-50">
+      <div className="card overflow-hidden">
+        <div className="px-6 py-4 border-b border-light-gray bg-red-50">
           <h3 className="text-lg font-medium text-red-800">
             Out of Stock ({outOfStockItems.length})
           </h3>
         </div>
         {outOfStockItems.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-medium-gray">
             No out of stock items
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-light-gray">
+            <thead className="bg-light-beige">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Reserved</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase">Location</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase">Quantity</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase">Reserved</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase">Available</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-light-gray">
               {outOfStockItems.map((item) => (
                 <tr key={item.id} className="bg-red-50">
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{item.product.name}</div>
-                    <div className="text-sm text-gray-500">{item.product.sku}</div>
+                    <div className="text-sm font-medium text-charcoal">{item.product.name}</div>
+                    <div className="text-sm text-medium-gray">{item.product.sku}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-6 py-4 text-sm text-charcoal">
                     {item.location.name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 text-sm text-charcoal text-right">
                     {item.quantity}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 text-sm text-charcoal text-right">
                     {item.reserved}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -474,58 +481,58 @@ function AlertsTab({
       </div>
 
       {/* Low Stock */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-yellow-50">
+      <div className="card overflow-hidden">
+        <div className="px-6 py-4 border-b border-light-gray bg-yellow-50">
           <h3 className="text-lg font-medium text-yellow-800">
             Low Stock ({lowStockItems.length})
           </h3>
         </div>
         {lowStockItems.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-medium-gray">
             No low stock items
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-light-gray">
+            <thead className="bg-light-beige">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Threshold</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">% of Threshold</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase">Location</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase">Available</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase">Threshold</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase">% of Threshold</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-light-gray">
               {lowStockItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
+                <tr key={item.id} className="hover:bg-light-beige">
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{item.product.name}</div>
-                    <div className="text-sm text-gray-500">{item.product.sku}</div>
+                    <div className="text-sm font-medium text-charcoal">{item.product.name}</div>
+                    <div className="text-sm text-medium-gray">{item.product.sku}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-6 py-4 text-sm text-charcoal">
                     {item.location.name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 text-sm text-charcoal text-right">
                     {item.available}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 text-right">
+                  <td className="px-6 py-4 text-sm text-medium-gray text-right">
                     {item.lowStockThreshold}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div className="w-16 bg-light-gray rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${
                             item.percentOfThreshold < 25
                               ? 'bg-red-500'
                               : item.percentOfThreshold < 50
                               ? 'bg-yellow-500'
-                              : 'bg-green-500'
+                              : 'bg-olive'
                           }`}
                           style={{ width: `${Math.min(item.percentOfThreshold, 100)}%` }}
                         />
                       </div>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-medium-gray">
                         {Math.round(item.percentOfThreshold)}%
                       </span>
                     </div>
@@ -544,61 +551,61 @@ function CategoriesTab({ categoryData }: { categoryData: InventoryByCategory[] }
   const totalValue = categoryData.reduce((sum, c) => sum + c.totalValue, 0)
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="card overflow-hidden">
       {categoryData.length === 0 ? (
-        <div className="p-6 text-center text-gray-500">
+        <div className="p-6 text-center text-medium-gray">
           No inventory data available
         </div>
       ) : (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-light-gray">
+          <thead className="bg-light-beige">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Products
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Total Stock
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 Value
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-medium-gray uppercase tracking-wider">
                 % of Total
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-light-gray">
             {categoryData.map((category) => {
               const percentOfTotal = totalValue > 0
                 ? (category.totalValue / totalValue) * 100
                 : 0
 
               return (
-                <tr key={category.categoryId ?? 'uncategorized'} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <tr key={category.categoryId ?? 'uncategorized'} className="hover:bg-light-beige">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-charcoal">
                     {category.categoryName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-medium-gray text-right">
                     {category.productCount}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-charcoal text-right">
                     {formatNumber(category.totalStock)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-charcoal text-right">
                     {formatCurrency(category.totalValue)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
+                      <div className="w-20 bg-light-gray rounded-full h-2">
                         <div
-                          className="h-2 rounded-full bg-blue-500"
+                          className="h-2 rounded-full bg-olive"
                           style={{ width: `${Math.min(percentOfTotal, 100)}%` }}
                         />
                       </div>
-                      <span className="text-sm text-gray-600 w-12 text-right">
+                      <span className="text-sm text-medium-gray w-12 text-right">
                         {percentOfTotal.toFixed(1)}%
                       </span>
                     </div>
@@ -607,21 +614,21 @@ function CategoriesTab({ categoryData }: { categoryData: InventoryByCategory[] }
               )
             })}
           </tbody>
-          <tfoot className="bg-gray-50">
+          <tfoot className="bg-light-beige">
             <tr>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-charcoal">
                 Total
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-charcoal text-right">
                 {categoryData.reduce((sum, c) => sum + c.productCount, 0)}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-charcoal text-right">
                 {formatNumber(categoryData.reduce((sum, c) => sum + c.totalStock, 0))}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-charcoal text-right">
                 {formatCurrency(totalValue)}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-charcoal text-right">
                 100%
               </td>
             </tr>

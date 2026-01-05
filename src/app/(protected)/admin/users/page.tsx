@@ -36,19 +36,21 @@ async function UserTableWrapper({ searchParams }: Props) {
 function TableSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow animate-pulse">
-        <div className="h-10 bg-gray-200 rounded" />
+      <div className="card animate-pulse">
+        <div className="card-body">
+          <div className="h-10 bg-light-gray rounded" />
+        </div>
       </div>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="divide-y divide-gray-200">
+      <div className="card overflow-hidden">
+        <div className="divide-y divide-light-gray">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="p-4 animate-pulse">
               <div className="flex items-center gap-4">
-                <div className="h-4 w-4 bg-gray-200 rounded" />
-                <div className="h-4 w-48 bg-gray-200 rounded" />
-                <div className="h-4 w-32 bg-gray-200 rounded" />
-                <div className="h-4 w-24 bg-gray-200 rounded" />
-                <div className="h-4 w-20 bg-gray-200 rounded" />
+                <div className="h-4 w-4 bg-light-gray rounded" />
+                <div className="h-4 w-48 bg-light-gray rounded" />
+                <div className="h-4 w-32 bg-light-gray rounded" />
+                <div className="h-4 w-24 bg-light-gray rounded" />
+                <div className="h-4 w-20 bg-light-gray rounded" />
               </div>
             </div>
           ))}
@@ -61,32 +63,37 @@ function TableSkeleton() {
 export default async function UsersPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage users, roles, and permissions
-          </p>
+      {/* Page Header */}
+      <div className="page-header">
+        <nav className="breadcrumb">
+          <Link href="/dashboard">Dashboard</Link>
+          <span className="breadcrumb-separator">/</span>
+          <Link href="/admin/users">Admin</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span>Users</span>
+        </nav>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="page-title">User Management</h1>
+            <p className="page-subtitle">Manage users, roles, and permissions</p>
+          </div>
+          <Link href="/admin/users/new" className="btn-primary">
+            <svg
+              className="-ml-0.5 mr-1.5 h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            Add User
+          </Link>
         </div>
-        <Link
-          href="/admin/users/new"
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-        >
-          <svg
-            className="-ml-0.5 mr-1.5 h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4.5v15m7.5-7.5h-15"
-            />
-          </svg>
-          Add User
-        </Link>
       </div>
 
       <Suspense fallback={<TableSkeleton />}>

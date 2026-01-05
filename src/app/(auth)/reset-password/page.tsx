@@ -45,10 +45,10 @@ export default async function ResetPasswordPage({
 
 function ResetPasswordLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-light-beige py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-olive">
             <svg
               className="h-8 w-8 text-white"
               fill="none"
@@ -64,17 +64,19 @@ function ResetPasswordLayout({ children }: { children: React.ReactNode }) {
             </svg>
           </div>
         </div>
-        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-charcoal">
           Create new password
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-medium-gray">
           Enter your new password below
         </p>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-        <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-          {children}
+        <div className="card">
+          <div className="card-body">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -111,13 +113,13 @@ function InvalidTokenMessage({ message }: { message: string }) {
       <div className="flex flex-col gap-3">
         <Link
           href="/forgot-password"
-          className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          className="btn-primary w-full text-center"
         >
           Request new reset link
         </Link>
         <Link
           href="/login"
-          className="flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          className="flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-charcoal shadow-sm ring-1 ring-inset ring-medium-gray hover:bg-light-beige"
         >
           Back to sign in
         </Link>

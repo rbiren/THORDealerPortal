@@ -95,7 +95,7 @@ function FileIcon({ extension, className = '' }: { extension: string; className?
   return (
     <div className={`relative ${className}`}>
       <svg
-        className={`h-10 w-10 ${colorMap[extension] || 'text-gray-400'}`}
+        className={`h-10 w-10 ${colorMap[extension] || 'text-medium-gray'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -122,18 +122,18 @@ function CategoryBadge({ category }: { category: string }) {
   }
 
   const colorClasses: Record<string, string> = {
-    blue: 'bg-blue-100 text-blue-800',
-    purple: 'bg-purple-100 text-purple-800',
-    green: 'bg-green-100 text-green-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    orange: 'bg-orange-100 text-orange-800',
-    gray: 'bg-gray-100 text-gray-800',
-    indigo: 'bg-indigo-100 text-indigo-800',
+    blue: 'badge badge-info',
+    purple: 'badge badge-primary',
+    green: 'badge badge-success',
+    yellow: 'badge badge-warning',
+    orange: 'badge badge-warning',
+    gray: 'badge',
+    indigo: 'badge badge-primary',
   }
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClasses[config.color] || colorClasses.gray}`}
+      className={colorClasses[config.color] || 'badge'}
     >
       {config.label}
     </span>
@@ -143,12 +143,12 @@ function CategoryBadge({ category }: { category: string }) {
 // Document card (grid view)
 function DocumentCard({ document }: { document: DocumentWithDetails }) {
   return (
-    <div className="bg-white rounded-lg border p-4 hover:shadow-md transition-shadow">
+    <div className="card hover:shadow-md transition-shadow">
       <div className="flex items-start gap-3">
         <FileIcon extension={document.fileExtension} />
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 truncate">{document.name}</h3>
-          <p className="text-sm text-gray-500 mt-1">{document.formattedSize}</p>
+          <h3 className="font-medium text-charcoal truncate">{document.name}</h3>
+          <p className="text-sm text-medium-gray mt-1">{document.formattedSize}</p>
         </div>
       </div>
 
@@ -156,15 +156,15 @@ function DocumentCard({ document }: { document: DocumentWithDetails }) {
         <CategoryBadge category={document.category} />
         <div className="flex items-center gap-2">
           {document.isPublic && (
-            <span className="text-xs text-gray-500">Public</span>
+            <span className="text-xs text-medium-gray">Public</span>
           )}
           {document.isExpiringSoon && (
-            <span className="text-xs text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded">
+            <span className="badge badge-warning">
               Expiring
             </span>
           )}
           {document.isExpired && (
-            <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+            <span className="badge badge-error">
               Expired
             </span>
           )}
@@ -172,12 +172,12 @@ function DocumentCard({ document }: { document: DocumentWithDetails }) {
       </div>
 
       <div className="mt-4 flex items-center justify-between pt-3 border-t">
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-medium-gray">
           {new Date(document.createdAt).toLocaleDateString()}
         </span>
         <div className="flex gap-2">
           <button className="text-olive hover:underline text-sm">View</button>
-          <button className="text-gray-500 hover:underline text-sm">Download</button>
+          <button className="text-medium-gray hover:underline text-sm">Download</button>
         </div>
       </div>
     </div>
@@ -187,14 +187,14 @@ function DocumentCard({ document }: { document: DocumentWithDetails }) {
 // Document row (list view)
 function DocumentRow({ document }: { document: DocumentWithDetails }) {
   return (
-    <tr className="hover:bg-gray-50">
+    <tr className="hover:bg-light-beige">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <FileIcon extension={document.fileExtension} className="h-8 w-8" />
           <div>
-            <p className="font-medium text-gray-900">{document.name}</p>
+            <p className="font-medium text-charcoal">{document.name}</p>
             {document.dealerName && (
-              <p className="text-sm text-gray-500">{document.dealerName}</p>
+              <p className="text-sm text-medium-gray">{document.dealerName}</p>
             )}
           </div>
         </div>
@@ -202,24 +202,24 @@ function DocumentRow({ document }: { document: DocumentWithDetails }) {
       <td className="px-4 py-3">
         <CategoryBadge category={document.category} />
       </td>
-      <td className="px-4 py-3 text-sm text-gray-500">{document.formattedSize}</td>
-      <td className="px-4 py-3 text-sm text-gray-500">
+      <td className="px-4 py-3 text-sm text-medium-gray">{document.formattedSize}</td>
+      <td className="px-4 py-3 text-sm text-medium-gray">
         {new Date(document.createdAt).toLocaleDateString()}
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           {document.isPublic && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+            <span className="badge">
               Public
             </span>
           )}
           {document.isExpiringSoon && (
-            <span className="text-xs text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded">
+            <span className="badge badge-warning">
               Expiring
             </span>
           )}
           {document.isExpired && (
-            <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">
+            <span className="badge badge-error">
               Expired
             </span>
           )}
@@ -228,8 +228,8 @@ function DocumentRow({ document }: { document: DocumentWithDetails }) {
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <button className="text-olive hover:underline text-sm">View</button>
-          <button className="text-gray-500 hover:underline text-sm">Download</button>
-          <button className="text-gray-400 hover:text-gray-600">
+          <button className="text-medium-gray hover:underline text-sm">Download</button>
+          <button className="text-medium-gray hover:text-charcoal">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -290,35 +290,30 @@ export default function DocumentsPage() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {filteredDocuments.length} documents
-          </p>
+      <div className="page-header">
+        <nav className="breadcrumb">
+          <Link href="/dashboard">Dashboard</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span>Documents</span>
+        </nav>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="page-title">Documents</h1>
+            <p className="page-subtitle">{filteredDocuments.length} documents</p>
+          </div>
+          <button className="btn-primary">Upload</button>
         </div>
-        <button className="px-4 py-2 bg-olive text-white rounded-lg hover:bg-olive/90 flex items-center gap-2">
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-            />
-          </svg>
-          Upload
-        </button>
       </div>
 
       {/* Category Quick Filters */}
-      <div className="bg-white rounded-lg border p-4 mb-6">
+      <div className="card">
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setCategoryFilter('all')}
             className={`px-3 py-1.5 rounded-lg text-sm ${
               categoryFilter === 'all'
                 ? 'bg-olive text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-light-gray text-charcoal hover:bg-light-beige'
             }`}
           >
             All
@@ -330,7 +325,7 @@ export default function DocumentsPage() {
               className={`px-3 py-1.5 rounded-lg text-sm ${
                 categoryFilter === key
                   ? 'bg-olive text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-light-gray text-charcoal hover:bg-light-beige'
               }`}
             >
               {config.label}
@@ -340,11 +335,11 @@ export default function DocumentsPage() {
       </div>
 
       {/* Search and View Controls */}
-      <div className="bg-white rounded-lg border p-4 mb-6 flex flex-wrap items-center gap-4">
+      <div className="card flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-medium-gray"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -367,7 +362,7 @@ export default function DocumentsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Sort by:</span>
+          <span className="text-sm text-medium-gray">Sort by:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -383,7 +378,7 @@ export default function DocumentsPage() {
         <div className="flex border rounded-lg overflow-hidden">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+            className={`p-2 ${viewMode === 'grid' ? 'bg-light-gray' : 'hover:bg-light-beige'}`}
             title="Grid view"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,7 +392,7 @@ export default function DocumentsPage() {
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 ${viewMode === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+            className={`p-2 ${viewMode === 'list' ? 'bg-light-gray' : 'hover:bg-light-beige'}`}
             title="List view"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,9 +409,9 @@ export default function DocumentsPage() {
 
       {/* Documents */}
       {sortedDocuments.length === 0 ? (
-        <div className="bg-white rounded-lg border p-12 text-center">
+        <div className="card p-12 text-center">
           <svg
-            className="h-16 w-16 mx-auto text-gray-300 mb-4"
+            className="h-16 w-16 mx-auto text-medium-gray mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -428,8 +423,8 @@ export default function DocumentsPage() {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No documents found</h3>
-          <p className="text-gray-500">
+          <h3 className="text-lg font-medium text-charcoal mb-1">No documents found</h3>
+          <p className="text-medium-gray">
             {searchQuery || categoryFilter !== 'all'
               ? 'Try adjusting your filters'
               : 'Upload your first document to get started'}
@@ -442,31 +437,31 @@ export default function DocumentsPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="card overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-light-beige border-b">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-medium-gray uppercase">
                   Name
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-medium-gray uppercase">
                   Category
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-medium-gray uppercase">
                   Size
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-medium-gray uppercase">
                   Date
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-medium-gray uppercase">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-medium-gray uppercase">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-light-gray">
               {sortedDocuments.map((doc) => (
                 <DocumentRow key={doc.id} document={doc} />
               ))}

@@ -1,27 +1,14 @@
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { useState } from 'react'
 import { changePasswordAction, type ChangePasswordState } from './actions'
 import Link from 'next/link'
 
 const initialState: ChangePasswordState = {}
 
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
-    >
-      {pending ? 'Changing password...' : 'Change password'}
-    </button>
-  )
-}
-
 export function ChangePasswordForm() {
-  const [state, formAction] = useFormState(
+  const [state, formAction, isPending] = useActionState(
     changePasswordAction,
     initialState
   )
@@ -30,11 +17,11 @@ export function ChangePasswordForm() {
   if (state.success) {
     return (
       <div className="space-y-6">
-        <div className="rounded-md bg-green-50 p-4">
+        <div className="rounded-md bg-olive/10 p-4 border border-olive/20">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-green-400"
+                className="h-5 w-5 text-olive"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -46,10 +33,10 @@ export function ChangePasswordForm() {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">
+              <h3 className="text-sm font-heading font-semibold text-olive">
                 Password changed successfully
               </h3>
-              <p className="mt-2 text-sm text-green-700">
+              <p className="mt-2 text-sm text-charcoal">
                 Your password has been updated. You can now use your new
                 password to sign in.
               </p>
@@ -59,7 +46,7 @@ export function ChangePasswordForm() {
 
         <Link
           href="/profile"
-          className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          className="btn-primary flex w-full justify-center"
         >
           Back to profile
         </Link>
@@ -70,11 +57,11 @@ export function ChangePasswordForm() {
   return (
     <form action={formAction} className="space-y-6">
       {state.error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-50 p-4 border border-red-200">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-red-400"
+                className="h-5 w-5 text-red-600"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -95,7 +82,7 @@ export function ChangePasswordForm() {
       <div>
         <label
           htmlFor="currentPassword"
-          className="block text-sm font-medium leading-6 text-gray-900"
+          className="label"
         >
           Current password
         </label>
@@ -106,7 +93,8 @@ export function ChangePasswordForm() {
             type={showPasswords ? 'text' : 'password'}
             autoComplete="current-password"
             required
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+            disabled={isPending}
+            className="input w-full disabled:bg-light-beige disabled:text-medium-gray disabled:cursor-not-allowed"
           />
         </div>
       </div>
@@ -114,7 +102,7 @@ export function ChangePasswordForm() {
       <div>
         <label
           htmlFor="newPassword"
-          className="block text-sm font-medium leading-6 text-gray-900"
+          className="label"
         >
           New password
         </label>
@@ -125,10 +113,11 @@ export function ChangePasswordForm() {
             type={showPasswords ? 'text' : 'password'}
             autoComplete="new-password"
             required
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+            disabled={isPending}
+            className="input w-full disabled:bg-light-beige disabled:text-medium-gray disabled:cursor-not-allowed"
           />
         </div>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-medium-gray">
           Must be at least 8 characters with uppercase, lowercase, and a number
         </p>
       </div>
@@ -136,7 +125,7 @@ export function ChangePasswordForm() {
       <div>
         <label
           htmlFor="confirmPassword"
-          className="block text-sm font-medium leading-6 text-gray-900"
+          className="label"
         >
           Confirm new password
         </label>
@@ -147,7 +136,8 @@ export function ChangePasswordForm() {
             type={showPasswords ? 'text' : 'password'}
             autoComplete="new-password"
             required
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+            disabled={isPending}
+            className="input w-full disabled:bg-light-beige disabled:text-medium-gray disabled:cursor-not-allowed"
           />
         </div>
       </div>
@@ -158,21 +148,27 @@ export function ChangePasswordForm() {
           type="checkbox"
           checked={showPasswords}
           onChange={(e) => setShowPasswords(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+          className="h-4 w-4 rounded border-light-gray text-olive focus:ring-olive"
         />
         <label
           htmlFor="showPasswords"
-          className="ml-2 block text-sm text-gray-900"
+          className="ml-2 block text-sm text-charcoal"
         >
           Show passwords
         </label>
       </div>
 
       <div className="flex gap-3">
-        <SubmitButton />
+        <button
+          type="submit"
+          disabled={isPending}
+          className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPending ? 'Changing password...' : 'Change password'}
+        </button>
         <Link
           href="/profile"
-          className="flex-1 text-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          className="btn-outline flex-1 text-center"
         >
           Cancel
         </Link>

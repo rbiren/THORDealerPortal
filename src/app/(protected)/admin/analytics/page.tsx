@@ -26,7 +26,7 @@ const tierColors: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  submitted: 'bg-blue-500',
+  submitted: 'bg-olive',
   confirmed: 'bg-olive',
   processing: 'bg-yellow-500',
   shipped: 'bg-purple-500',
@@ -276,10 +276,10 @@ export default function AdminAnalyticsPage() {
                     <button
                       key={sort}
                       onClick={() => setDealerSort(sort)}
-                      className={`px-3 py-1 text-sm rounded-md capitalize ${
+                      className={`px-3 py-1 text-sm capitalize ${
                         dealerSort === sort
-                          ? 'bg-olive text-white'
-                          : 'bg-light-beige text-charcoal hover:bg-olive/10'
+                          ? 'btn-primary'
+                          : 'btn-outline'
                       }`}
                     >
                       {sort}
