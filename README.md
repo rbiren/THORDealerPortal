@@ -4,7 +4,7 @@ A comprehensive B2B dealer portal platform for inventory management, order proce
 
 ## Status
 
-🚧 **In Development** - Foundation phase complete, Phase 2 (Inventory) in progress
+🚧 **In Development** - Core modules complete, advanced features in progress
 
 ## Tech Stack
 
@@ -70,12 +70,16 @@ THORDealerPortal/
 
 ## Core Features
 
+- **Authentication** - Login, sessions, role-based access ✅
+- **Dashboard** - Overview metrics, recent activity, quick actions ✅
 - **Dealer Management** - Registration, onboarding, profiles ✅
 - **Inventory** - Real-time stock visibility, adjustments, locations ✅
-- **Orders** - Cart, checkout, tracking, invoices (Phase 3)
-- **Reporting** - Dashboards, analytics, exports (Phase 4)
-- **Documents** - Upload, versioning, access control (Phase 5)
-- **Notifications** - In-app, email, preferences (Phase 5)
+- **Orders** - Cart, checkout, tracking, order management ✅
+- **Invoices** - Invoice generation, status tracking, payment info ✅
+- **Warranty Claims** - Claim submission, review workflow, dealer-manufacturer communication ✅
+- **Reporting** - Dashboards, analytics, exports (In Progress)
+- **Documents** - Upload, versioning, access control (Planned)
+- **Notifications** - In-app, email, preferences (Planned)
 
 ## Style Guide
 

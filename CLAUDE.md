@@ -8,14 +8,15 @@ This document provides guidance for AI assistants working with the THORDealerPor
 
 ### Current Status
 
-- **Stage**: Initial setup (foundation phase)
+- **Stage**: Active development (Phase 3+ features)
+- **Completed**: Authentication, Dashboard, Inventory, Orders, Invoices, Warranty Claims
 - **Branch Strategy**: Feature branches prefixed with `claude/` for AI-assisted development
 - **Development Approach**: Ralph Wiggum autonomous loops for iterative implementation
 
 ### Key Documentation
 
 - **Project Plan**: `docs/PROJECT_PLAN.md` - Complete architecture, phases, and technical specifications
-- **Task Backlog**: `.ralph/TASK_BACKLOG.md` - 117 tasks across 7 phases with ready-to-run commands
+- **Task Backlog**: `.ralph/TASK_BACKLOG.md` - Development tasks with ready-to-run commands
 
 ---
 
@@ -23,15 +24,21 @@ This document provides guidance for AI assistants working with the THORDealerPor
 
 ```
 THORDealerPortal/
-├── README.md           # Project overview (public-facing)
-├── CLAUDE.md           # AI assistant guidelines (this file)
-├── docs/               # Reference documentation
-│   ├── PROJECT_PLAN.md        # Architecture and technical specs
-│   └── RALPH_WIGGUM_GUIDE.md  # Ralph Wiggum usage guide
-├── .ralph/             # Ralph Wiggum runtime state
-│   ├── PROGRESS_TEMPLATE.md   # Progress tracking template
-│   └── TASK_BACKLOG.md        # Development task backlog
-└── src/                # Source code (to be created)
+├── src/
+│   ├── app/              # Next.js app router pages
+│   │   ├── dashboard/    # Main dealer dashboard
+│   │   ├── inventory/    # Inventory management
+│   │   ├── orders/       # Order processing
+│   │   ├── invoices/     # Invoice management
+│   │   ├── warranty/     # Warranty claims module
+│   │   └── api/          # API routes
+│   ├── components/       # Reusable React components
+│   ├── lib/              # Utilities, services, validations
+│   └── types/            # TypeScript type definitions
+├── prisma/               # Database schema and migrations
+├── styles/               # Design system CSS
+├── docs/                 # Technical documentation
+└── .ralph/               # Development task tracking
 ```
 
 ---
