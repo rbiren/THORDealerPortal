@@ -5,10 +5,10 @@ import Link from 'next/link'
 import {
   adjustInventory,
   getAdjustmentHistory,
-  getAdjustmentReasons,
   type AdjustmentHistoryItem,
   type AdjustmentReason,
 } from './actions'
+import { getAdjustmentReasons } from '@/lib/inventory-utils'
 import { getInventoryLocations, type InventoryLocationListItem } from '../actions'
 import { prisma } from '@/lib/prisma'
 
