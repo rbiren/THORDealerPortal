@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
-import { getOrdersForDealer, getDealerOrderStats, ORDER_STATUSES, type OrderStatus } from './actions'
+import { getOrdersForDealer, getDealerOrderStats } from './actions'
+import { ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses'
 
 type Order = {
   id: string

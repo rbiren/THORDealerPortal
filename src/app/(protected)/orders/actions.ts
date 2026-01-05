@@ -10,19 +10,7 @@ import {
   getOrderStats,
 } from '@/lib/services/order'
 import { sendEmail } from '@/lib/services/email'
-
-// Order status workflow configuration
-export const ORDER_STATUSES = {
-  draft: { label: 'Draft', color: 'gray', next: ['submitted'] },
-  submitted: { label: 'Submitted', color: 'blue', next: ['confirmed', 'cancelled'] },
-  confirmed: { label: 'Confirmed', color: 'olive', next: ['processing', 'cancelled'] },
-  processing: { label: 'Processing', color: 'yellow', next: ['shipped'] },
-  shipped: { label: 'Shipped', color: 'purple', next: ['delivered'] },
-  delivered: { label: 'Delivered', color: 'green', next: [] },
-  cancelled: { label: 'Cancelled', color: 'red', next: [] },
-} as const
-
-export type OrderStatus = keyof typeof ORDER_STATUSES
+import { ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses'
 
 // Get order details for display
 export async function getOrder(orderIdOrNumber: string) {

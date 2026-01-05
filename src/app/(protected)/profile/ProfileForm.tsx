@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useFormState, useFormStatus } from 'react-dom'
 import { useState } from 'react'
 import { updateProfileAction, type ProfileState } from './actions'
 
@@ -14,8 +14,34 @@ interface ProfileFormProps {
 
 const initialState: ProfileState = {}
 
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Saving...' : 'Save changes'}
+    </button>
+  )
+}
+
+function CancelButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:bg-gray-50 disabled:cursor-not-allowed"
+    >
+      Cancel
+    </button>
+  )
+}
+
 export function ProfileForm({ user }: ProfileFormProps) {
-  const [state, formAction, isPending] = useActionState(
+  const [state, formAction] = useFormState(
     updateProfileAction,
     initialState
   )
@@ -125,8 +151,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               name="firstName"
               type="text"
               defaultValue={user.firstName}
-              disabled={isPending}
-              className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
             />
           </div>
         </div>
@@ -144,8 +169,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               name="lastName"
               type="text"
               defaultValue={user.lastName}
-              disabled={isPending}
-              className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
             />
           </div>
         </div>
@@ -163,8 +187,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               name="phone"
               type="tel"
               defaultValue={user.phone || ''}
-              disabled={isPending}
-              className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
               placeholder="(555) 555-5555"
             />
           </div>
@@ -172,21 +195,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
       </div>
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
-        >
-          {isPending ? 'Saving...' : 'Save changes'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsEditing(false)}
-          disabled={isPending}
-          className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:bg-gray-50 disabled:cursor-not-allowed"
-        >
-          Cancel
-        </button>
+        <SubmitButton />
+        <CancelButton onClick={() => setIsEditing(false)} />
       </div>
     </form>
   )

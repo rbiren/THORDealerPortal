@@ -1,14 +1,27 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useFormState, useFormStatus } from 'react-dom'
 import { useState } from 'react'
 import { changePasswordAction, type ChangePasswordState } from './actions'
 import Link from 'next/link'
 
 const initialState: ChangePasswordState = {}
 
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Changing password...' : 'Change password'}
+    </button>
+  )
+}
+
 export function ChangePasswordForm() {
-  const [state, formAction, isPending] = useActionState(
+  const [state, formAction] = useFormState(
     changePasswordAction,
     initialState
   )
@@ -93,8 +106,7 @@ export function ChangePasswordForm() {
             type={showPasswords ? 'text' : 'password'}
             autoComplete="current-password"
             required
-            disabled={isPending}
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
           />
         </div>
       </div>
@@ -113,8 +125,7 @@ export function ChangePasswordForm() {
             type={showPasswords ? 'text' : 'password'}
             autoComplete="new-password"
             required
-            disabled={isPending}
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
           />
         </div>
         <p className="mt-2 text-sm text-gray-500">
@@ -136,8 +147,7 @@ export function ChangePasswordForm() {
             type={showPasswords ? 'text' : 'password'}
             autoComplete="new-password"
             required
-            disabled={isPending}
-            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm sm:leading-6"
+            className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
           />
         </div>
       </div>
@@ -159,13 +169,7 @@ export function ChangePasswordForm() {
       </div>
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
-        >
-          {isPending ? 'Changing password...' : 'Change password'}
-        </button>
+        <SubmitButton />
         <Link
           href="/profile"
           className="flex-1 text-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"

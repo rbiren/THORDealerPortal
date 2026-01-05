@@ -115,6 +115,8 @@ const config: Config = {
         '72': '18rem',
         '84': '21rem',
         '96': '24rem',
+        'sidebar': '260px',
+        'sidebar-collapsed': '72px',
       },
 
       // Border Radius

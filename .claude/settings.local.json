@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run db:seed:*)",
+      "Bash(npm run db:setup:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(dir /b \"%APPDATA%\\\\Claude\")",
+      "Bash(dir /b \"%USERPROFILE%\\\\.claude\")",
+      "Bash(dir /b \"%LOCALAPPDATA%\\\\claude-code\")",
+      "Bash(dir /s /b \"%USERPROFILE%\\\\*claude*\")",
+      "Bash(findstr:*)",
+      "Bash(cat:*)",
+      "Bash(netstat:*)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
