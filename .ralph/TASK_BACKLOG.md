@@ -336,9 +336,9 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 5.1.1 | 🔴 | ✅ | Build document library | Manual | *Completed 2026-01-01 (1058 tests passing)* |
 | 5.1.2 | 🔴 | ✅ | Implement file upload | Manual | *Completed 2026-01-01 (1101 tests passing)* |
 | 5.1.3 | 🟠 | ✅ | Add document preview | Manual | *Completed 2026-01-01 (1161 tests passing)* |
-| 5.1.4 | 🟠 | ⏳ | Create version control | 12 | `/ralph-loop "Add document versioning: upload new version, version history, restore previous. Track changes and uploaders" --max-iterations 12` |
-| 5.1.5 | 🟡 | ⏳ | Implement access control | 10 | `/ralph-loop "Create document permissions: public, dealer-specific, role-based. Admin override capability. Audit access logs" --max-iterations 10` |
-| 5.1.6 | 🟡 | ⏳ | Add expiration tracking | 8 | `/ralph-loop "Implement document expiration: set expiry dates, renewal reminders, expired document handling. Dashboard widget" --max-iterations 8` |
+| 5.1.4 | 🟠 | ✅ | Create version control | Manual | *Completed 2026-01-05 (document versioning service)* |
+| 5.1.5 | 🟡 | ✅ | Implement access control | Manual | *Completed 2026-01-05 (access levels, audit logs)* |
+| 5.1.6 | 🟡 | ✅ | Add expiration tracking | Manual | *Completed 2026-01-05 (reminders, stats)* |
 
 ### 5.2 Notification System
 
@@ -346,17 +346,17 @@ This document contains the complete task breakdown for building THORDealerPortal
 |----|----------|--------|------|------------|---------|
 | 5.2.1 | 🔴 | ✅ | Create notification service | Manual | *Completed 2026-01-01 (1002 tests passing)* |
 | 5.2.2 | 🔴 | ✅ | Build in-app notifications | Manual | *Completed 2026-01-01 (bell icon, dropdown, full page)* |
-| 5.2.3 | 🟠 | ⏳ | Implement email notifications | 12 | `/ralph-loop "Setup transactional email: templates for order updates, alerts, system messages. Resend/SendGrid integration. Unsubscribe links" --max-iterations 12` |
-| 5.2.4 | 🟠 | ⏳ | Add notification preferences | 10 | `/ralph-loop "Create preference UI: toggle by notification type, channel selection (in-app, email, SMS). Per-user configuration" --max-iterations 10` |
-| 5.2.5 | 🟡 | ⏳ | Create system announcements | 10 | `/ralph-loop "Build announcement system: admin creates banners/modals, target audience selection, scheduling, dismissal tracking" --max-iterations 10` |
+| 5.2.3 | 🟠 | ✅ | Implement email notifications | Manual | *Completed 2026-01-05 (email templates, bulk send)* |
+| 5.2.4 | 🟠 | ✅ | Add notification preferences | Manual | *Completed 2026-01-05 (in-app + email prefs)* |
+| 5.2.5 | 🟡 | ✅ | Create system announcements | Manual | *Completed 2026-01-05 (targeting, scheduling, receipts)* |
 
 ### 5.3 Real-time Updates
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 5.3.1 | 🟡 | ⏳ | Setup WebSocket infrastructure | 15 | `/ralph-loop "Implement Socket.io: connection management, authentication, room-based subscriptions. Redis adapter for scaling" --max-iterations 15` |
-| 5.3.2 | 🟡 | ⏳ | Add real-time notifications | 10 | `/ralph-loop "Connect notifications to WebSocket: push new notifications instantly, update counts. Fallback to polling" --max-iterations 10` |
-| 5.3.3 | 🟢 | ⏳ | Implement live order updates | 10 | `/ralph-loop "Add real-time order status: push updates to dealer when order status changes. Show toast notifications" --max-iterations 10` |
+| 5.3.1 | 🟡 | ✅ | Setup WebSocket infrastructure | Manual | *Completed 2026-01-05 (SSE, event emitter)* |
+| 5.3.2 | 🟡 | ✅ | Add real-time notifications | Manual | *Completed 2026-01-05 (useRealtimeUpdates hook)* |
+| 5.3.3 | 🟢 | ✅ | Implement live order updates | Manual | *Completed 2026-01-05 (order status events)* |
 
 ---
 

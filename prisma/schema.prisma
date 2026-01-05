@@ -436,14 +436,63 @@ model Document {
   version     Int      @default(1)
   isPublic    Boolean  @default(false)
 
+  // Access control
+  accessLevel String   @default("dealer") // public, dealer, role, user
+  allowedRoles String? // JSON array of allowed roles
+  allowedUsers String? // JSON array of allowed user IDs
+
   expiresAt   DateTime?
   uploadedBy  String?
+
+  // Version control
+  parentDocumentId String?
+  parentDocument   Document?  @relation("DocumentVersions", fields: [parentDocumentId], references: [id])
+  versions         Document[] @relation("DocumentVersions")
+
+  // Tracking
+  accessLogs       DocumentAccessLog[]
+  expiryReminders  DocumentExpiryReminder[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([dealerId])
   @@index([category])
+  @@index([parentDocumentId])
+  @@index([expiresAt])
+}
+
+model DocumentAccessLog {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId      String
+  action      String   // view, download, share, edit
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model DocumentExpiryReminder {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId      String
+  reminderDays Int     @default(30) // Days before expiry to send reminder
+  sentAt      DateTime?
+  acknowledged Boolean @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([documentId, userId, reminderDays])
+  @@index([documentId])
+  @@index([userId])
 }
 
 // ============================================================================
@@ -455,10 +504,15 @@ model Notification {
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type      String    // order_update, low_stock, document_expiry, system
+  type      String    // order_update, low_stock, document_expiry, system, announcement
   title     String
   body      String
   data      String?   // JSON string for additional data
+  priority  String    @default("normal") // low, normal, high, urgent
+
+  // Email delivery tracking
+  emailSent Boolean   @default(false)
+  emailSentAt DateTime?
 
   readAt    DateTime?
 
@@ -466,6 +520,81 @@ model Notification {
 
   @@index([userId])
   @@index([type])
+  @@index([createdAt])
+}
+
+model NotificationPreference {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+
+  // In-app notification preferences
+  orderUpdates          Boolean @default(true)
+  lowStockAlerts        Boolean @default(true)
+  invoiceNotifications  Boolean @default(true)
+  documentExpiry        Boolean @default(true)
+  systemAnnouncements   Boolean @default(true)
+  warrantyUpdates       Boolean @default(true)
+
+  // Email notification preferences
+  emailOrderUpdates     Boolean @default(true)
+  emailInvoices         Boolean @default(true)
+  emailDocumentExpiry   Boolean @default(true)
+  emailSystemAnnouncements Boolean @default(false)
+  emailDigestFrequency  String  @default("instant") // instant, daily, weekly, never
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model SystemAnnouncement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  type        String    @default("info") // info, warning, alert, maintenance
+  priority    String    @default("normal") // low, normal, high, critical
+
+  // Targeting
+  targetAll   Boolean   @default(true)
+  targetRoles String?   // JSON array of roles to target
+  targetTiers String?   // JSON array of dealer tiers to target
+
+  // Display settings
+  isDismissible Boolean @default(true)
+  showAsBanner  Boolean @default(false) // Show as a top banner vs notification
+
+  // Scheduling
+  publishAt   DateTime  @default(now())
+  expiresAt   DateTime?
+
+  // Status
+  isActive    Boolean   @default(true)
+  createdBy   String?
+
+  // Tracking
+  readReceipts AnnouncementReadReceipt[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive])
+  @@index([publishAt])
+  @@index([expiresAt])
+}
+
+model AnnouncementReadReceipt {
+  id              String   @id @default(cuid())
+  announcementId  String
+  announcement    SystemAnnouncement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId          String
+  dismissed       Boolean  @default(false)
+
+  readAt          DateTime @default(now())
+
+  @@unique([announcementId, userId])
+  @@index([announcementId])
+  @@index([userId])
 }
 
 // ============================================================================
