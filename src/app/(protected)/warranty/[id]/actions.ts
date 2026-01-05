@@ -14,21 +14,14 @@ import {
   addWarrantyNoteSchema,
   reviewWarrantyClaimSchema,
   respondToInfoRequestSchema,
-  warrantyStatusLabels,
-  warrantyStatusColors,
-  warrantyClaimTypeLabels,
-  warrantyPriorityLabels,
-  warrantyPriorityColors,
 } from '@/lib/validations/warranty'
-
-// Re-export UI helpers
-export {
+import {
   warrantyStatusLabels,
   warrantyStatusColors,
   warrantyClaimTypeLabels,
   warrantyPriorityLabels,
   warrantyPriorityColors,
-}
+} from '@/lib/warranty-constants'
 
 // Get warranty claim details
 export async function getWarrantyClaimDetails(claimId: string) {

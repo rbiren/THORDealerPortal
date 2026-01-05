@@ -11,24 +11,15 @@ import {
 import {
   warrantyFilterSchema,
   createWarrantyClaimSchema,
-  warrantyStatusLabels,
-  warrantyStatusColors,
-  warrantyClaimTypeLabels,
-  warrantyPriorityLabels,
-  warrantyPriorityColors,
-  type WarrantyFilterInput,
-  type CreateWarrantyClaimInput,
-  type WarrantyStatus,
 } from '@/lib/validations/warranty'
-
-// Re-export for use in components
-export {
+import {
   warrantyStatusLabels,
   warrantyStatusColors,
   warrantyClaimTypeLabels,
   warrantyPriorityLabels,
   warrantyPriorityColors,
-}
+  type WarrantyStatus,
+} from '@/lib/warranty-constants'
 
 export type WarrantyClaimListItem = {
   id: string

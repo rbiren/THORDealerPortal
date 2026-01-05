@@ -10,12 +10,14 @@ import {
   respondToRequestAction,
   assignClaimAction,
   submitClaimAction,
+} from './actions'
+import {
   warrantyStatusLabels,
   warrantyStatusColors,
   warrantyClaimTypeLabels,
   warrantyPriorityLabels,
   warrantyPriorityColors,
-} from './actions'
+} from '@/lib/warranty-constants'
 
 type WarrantyClaim = Awaited<ReturnType<typeof getWarrantyClaimDetails>>
 
