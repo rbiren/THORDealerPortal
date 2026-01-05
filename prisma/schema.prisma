@@ -39,6 +39,26 @@ model User {
   warrantyClaimsAssigned  WarrantyClaim[] @relation("WarrantyAssignee")
   warrantyClaimNotes      WarrantyClaimNote[]
 
+  // Phase 8: Communication Hub
+  ticketsSubmitted        SupportTicket[] @relation("TicketSubmitter")
+  ticketsAssigned         SupportTicket[] @relation("TicketAssignee")
+  ticketMessages          TicketMessage[]
+
+  // Phase 8: Incentives
+  incentiveClaimsSubmitted IncentiveClaim[]
+
+  // Phase 8: Training
+  trainingAssignments     TrainingAssignment[]
+  courseProgress          CourseProgress[]
+  certifications          Certification[]
+
+  // Phase 8: Parts & Service
+  partsOrders             PartsOrder[]
+  bulletinAcknowledgments ServiceBulletinAcknowledgment[]
+
+  // Phase 8: Marketing
+  assetDownloads          MarketingAssetDownload[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -102,6 +122,32 @@ model Dealer {
   forecastConfig  ForecastConfig?
   invoices        Invoice[]
   warrantyClaims  WarrantyClaim[]
+
+  // Phase 8: Communication Hub
+  supportTickets  SupportTicket[]
+
+  // Phase 8: Incentives & Programs
+  programEnrollments DealerProgramEnrollment[]
+  rebateAccruals     RebateAccrual[]
+  incentiveClaims    IncentiveClaim[]
+  incentivePayouts   IncentivePayout[]
+
+  // Phase 8: Training & Certification
+  trainingAssignments TrainingAssignment[]
+  certifications      Certification[]
+
+  // Phase 8: Performance Scorecard
+  scorecards          DealerScorecard[]
+  performanceMetrics  PerformanceMetric[]
+  salesTargets        SalesTarget[]
+
+  // Phase 8: Parts & Service
+  partsOrders             PartsOrder[]
+  bulletinAcknowledgments ServiceBulletinAcknowledgment[]
+  recallNotifications     RecallDealerNotification[]
+
+  // Phase 8: Marketing Asset Library
+  assetDownloads          MarketingAssetDownload[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -436,14 +482,63 @@ model Document {
   version     Int      @default(1)
   isPublic    Boolean  @default(false)
 
+  // Access control
+  accessLevel String   @default("dealer") // public, dealer, role, user
+  allowedRoles String? // JSON array of allowed roles
+  allowedUsers String? // JSON array of allowed user IDs
+
   expiresAt   DateTime?
   uploadedBy  String?
+
+  // Version control
+  parentDocumentId String?
+  parentDocument   Document?  @relation("DocumentVersions", fields: [parentDocumentId], references: [id])
+  versions         Document[] @relation("DocumentVersions")
+
+  // Tracking
+  accessLogs       DocumentAccessLog[]
+  expiryReminders  DocumentExpiryReminder[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([dealerId])
   @@index([category])
+  @@index([parentDocumentId])
+  @@index([expiresAt])
+}
+
+model DocumentAccessLog {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId      String
+  action      String   // view, download, share, edit
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model DocumentExpiryReminder {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId      String
+  reminderDays Int     @default(30) // Days before expiry to send reminder
+  sentAt      DateTime?
+  acknowledged Boolean @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([documentId, userId, reminderDays])
+  @@index([documentId])
+  @@index([userId])
 }
 
 // ============================================================================
@@ -455,10 +550,15 @@ model Notification {
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type      String    // order_update, low_stock, document_expiry, system
+  type      String    // order_update, low_stock, document_expiry, system, announcement
   title     String
   body      String
   data      String?   // JSON string for additional data
+  priority  String    @default("normal") // low, normal, high, urgent
+
+  // Email delivery tracking
+  emailSent Boolean   @default(false)
+  emailSentAt DateTime?
 
   readAt    DateTime?
 
@@ -466,6 +566,81 @@ model Notification {
 
   @@index([userId])
   @@index([type])
+  @@index([createdAt])
+}
+
+model NotificationPreference {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+
+  // In-app notification preferences
+  orderUpdates          Boolean @default(true)
+  lowStockAlerts        Boolean @default(true)
+  invoiceNotifications  Boolean @default(true)
+  documentExpiry        Boolean @default(true)
+  systemAnnouncements   Boolean @default(true)
+  warrantyUpdates       Boolean @default(true)
+
+  // Email notification preferences
+  emailOrderUpdates     Boolean @default(true)
+  emailInvoices         Boolean @default(true)
+  emailDocumentExpiry   Boolean @default(true)
+  emailSystemAnnouncements Boolean @default(false)
+  emailDigestFrequency  String  @default("instant") // instant, daily, weekly, never
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model SystemAnnouncement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  type        String    @default("info") // info, warning, alert, maintenance
+  priority    String    @default("normal") // low, normal, high, critical
+
+  // Targeting
+  targetAll   Boolean   @default(true)
+  targetRoles String?   // JSON array of roles to target
+  targetTiers String?   // JSON array of dealer tiers to target
+
+  // Display settings
+  isDismissible Boolean @default(true)
+  showAsBanner  Boolean @default(false) // Show as a top banner vs notification
+
+  // Scheduling
+  publishAt   DateTime  @default(now())
+  expiresAt   DateTime?
+
+  // Status
+  isActive    Boolean   @default(true)
+  createdBy   String?
+
+  // Tracking
+  readReceipts AnnouncementReadReceipt[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive])
+  @@index([publishAt])
+  @@index([expiresAt])
+}
+
+model AnnouncementReadReceipt {
+  id              String   @id @default(cuid())
+  announcementId  String
+  announcement    SystemAnnouncement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId          String
+  dismissed       Boolean  @default(false)
+
+  readAt          DateTime @default(now())
+
+  @@unique([announcementId, userId])
+  @@index([announcementId])
+  @@index([userId])
 }
 
 // ============================================================================
@@ -846,4 +1021,1216 @@ model WarrantyClaimStatusHistory {
 
   @@index([claimId])
   @@index([createdAt])
+}
+
+// ============================================================================
+// PHASE 8: RELATIONSHIP LAYER
+// ============================================================================
+
+// ============================================================================
+// 8.1 COMMUNICATION HUB
+// ============================================================================
+
+model SupportTicket {
+  id              String    @id @default(cuid())
+  ticketNumber    String    @unique // TKT-2025-00001 format
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+  submittedById   String
+  submittedBy     User      @relation("TicketSubmitter", fields: [submittedById], references: [id])
+  assignedToId    String?
+  assignedTo      User?     @relation("TicketAssignee", fields: [assignedToId], references: [id])
+
+  // Ticket details
+  category        String    // product, warranty, order, billing, technical, other
+  subcategory     String?
+  subject         String
+  description     String
+  priority        String    @default("normal") // low, normal, high, urgent
+
+  // Status workflow: open -> in_progress -> pending_dealer -> resolved -> closed
+  status          String    @default("open")
+
+  // SLA tracking
+  slaResponseDue  DateTime?
+  slaResolutionDue DateTime?
+  firstResponseAt DateTime?
+  escalatedAt     DateTime?
+  escalationLevel Int       @default(0)
+
+  // Resolution
+  resolutionNotes String?
+  satisfactionRating Int?   // 1-5 rating from dealer
+
+  messages        TicketMessage[]
+  attachments     TicketAttachment[]
+
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([ticketNumber])
+  @@index([dealerId])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model TicketMessage {
+  id              String    @id @default(cuid())
+  ticketId        String
+  ticket          SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  content         String
+  isInternal      Boolean   @default(false) // Internal notes visible only to OEM reps
+  isSystemMessage Boolean   @default(false) // Auto-generated status messages
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model TicketAttachment {
+  id              String    @id @default(cuid())
+  ticketId        String
+  ticket          SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int       // bytes
+  url             String    // Storage URL
+
+  uploadedById    String?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([ticketId])
+}
+
+model KnowledgeCategory {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  parentId        String?
+  parent          KnowledgeCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children        KnowledgeCategory[] @relation("CategoryHierarchy")
+  sortOrder       Int       @default(0)
+  isActive        Boolean   @default(true)
+
+  articles        KnowledgeArticle[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model KnowledgeArticle {
+  id              String    @id @default(cuid())
+  categoryId      String
+  category        KnowledgeCategory @relation(fields: [categoryId], references: [id])
+
+  title           String
+  slug            String    @unique
+  content         String    // Markdown content
+  excerpt         String?   // Short summary for listings
+
+  // Visibility
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  targetRoles     String?   // JSON array of roles who can view
+  targetTiers     String?   // JSON array of dealer tiers who can view
+
+  // Metadata
+  tags            String?   // JSON array of tags
+  authorId        String?
+  viewCount       Int       @default(0)
+  helpfulCount    Int       @default(0)
+  notHelpfulCount Int       @default(0)
+
+  // Related tickets (used to answer)
+  relatedTickets  String?   // JSON array of ticket IDs
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isPublished])
+}
+
+// ============================================================================
+// 8.2 INCENTIVES & PROGRAMS
+// ============================================================================
+
+model IncentiveProgram {
+  id              String    @id @default(cuid())
+  name            String
+  code            String    @unique // REBATE-2025-Q1, COOP-2025
+  description     String?
+
+  // Program type
+  type            String    // rebate, coop, contest, spiff
+  subtype         String?   // volume_based, tiered, flat_rate, etc.
+
+  // Dates
+  startDate       DateTime
+  endDate         DateTime?
+  enrollmentDeadline DateTime?
+
+  // Status
+  status          String    @default("draft") // draft, active, paused, completed, cancelled
+
+  // Eligibility
+  eligibleTiers   String?   // JSON array of dealer tiers
+  eligibleRegions String?   // JSON array of regions
+  minOrderVolume  Float?    // Minimum order volume to qualify
+
+  // Rules (JSON structure for flexibility)
+  rules           String    // JSON: tier thresholds, rates, caps, etc.
+
+  // Funding
+  budgetAmount    Float?    // Total program budget
+  spentAmount     Float     @default(0) // Tracked spend
+
+  // Settings
+  autoEnroll      Boolean   @default(false)
+  requiresApproval Boolean  @default(true)
+
+  createdBy       String?
+
+  enrollments     DealerProgramEnrollment[]
+  accruals        RebateAccrual[]
+  claims          IncentiveClaim[]
+  payouts         IncentivePayout[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([code])
+  @@index([status])
+  @@index([type])
+  @@index([startDate])
+}
+
+model DealerProgramEnrollment {
+  id              String    @id @default(cuid())
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+  programId       String
+  program         IncentiveProgram @relation(fields: [programId], references: [id])
+
+  status          String    @default("pending") // pending, active, suspended, withdrawn
+  enrolledAt      DateTime  @default(now())
+  approvedAt      DateTime?
+  approvedById    String?
+
+  // Tracking
+  accruedAmount   Float     @default(0)
+  paidAmount      Float     @default(0)
+  pendingAmount   Float     @default(0)
+
+  // Terms acceptance
+  termsAcceptedAt DateTime?
+  termsVersion    String?
+
+  // Custom settings per dealer
+  customRules     String?   // JSON for dealer-specific adjustments
+
+  withdrawnAt     DateTime?
+  withdrawReason  String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([dealerId, programId])
+  @@index([dealerId])
+  @@index([programId])
+  @@index([status])
+}
+
+model RebateAccrual {
+  id              String    @id @default(cuid())
+  programId       String
+  program         IncentiveProgram @relation(fields: [programId], references: [id])
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Period
+  periodType      String    // monthly, quarterly, annual
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Amounts
+  qualifyingVolume Float    // Sales volume that qualified
+  rebateRate      Float     // Rate applied (e.g., 0.03 for 3%)
+  accruedAmount   Float     // Calculated rebate amount
+  adjustments     Float     @default(0) // Manual adjustments
+  finalAmount     Float     // accruedAmount + adjustments
+
+  // Tier achieved
+  tierAchieved    String?   // Which tier they reached
+  tierProgress    Float?    // Progress toward next tier (0-100%)
+
+  // Status
+  status          String    @default("calculated") // calculated, approved, paid
+  approvedById    String?
+  approvedAt      DateTime?
+
+  // Reference
+  orderId         String?   // Link to specific order if applicable
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([programId, dealerId, periodStart])
+  @@index([programId])
+  @@index([dealerId])
+  @@index([periodStart])
+  @@index([status])
+}
+
+model IncentiveClaim {
+  id              String    @id @default(cuid())
+  claimNumber     String    @unique // CLM-2025-00001
+  programId       String
+  program         IncentiveProgram @relation(fields: [programId], references: [id])
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+  submittedById   String
+  submittedBy     User      @relation(fields: [submittedById], references: [id])
+
+  // Claim type
+  claimType       String    // rebate_payout, coop_reimbursement, spiff_claim
+
+  // Amounts
+  requestedAmount Float
+  approvedAmount  Float?
+  paidAmount      Float?
+
+  // Details
+  description     String?
+  supportingInfo  String?   // JSON: invoice numbers, dates, etc.
+
+  // Status workflow: draft -> submitted -> under_review -> approved/denied -> paid
+  status          String    @default("draft")
+  reviewedById    String?
+  reviewNotes     String?
+  denialReason    String?
+
+  documents       IncentiveClaimDocument[]
+
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  approvedAt      DateTime?
+  paidAt          DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([claimNumber])
+  @@index([programId])
+  @@index([dealerId])
+  @@index([status])
+}
+
+model IncentiveClaimDocument {
+  id              String    @id @default(cuid())
+  claimId         String
+  claim           IncentiveClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int
+  url             String
+
+  documentType    String    // invoice, receipt, proof_of_purchase, ad_copy, other
+  description     String?
+
+  uploadedById    String?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([claimId])
+}
+
+model IncentivePayout {
+  id              String    @id @default(cuid())
+  programId       String
+  program         IncentiveProgram @relation(fields: [programId], references: [id])
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Payout details
+  payoutType      String    // rebate, coop, spiff, adjustment
+  amount          Float
+  paymentMethod   String?   // check, ach, credit, offset
+
+  // Reference
+  referenceNumber String?   // Check number, ACH confirmation, etc.
+  periodCovered   String?   // e.g., "Q1 2025"
+
+  // Status
+  status          String    @default("pending") // pending, processing, completed, failed
+  scheduledDate   DateTime?
+  paidDate        DateTime?
+  failedReason    String?
+
+  notes           String?
+  processedById   String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([programId])
+  @@index([dealerId])
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+// ============================================================================
+// 8.3 TRAINING & CERTIFICATION PORTAL
+// ============================================================================
+
+model TrainingCourse {
+  id              String    @id @default(cuid())
+  code            String    @unique // TRN-PROD-001
+  title           String
+  description     String?
+  shortDescription String?  // For card listings
+
+  // Categorization
+  category        String    // product, sales, service, compliance, safety
+  subcategory     String?
+  tags            String?   // JSON array of tags
+
+  // Requirements
+  isRequired      Boolean   @default(false)
+  requiredForRoles String?  // JSON array of roles
+  requiredForTiers String?  // JSON array of dealer tiers
+  prerequisiteCourseIds String? // JSON array of course IDs
+
+  // Course details
+  durationMinutes Int       @default(0)
+  passingScore    Int       @default(70) // Percentage to pass quiz
+  maxAttempts     Int       @default(3)  // Max quiz attempts
+
+  // Certification
+  certificationValid Int?   // Months certification is valid (null = no expiration)
+  certificateTemplateUrl String?
+
+  // Media
+  thumbnailUrl    String?
+  previewVideoUrl String?
+
+  // Status
+  status          String    @default("draft") // draft, published, archived
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+
+  // Version control
+  version         String    @default("1.0")
+
+  createdBy       String?
+
+  contents        CourseContent[]
+  quizzes         Quiz[]
+  assignments     TrainingAssignment[]
+  progress        CourseProgress[]
+  certifications  Certification[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([code])
+  @@index([category])
+  @@index([status])
+  @@index([isRequired])
+}
+
+model CourseContent {
+  id              String    @id @default(cuid())
+  courseId        String
+  course          TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Content details
+  title           String
+  contentType     String    // video, document, slide, scorm, external_link
+  contentUrl      String?   // URL to content
+  contentBody     String?   // For text/HTML content
+
+  // Order and structure
+  moduleNumber    Int       @default(1)  // Which module
+  lessonNumber    Int       @default(1)  // Lesson within module
+  sortOrder       Int       @default(0)
+
+  // Timing
+  durationMinutes Int       @default(0)
+
+  // Completion requirements
+  isRequired      Boolean   @default(true)
+  minWatchTime    Int?      // Minimum seconds to watch (for video)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([courseId])
+  @@index([sortOrder])
+}
+
+model Quiz {
+  id              String    @id @default(cuid())
+  courseId        String
+  course          TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  title           String
+  description     String?
+  quizType        String    @default("final") // module, final, pre_assessment
+
+  // Quiz settings
+  timeLimitMinutes Int?     // null = no limit
+  passingScore    Int       @default(70)
+  randomizeQuestions Boolean @default(true)
+  randomizeAnswers Boolean @default(true)
+  showCorrectAnswers Boolean @default(true) // After completion
+  questionsToShow Int?      // If null, show all questions
+
+  sortOrder       Int       @default(0)
+
+  questions       QuizQuestion[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([courseId])
+}
+
+model QuizQuestion {
+  id              String    @id @default(cuid())
+  quizId          String
+  quiz            Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  questionType    String    // multiple_choice, true_false, multi_select
+  question        String
+  explanation     String?   // Explanation shown after answer
+
+  // Answers stored as JSON: [{ text, isCorrect, sortOrder }]
+  answers         String    // JSON array
+
+  // Weighting
+  points          Int       @default(1)
+  sortOrder       Int       @default(0)
+
+  // Media
+  imageUrl        String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([quizId])
+}
+
+model TrainingAssignment {
+  id              String    @id @default(cuid())
+  courseId        String
+  course          TrainingCourse @relation(fields: [courseId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Assignment details
+  assignedById    String?
+  dueDate         DateTime?
+  priority        String    @default("normal") // low, normal, high, urgent
+
+  // Status
+  status          String    @default("assigned") // assigned, in_progress, completed, overdue
+
+  // Notifications
+  reminderSentAt  DateTime?
+  overdueSentAt   DateTime?
+
+  completedAt     DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([courseId, userId])
+  @@index([userId])
+  @@index([dealerId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model CourseProgress {
+  id              String    @id @default(cuid())
+  courseId        String
+  course          TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  // Progress tracking
+  status          String    @default("not_started") // not_started, in_progress, completed
+  percentComplete Int       @default(0)
+
+  // Content progress (JSON: { contentId: { viewed, viewedAt, timeSpent } })
+  contentProgress String?   // JSON object
+
+  // Quiz results (JSON: { quizId: { attempts, bestScore, passedAt } })
+  quizResults     String?   // JSON object
+
+  // Time tracking
+  totalTimeMinutes Int      @default(0)
+  lastAccessedAt  DateTime?
+
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([courseId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Certification {
+  id              String    @id @default(cuid())
+  courseId        String
+  course          TrainingCourse @relation(fields: [courseId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Certification details
+  certificateNumber String  @unique // CERT-2025-00001
+  status          String    @default("active") // active, expired, revoked
+
+  // Scores
+  finalScore      Int       // Quiz score achieved
+  attemptNumber   Int       @default(1)
+
+  // Validity
+  issuedAt        DateTime  @default(now())
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  revokeReason    String?
+
+  // Certificate file
+  certificateUrl  String?
+
+  // Renewal tracking
+  renewalReminderSentAt DateTime?
+  renewedFromId   String?   // Previous certification if renewal
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([courseId])
+  @@index([userId])
+  @@index([dealerId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// 8.4 DEALER PERFORMANCE SCORECARD
+// ============================================================================
+
+model DealerScorecard {
+  id              String    @id @default(cuid())
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Period
+  periodType      String    @default("monthly") // monthly, quarterly, annual
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Sales Metrics
+  salesActual     Float     @default(0)
+  salesTarget     Float     @default(0)
+  salesScore      Float     @default(0) // Normalized 0-100
+  salesYoYChange  Float?    // % change vs same period last year
+
+  // Growth
+  revenueGrowth   Float?    // % revenue growth
+  unitGrowth      Float?    // % unit sales growth
+  growthScore     Float     @default(0)
+
+  // Customer Satisfaction
+  csiScore        Float?    // Customer satisfaction index
+  csiSampleSize   Int?
+  csiScore100     Float     @default(0) // Normalized 0-100
+
+  // Warranty/Quality
+  warrantyClaimRate Float?  // Claims per 100 units
+  warrantyClaimCount Int    @default(0)
+  warrantyScore   Float     @default(0)
+
+  // Training Compliance
+  trainingComplianceRate Float @default(0) // % of required training completed
+  certifiedStaffCount Int   @default(0)
+  totalStaffCount Int       @default(0)
+  trainingScore   Float     @default(0)
+
+  // Inventory Management
+  inventoryTurnRate Float?  // Turns per year
+  daysOfSupply    Float?
+  stockoutRate    Float?    // % of time key items out of stock
+  inventoryScore  Float     @default(0)
+
+  // Payment Performance
+  avgDaysToPay    Float?
+  onTimePaymentRate Float?  // % of invoices paid on time
+  paymentScore    Float     @default(0)
+
+  // Composite Score
+  compositeScore  Float     @default(0) // Weighted average (0-100)
+  scoreRank       Int?      // Rank among all dealers
+  tierRecommendation String? // Recommended tier based on score
+
+  // Trend
+  previousCompositeScore Float?
+  scoreTrend      String?   // up, down, stable
+
+  // Metadata
+  calculatedAt    DateTime  @default(now())
+  calculatedBy    String?   // System or manual
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([dealerId, periodStart, periodType])
+  @@index([dealerId])
+  @@index([periodStart])
+  @@index([compositeScore])
+}
+
+model PerformanceMetric {
+  id              String    @id @default(cuid())
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  metricType      String    // sales, csi, warranty, training, inventory, payment
+  metricName      String    // Specific metric name
+
+  // Time period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // Values
+  value           Float
+  previousValue   Float?
+  target          Float?
+  benchmark       Float?    // Network/industry average
+
+  // Analysis
+  percentChange   Float?
+  percentOfTarget Float?
+  percentile      Float?    // Percentile rank in network
+
+  // Metadata
+  source          String?   // Where the data came from
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([dealerId])
+  @@index([metricType])
+  @@index([periodStart])
+}
+
+model SalesTarget {
+  id              String    @id @default(cuid())
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Target period
+  year            Int
+  quarter         Int?      // null = annual target
+  month           Int?      // null = quarterly/annual
+
+  // Target values
+  revenueTarget   Float     @default(0)
+  unitTarget      Int       @default(0)
+  marginTarget    Float?    // Target margin %
+
+  // By category (JSON for flexibility)
+  categoryTargets String?   // JSON: { categoryId: { revenue, units } }
+
+  // Status
+  status          String    @default("active") // draft, active, locked
+  approvedById    String?
+  approvedAt      DateTime?
+
+  // Actuals (updated as sales come in)
+  revenueActual   Float     @default(0)
+  unitActual      Int       @default(0)
+
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([dealerId, year, quarter, month])
+  @@index([dealerId])
+  @@index([year])
+}
+
+model ScoreWeight {
+  id              String    @id @default(cuid())
+
+  // Scope (null = global default)
+  dealerTier      String?   // Apply different weights by tier
+  effectiveDate   DateTime  @default(now())
+
+  // Weights (must sum to 100)
+  salesWeight     Float     @default(30)
+  growthWeight    Float     @default(15)
+  csiWeight       Float     @default(20)
+  warrantyWeight  Float     @default(10)
+  trainingWeight  Float     @default(10)
+  inventoryWeight Float     @default(10)
+  paymentWeight   Float     @default(5)
+
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([dealerTier])
+  @@index([isActive])
+}
+
+model TierThreshold {
+  id              String    @id @default(cuid())
+
+  tierName        String    // platinum, gold, silver, bronze
+  minScore        Float     // Minimum composite score for tier
+  maxScore        Float?    // Maximum (null for top tier)
+
+  // Additional criteria
+  minAnnualRevenue Float?
+  minYearsActive  Int?
+
+  // Benefits (JSON for flexibility)
+  benefits        String?   // JSON: { rebateRate, coopRate, supportLevel, etc. }
+
+  sortOrder       Int       @default(0) // For display order
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([tierName])
+  @@index([isActive])
+}
+
+// ============================================================================
+// 8.5 PARTS & SERVICE MODULE
+// ============================================================================
+
+model Part {
+  id              String    @id @default(cuid())
+  partNumber      String    @unique
+  name            String
+  description     String?
+
+  categoryId      String?
+  category        PartCategory? @relation(fields: [categoryId], references: [id])
+
+  // Pricing
+  listPrice       Float     @default(0)
+  dealerPrice     Float     @default(0)
+  costPrice       Float?
+
+  // Inventory
+  quantityOnHand  Int       @default(0)
+  quantityReserved Int      @default(0)
+  reorderPoint    Int       @default(5)
+  reorderQuantity Int       @default(10)
+
+  // Attributes
+  weight          Float?    // For shipping calculation
+  dimensions      String?   // JSON: { length, width, height }
+  unitOfMeasure   String    @default("each") // each, set, pair, etc.
+
+  // Status
+  status          String    @default("active") // active, discontinued, backordered
+
+  // Media
+  imageUrl        String?
+  specSheetUrl    String?
+
+  // Cross-reference
+  supersededByPartId String?
+  supersededBy    Part?     @relation("PartSupersedes", fields: [supersededByPartId], references: [id])
+  supersedes      Part[]    @relation("PartSupersedes")
+
+  // Applicable products (JSON array of product IDs)
+  applicableProducts String? // JSON array
+
+  partsOrderItems PartsOrderItem[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([partNumber])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model PartCategory {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  parentId        String?
+  parent          PartCategory?  @relation("PartCategoryHierarchy", fields: [parentId], references: [id])
+  children        PartCategory[] @relation("PartCategoryHierarchy")
+  sortOrder       Int       @default(0)
+
+  parts           Part[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model PartsOrder {
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique // PO-2025-00001
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+  orderedById     String
+  orderedBy       User      @relation(fields: [orderedById], references: [id])
+
+  // Status
+  status          String    @default("draft") // draft, submitted, confirmed, shipped, delivered, cancelled
+
+  // Amounts
+  subtotal        Float     @default(0)
+  shippingAmount  Float     @default(0)
+  taxAmount       Float     @default(0)
+  totalAmount     Float     @default(0)
+
+  // Shipping
+  shippingAddress String?   // JSON
+  shippingMethod  String?
+  trackingNumber  String?
+
+  // Reference
+  poNumber        String?   // Dealer's PO
+  notes           String?
+  isRush          Boolean   @default(false)
+
+  items           PartsOrderItem[]
+
+  submittedAt     DateTime?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([orderNumber])
+  @@index([dealerId])
+  @@index([status])
+}
+
+model PartsOrderItem {
+  id              String    @id @default(cuid())
+  orderId         String
+  order           PartsOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  partId          String
+  part            Part      @relation(fields: [partId], references: [id])
+
+  quantity        Int
+  unitPrice       Float
+  totalPrice      Float
+
+  // For tracking partial shipments
+  quantityShipped Int       @default(0)
+  quantityBackordered Int   @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([orderId])
+  @@index([partId])
+}
+
+model ServiceBulletin {
+  id              String    @id @default(cuid())
+  bulletinNumber  String    @unique // TSB-2025-001
+  title           String
+  description     String
+  content         String    // Full bulletin content (markdown)
+
+  // Categorization
+  category        String    // safety, recall, service, technical, product_update
+  severity        String    @default("normal") // critical, high, normal, low
+
+  // Affected items
+  affectedProducts String?  // JSON array of product IDs
+  affectedSerialRange String? // e.g., "SN001000-SN005000"
+  affectedModelYears String? // e.g., "2023-2025"
+
+  // Action required
+  actionRequired  String?   // What dealers need to do
+  laborTimeHours  Float?    // Estimated labor time
+  partsRequired   String?   // JSON array of part numbers
+
+  // Dates
+  effectiveDate   DateTime
+  expirationDate  DateTime?
+
+  // Status
+  status          String    @default("draft") // draft, published, superseded, expired
+
+  // Attachments
+  attachmentUrls  String?   // JSON array of URLs
+
+  // Tracking
+  publishedById   String?
+  publishedAt     DateTime?
+  viewCount       Int       @default(0)
+
+  acknowledgments ServiceBulletinAcknowledgment[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([bulletinNumber])
+  @@index([category])
+  @@index([severity])
+  @@index([status])
+}
+
+model ServiceBulletinAcknowledgment {
+  id              String    @id @default(cuid())
+  bulletinId      String
+  bulletin        ServiceBulletin @relation(fields: [bulletinId], references: [id], onDelete: Cascade)
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  acknowledgedAt  DateTime  @default(now())
+
+  @@unique([bulletinId, dealerId])
+  @@index([bulletinId])
+  @@index([dealerId])
+}
+
+model RecallNotice {
+  id              String    @id @default(cuid())
+  recallNumber    String    @unique // RCL-2025-001
+  title           String
+  description     String
+  content         String    // Full recall details
+
+  // Regulatory
+  nhtsaCampaignNumber String? // NHTSA campaign number if applicable
+  regulatoryBody  String?   // NHTSA, Transport Canada, etc.
+
+  // Severity
+  severity        String    // critical, high, normal
+  safetyRisk      String?   // Description of safety risk
+
+  // Affected items
+  affectedProducts String?  // JSON array of product IDs
+  affectedSerialRange String?
+  affectedModelYears String?
+  estimatedAffectedUnits Int?
+
+  // Remedy
+  remedyDescription String?
+  remedyAvailableDate DateTime?
+  partsAvailable  Boolean   @default(false)
+
+  // Dates
+  announcedDate   DateTime
+  remedyDeadline  DateTime?
+
+  // Status
+  status          String    @default("active") // active, completed, superseded
+
+  // Dealer tracking
+  dealerNotifications RecallDealerNotification[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([recallNumber])
+  @@index([severity])
+  @@index([status])
+}
+
+model RecallDealerNotification {
+  id              String    @id @default(cuid())
+  recallId        String
+  recall          RecallNotice @relation(fields: [recallId], references: [id], onDelete: Cascade)
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Affected inventory at this dealer
+  affectedUnits   Int       @default(0)
+  unitsRemedied   Int       @default(0)
+
+  // Status
+  status          String    @default("notified") // notified, acknowledged, in_progress, completed
+
+  acknowledgedAt  DateTime?
+  completedAt     DateTime?
+
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([recallId, dealerId])
+  @@index([recallId])
+  @@index([dealerId])
+  @@index([status])
+}
+
+// ============================================================================
+// 8.6 MARKETING ASSET LIBRARY
+// ============================================================================
+
+model MarketingAsset {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+
+  categoryId      String
+  category        MarketingAssetCategory @relation(fields: [categoryId], references: [id])
+
+  // File details
+  assetType       String    // image, video, document, template, branding
+  mimeType        String
+  fileSize        Int       // bytes
+  url             String
+  thumbnailUrl    String?
+
+  // Dimensions (for images/videos)
+  width           Int?
+  height          Int?
+  duration        Int?      // seconds for video
+
+  // Metadata
+  tags            String?   // JSON array
+  brand           String?   // Product brand
+  campaign        String?   // Campaign name
+  year            Int?
+
+  // Availability
+  status          String    @default("active") // draft, active, archived
+  availableToTiers String?  // JSON array of tiers (null = all)
+  availableToRegions String? // JSON array of regions (null = all)
+
+  // Usage tracking
+  downloadCount   Int       @default(0)
+  viewCount       Int       @default(0)
+
+  // Versioning
+  version         String    @default("1.0")
+  previousVersionId String?
+
+  uploadedById    String?
+
+  downloads       MarketingAssetDownload[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([assetType])
+  @@index([status])
+  @@index([brand])
+}
+
+model MarketingAssetCategory {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  parentId        String?
+  parent          MarketingAssetCategory?  @relation("AssetCategoryHierarchy", fields: [parentId], references: [id])
+  children        MarketingAssetCategory[] @relation("AssetCategoryHierarchy")
+  sortOrder       Int       @default(0)
+
+  assets          MarketingAsset[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model MarketingAssetDownload {
+  id              String    @id @default(cuid())
+  assetId         String
+  asset           MarketingAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+
+  downloadedAt    DateTime  @default(now())
+  ipAddress       String?
+
+  @@index([assetId])
+  @@index([userId])
+  @@index([dealerId])
+  @@index([downloadedAt])
+}
+
+model CampaignTemplate {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+
+  templateType    String    // email, flyer, social_post, banner, signage
+  category        String?   // product_launch, seasonal, promotional
+
+  // Template content
+  templateUrl     String?   // URL to template file
+  previewUrl      String?   // Preview image
+
+  // Customization options (JSON)
+  customizableFields String? // JSON: [{ field, type, label, defaultValue }]
+
+  // Availability
+  status          String    @default("active") // draft, active, archived
+  availableToTiers String?  // JSON array
+
+  // Usage
+  useCount        Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([templateType])
+  @@index([status])
 }

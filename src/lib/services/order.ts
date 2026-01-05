@@ -159,7 +159,7 @@ export async function reserveInventory(
             where: { id: inv.id },
             data: {
               quantity: inv.quantity - toDeduct,
-              reservedQuantity: inv.reservedQuantity + toDeduct,
+              reserved: inv.reserved + toDeduct,
             },
           })
 
@@ -201,7 +201,7 @@ export async function releaseInventory(
         const inventoryRecords = await tx.inventory.findMany({
           where: {
             productId: item.productId,
-            reservedQuantity: { gt: 0 },
+            reserved: { gt: 0 },
           },
         })
 
@@ -210,13 +210,13 @@ export async function releaseInventory(
         for (const inv of inventoryRecords) {
           if (remainingToRelease <= 0) break
 
-          const toRelease = Math.min(inv.reservedQuantity, remainingToRelease)
+          const toRelease = Math.min(inv.reserved, remainingToRelease)
 
           await tx.inventory.update({
             where: { id: inv.id },
             data: {
               quantity: inv.quantity + toRelease,
-              reservedQuantity: inv.reservedQuantity - toRelease,
+              reserved: inv.reserved - toRelease,
             },
           })
 
@@ -369,7 +369,7 @@ export async function getOrderByNumber(orderNumber: string) {
   })
 }
 
-// Update order status
+// Update order status with real-time notification
 export async function updateOrderStatus(
   orderId: string,
   status: string,
@@ -399,6 +399,8 @@ export async function updateOrderStatus(
       return { success: false, error: 'Order not found' }
     }
 
+    const previousStatus = order.status
+
     // Get timestamp field for this status
     const timestampField = getTimestampField(status)
 
@@ -425,6 +427,24 @@ export async function updateOrderStatus(
     // If cancelled, release inventory
     if (status === 'cancelled') {
       await releaseInventory(orderId)
+    }
+
+    // Emit real-time order update
+    try {
+      const { emitOrderUpdate } = await import('@/lib/services/realtime')
+      emitOrderUpdate(
+        {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          status,
+          previousStatus,
+          updatedBy: changedBy,
+        },
+        order.dealerId
+      )
+    } catch (e) {
+      // Don't fail the update if real-time emission fails
+      console.error('Failed to emit real-time order update:', e)
     }
 
     return { success: true }

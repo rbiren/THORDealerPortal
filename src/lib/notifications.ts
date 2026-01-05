@@ -298,3 +298,61 @@ export async function createSystemAnnouncement(
 
   return createNotifications(inputs)
 }
+
+// ============================================================================
+// REAL-TIME NOTIFICATION HELPERS
+// ============================================================================
+
+/**
+ * Create and emit a real-time notification
+ * Use this when you want the notification to appear instantly in the UI
+ */
+export async function createAndEmitNotification(
+  input: CreateNotificationInput
+): Promise<Notification> {
+  const notification = await createNotification(input)
+
+  // Import dynamically to avoid circular dependencies
+  const { emitNotification } = await import('@/lib/services/realtime')
+
+  emitNotification(
+    {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      data: notification.data || undefined,
+    },
+    [input.userId]
+  )
+
+  return notification
+}
+
+/**
+ * Create notifications for multiple users and emit them in real-time
+ */
+export async function createAndEmitNotifications(
+  inputs: CreateNotificationInput[]
+): Promise<number> {
+  const count = await createNotifications(inputs)
+
+  // Import dynamically to avoid circular dependencies
+  const { emitNotification } = await import('@/lib/services/realtime')
+
+  // Emit each notification (could be optimized with batch emit)
+  for (const input of inputs) {
+    emitNotification(
+      {
+        id: `${Date.now()}-${input.userId}`, // Temp ID since we used createMany
+        type: input.type,
+        title: input.title,
+        body: input.body,
+        data: input.data,
+      },
+      [input.userId]
+    )
+  }
+
+  return count
+}
