@@ -454,10 +454,10 @@ This document contains the complete task breakdown for building THORDealerPortal
 
 | ID | Priority | Status | Task | Iterations | Command |
 |----|----------|--------|------|------------|---------|
-| 8.1.1 | 🔴 | ⏳ | Design communication schema | 15 | `/ralph-loop "Create Prisma schema for Communication Hub: SupportTicket, TicketMessage, TicketAttachment, Announcement, AnnouncementReadReceipt, KnowledgeArticle. Add relations, indexes. Run migration" --max-iterations 15` |
-| 8.1.2 | 🔴 | ⏳ | Build ticket submission flow | 15 | `/ralph-loop "Create ticket submission: /support/new page, form with category/priority/subject/description, file attachments, Zod validation, server action to create ticket. Generate ticket number" --max-iterations 15` |
-| 8.1.3 | 🔴 | ⏳ | Create dealer ticket list | 12 | `/ralph-loop "Build dealer support ticket list: /support page, filter by status/category, search by ticket number, pagination, status badges, link to detail" --max-iterations 12` |
-| 8.1.4 | 🔴 | ⏳ | Build ticket detail page | 15 | `/ralph-loop "Create ticket detail: /support/[ticketNumber] page, show ticket info, message thread, add reply, file attachments, status timeline. Real-time feel" --max-iterations 15` |
+| 8.1.1 | 🔴 | ✅ | Design communication schema | Manual | *Completed 2026-01-05 (SupportTicket, TicketMessage, TicketAttachment, KnowledgeCategory, KnowledgeArticle)* |
+| 8.1.2 | 🔴 | ✅ | Build ticket submission flow | Manual | *Completed 2026-01-05 (/support/new page, Zod validation, SLA calculation)* |
+| 8.1.3 | 🔴 | ✅ | Create dealer ticket list | Manual | *Completed 2026-01-05 (/support page, filters, pagination, stats)* |
+| 8.1.4 | 🔴 | ✅ | Build ticket detail page | Manual | *Completed 2026-01-05 (/support/[ticketNumber] page, message thread, SLA indicators)* |
 | 8.1.5 | 🟠 | ⏳ | Build admin ticket queue | 15 | `/ralph-loop "Create admin ticket management: /admin/support page, all tickets across dealers, assign to OEM rep, filter by status/priority/assignee, bulk actions" --max-iterations 15` |
 | 8.1.6 | 🟠 | ⏳ | Add ticket assignment/routing | 12 | `/ralph-loop "Implement ticket routing: auto-assign by category, manual reassign, assignment notifications, workload balancing view" --max-iterations 12` |
 | 8.1.7 | 🟠 | ⏳ | Create announcement system | 15 | `/ralph-loop "Build announcements: admin create/edit form, target dealer tiers, schedule publish, announcement feed on dealer dashboard, mark as read, critical banner" --max-iterations 15` |
