@@ -9,7 +9,7 @@ This document provides guidance for AI assistants working with the THORDealerPor
 ### Current Status
 
 - **Stage**: Active development (Phase 3+ features)
-- **Completed**: Authentication, Dashboard, Inventory, Orders, Invoices, Warranty Claims
+- **Completed**: Authentication, Dashboard, Inventory, Orders, Invoices, Warranty Claims, Community Forum
 - **Branch Strategy**: Feature branches prefixed with `claude/` for AI-assisted development
 - **Development Approach**: Ralph Wiggum autonomous loops for iterative implementation
 
@@ -31,6 +31,7 @@ THORDealerPortal/
 │   │   ├── orders/       # Order processing
 │   │   ├── invoices/     # Invoice management
 │   │   ├── warranty/     # Warranty claims module
+│   │   ├── forum/        # Community forum for dealers
 │   │   └── api/          # API routes
 │   ├── components/       # Reusable React components
 │   ├── lib/              # Utilities, services, validations

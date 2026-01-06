@@ -13,18 +13,114 @@ async function hashPassword(password: string): Promise<string> {
 async function main() {
   console.log('🌱 Starting seed...')
 
-  // Clean existing data
-  await prisma.auditLog.deleteMany()
+  // Clean existing data - order matters for foreign keys!
+  // Using exact model names from schema.prisma
+
+  // Forum
+  await prisma.forumReplyLike.deleteMany()
+  await prisma.forumPostLike.deleteMany()
+  await prisma.forumReply.deleteMany()
+  await prisma.forumPost.deleteMany()
+  await prisma.forumCategory.deleteMany()
+
+  // Marketing
+  await prisma.marketingAssetDownload.deleteMany()
+  await prisma.campaignTemplate.deleteMany()
+  await prisma.marketingAsset.deleteMany()
+  await prisma.marketingAssetCategory.deleteMany()
+
+  // Parts & Service
+  await prisma.recallDealerNotification.deleteMany()
+  await prisma.recallNotice.deleteMany()
+  await prisma.serviceBulletinAcknowledgment.deleteMany()
+  await prisma.serviceBulletin.deleteMany()
+  await prisma.partsOrderItem.deleteMany()
+  await prisma.partsOrder.deleteMany()
+  await prisma.part.deleteMany()
+  await prisma.partCategory.deleteMany()
+
+  // Scorecard
+  await prisma.tierThreshold.deleteMany()
+  await prisma.scoreWeight.deleteMany()
+  await prisma.salesTarget.deleteMany()
+  await prisma.performanceMetric.deleteMany()
+  await prisma.dealerScorecard.deleteMany()
+
+  // Training
+  await prisma.certification.deleteMany()
+  await prisma.courseProgress.deleteMany()
+  await prisma.trainingAssignment.deleteMany()
+  await prisma.quizQuestion.deleteMany()
+  await prisma.quiz.deleteMany()
+  await prisma.courseContent.deleteMany()
+  await prisma.trainingCourse.deleteMany()
+
+  // Incentives
+  await prisma.incentivePayout.deleteMany()
+  await prisma.incentiveClaimDocument.deleteMany()
+  await prisma.incentiveClaim.deleteMany()
+  await prisma.rebateAccrual.deleteMany()
+  await prisma.dealerProgramEnrollment.deleteMany()
+  await prisma.incentiveProgram.deleteMany()
+
+  // Knowledge base
+  await prisma.knowledgeArticle.deleteMany()
+  await prisma.knowledgeCategory.deleteMany()
+
+  // Support tickets
+  await prisma.ticketAttachment.deleteMany()
+  await prisma.ticketMessage.deleteMany()
+  await prisma.supportTicket.deleteMany()
+
+  // Warranty
+  await prisma.warrantyClaimStatusHistory.deleteMany()
+  await prisma.warrantyClaimNote.deleteMany()
+  await prisma.warrantyClaimAttachment.deleteMany()
+  await prisma.warrantyClaimItem.deleteMany()
+  await prisma.warrantyClaim.deleteMany()
+
+  // Announcements & Notifications
+  await prisma.announcementReadReceipt.deleteMany()
+  await prisma.systemAnnouncement.deleteMany()
+  await prisma.notificationPreference.deleteMany()
   await prisma.notification.deleteMany()
+
+  // Documents
+  await prisma.documentExpiryReminder.deleteMany()
+  await prisma.documentAccessLog.deleteMany()
   await prisma.document.deleteMany()
+
+  // Forecasting
+  await prisma.marketIndicator.deleteMany()
+  await prisma.seasonalPattern.deleteMany()
+  await prisma.suggestedOrder.deleteMany()
+  await prisma.demandForecast.deleteMany()
+  await prisma.forecastConfig.deleteMany()
+
+  // Orders and invoices
+  await prisma.orderNote.deleteMany()
   await prisma.orderStatusHistory.deleteMany()
   await prisma.orderItem.deleteMany()
+  await prisma.invoice.deleteMany()
   await prisma.order.deleteMany()
+
+  // Cart
+  await prisma.cartItem.deleteMany()
+  await prisma.cart.deleteMany()
+
+  // Inventory
   await prisma.inventory.deleteMany()
   await prisma.inventoryLocation.deleteMany()
+
+  // Products
   await prisma.productImage.deleteMany()
   await prisma.product.deleteMany()
   await prisma.productCategory.deleteMany()
+
+  // Audit log
+  await prisma.auditLog.deleteMany()
+
+  // Dealers and users
   await prisma.dealerAddress.deleteMany()
   await prisma.dealerContact.deleteMany()
   await prisma.session.deleteMany()
@@ -33,6 +129,84 @@ async function main() {
   await prisma.dealer.deleteMany()
 
   console.log('🧹 Cleaned existing data')
+
+  // Create Forum Categories
+  const forumCategories = await Promise.all([
+    prisma.forumCategory.create({
+      data: {
+        name: 'General Discussion',
+        slug: 'general',
+        description: 'General topics and conversations about dealership operations',
+        icon: 'MessageSquare',
+        color: '#3B82F6',
+        targetAudience: 'all',
+        sortOrder: 1,
+        isActive: true,
+      },
+    }),
+    prisma.forumCategory.create({
+      data: {
+        name: 'Product Questions',
+        slug: 'products',
+        description: 'Ask questions about THOR products, features, and specifications',
+        icon: 'HelpCircle',
+        color: '#8B5CF6',
+        targetAudience: 'all',
+        sortOrder: 2,
+        isActive: true,
+      },
+    }),
+    prisma.forumCategory.create({
+      data: {
+        name: 'Sales Tips & Strategies',
+        slug: 'sales',
+        description: 'Share sales strategies, closing techniques, and success stories',
+        icon: 'TrendingUp',
+        color: '#10B981',
+        targetAudience: 'all',
+        sortOrder: 3,
+        isActive: true,
+      },
+    }),
+    prisma.forumCategory.create({
+      data: {
+        name: 'Service & Warranty',
+        slug: 'service',
+        description: 'Discuss service issues, warranty claims, and technical support',
+        icon: 'Wrench',
+        color: '#F59E0B',
+        targetAudience: 'all',
+        sortOrder: 4,
+        isActive: true,
+      },
+    }),
+    prisma.forumCategory.create({
+      data: {
+        name: 'Announcements',
+        slug: 'announcements',
+        description: 'Official announcements from THOR Industries',
+        icon: 'Megaphone',
+        color: '#EF4444',
+        targetAudience: 'all',
+        sortOrder: 0,
+        isActive: true,
+      },
+    }),
+    prisma.forumCategory.create({
+      data: {
+        name: 'Tips & Best Practices',
+        slug: 'tips',
+        description: 'Share helpful tips and best practices with the dealer community',
+        icon: 'Lightbulb',
+        color: '#F97316',
+        targetAudience: 'all',
+        sortOrder: 5,
+        isActive: true,
+      },
+    }),
+  ])
+
+  console.log('💬 Created forum categories')
 
   // Create Inventory Locations
   const warehouse = await prisma.inventoryLocation.create({
@@ -316,6 +490,194 @@ async function main() {
   )
 
   console.log('👤 Created users')
+
+  // Create sample forum posts
+  const forumPosts = await Promise.all([
+    prisma.forumPost.create({
+      data: {
+        categoryId: forumCategories[0].id, // General Discussion
+        authorId: dealerUsers[0].id,
+        dealerId: dealers[0].id,
+        title: 'Tips for winter RV storage preparation',
+        content: `Hi everyone! With winter approaching, I wanted to share some tips we've found helpful for preparing RVs for winter storage:
+
+1. **Drain all water systems** - This includes fresh water tank, water heater, and all lines
+2. **Add RV antifreeze** - Use non-toxic antifreeze in all drains and toilet
+3. **Remove batteries** - Store in a warm, dry place and keep charged
+4. **Cover tires** - Protect from UV damage with tire covers
+5. **Ventilate the interior** - Leave vents cracked to prevent moisture buildup
+
+What other tips do you recommend to customers? Would love to hear what works for your dealerships!`,
+        excerpt: 'With winter approaching, I wanted to share some tips for preparing RVs for winter storage including draining water systems, adding antifreeze, and more...',
+        postType: 'discussion',
+        tags: JSON.stringify(['winter', 'storage', 'maintenance', 'tips']),
+        status: 'published',
+        isPinned: true,
+        viewCount: 245,
+        replyCount: 8,
+        likeCount: 32,
+        lastReplyAt: new Date('2026-01-05T14:30:00Z'),
+      },
+    }),
+    prisma.forumPost.create({
+      data: {
+        categoryId: forumCategories[1].id, // Product Questions
+        authorId: dealerUsers[1].id,
+        dealerId: dealers[1].id,
+        title: 'Question about 2026 Jayco North Point suspension upgrades',
+        content: `Has anyone gotten details on the suspension upgrades in the 2026 Jayco North Point lineup?
+
+A customer is asking about the differences between the MORryde IS suspension and the new upgraded option. Specifically:
+- Weight capacity differences
+- Ride quality improvements
+- Warranty coverage
+
+Any insights from those who've had customers with both versions would be greatly appreciated!`,
+        excerpt: 'Has anyone gotten details on the suspension upgrades in the 2026 Jayco North Point lineup? A customer is asking about the differences...',
+        postType: 'question',
+        tags: JSON.stringify(['jayco', 'north-point', 'suspension', '2026']),
+        status: 'published',
+        isResolved: false,
+        viewCount: 127,
+        replyCount: 4,
+        likeCount: 15,
+        lastReplyAt: new Date('2026-01-04T09:15:00Z'),
+      },
+    }),
+    prisma.forumPost.create({
+      data: {
+        categoryId: forumCategories[2].id, // Sales Tips
+        authorId: dealerUsers[0].id,
+        dealerId: dealers[0].id,
+        title: 'Successful financing strategies for first-time RV buyers',
+        content: `Wanted to share what's been working for us with first-time RV buyers who are nervous about financing:
+
+**Key Strategies:**
+1. Walk through the total cost of ownership, not just monthly payments
+2. Compare RV camping costs vs hotel stays - the math often surprises them
+3. Partner with multiple lenders to find the best rates for different credit profiles
+4. Offer extended warranties as part of the financing discussion
+5. Create a "first year owner" checklist to build confidence
+
+We've seen a 23% increase in first-time buyer conversions since implementing these strategies last quarter.
+
+What approaches have worked for your teams?`,
+        excerpt: 'Wanted to share what has been working for us with first-time RV buyers who are nervous about financing...',
+        postType: 'tip',
+        tags: JSON.stringify(['sales', 'financing', 'first-time-buyers', 'strategies']),
+        status: 'published',
+        isFeatured: true,
+        viewCount: 312,
+        replyCount: 12,
+        likeCount: 47,
+        lastReplyAt: new Date('2026-01-06T08:00:00Z'),
+      },
+    }),
+    prisma.forumPost.create({
+      data: {
+        categoryId: forumCategories[3].id, // Service & Warranty
+        authorId: dealerUsers[2].id,
+        dealerId: dealers[2].id,
+        title: 'Best practices for slide-out seal replacement',
+        content: `Our service team has been dealing with several slide-out seal replacements lately. Here's our refined process:
+
+**Tools needed:**
+- Heat gun
+- Seal removal tool
+- Adhesive remover
+- New seal material
+- Dicor lap sealant
+
+**Process:**
+1. Fully extend the slide
+2. Remove old seal carefully with heat gun
+3. Clean surface thoroughly with adhesive remover
+4. Apply new seal starting at bottom, working up
+5. Use Dicor at corners and seams
+
+Anyone have tips for dealing with stubborn adhesive residue?`,
+        excerpt: 'Our service team has been dealing with several slide-out seal replacements lately. Here is our refined process...',
+        postType: 'tip',
+        tags: JSON.stringify(['service', 'slide-out', 'seals', 'repair']),
+        status: 'published',
+        viewCount: 189,
+        replyCount: 6,
+        likeCount: 28,
+        lastReplyAt: new Date('2026-01-03T16:45:00Z'),
+      },
+    }),
+    prisma.forumPost.create({
+      data: {
+        categoryId: forumCategories[4].id, // Announcements
+        authorId: adminUser.id,
+        title: 'New 2026 Model Year Pricing Now Available in Portal',
+        content: `Hello Dealers,
+
+We're excited to announce that the 2026 model year pricing is now available in the dealer portal!
+
+**Key Updates:**
+- All Jayco brands pricing updated
+- New Airstream touring coach configurations
+- Updated MSRP for Keystone fifth wheels
+- Refreshed pricing tiers for volume discounts
+
+**Action Required:**
+Please review the new pricing in the Products section and update your showroom pricing accordingly. Contact your regional sales manager if you have questions.
+
+The old 2025 pricing will remain visible for reference until January 31st.
+
+Thank you for your continued partnership!`,
+        excerpt: 'The 2026 model year pricing is now available in the dealer portal. Please review and update your showroom pricing accordingly.',
+        postType: 'announcement',
+        tags: JSON.stringify(['pricing', '2026', 'models', 'official']),
+        status: 'published',
+        isPinned: true,
+        viewCount: 523,
+        replyCount: 3,
+        likeCount: 89,
+        lastReplyAt: new Date('2026-01-02T11:00:00Z'),
+      },
+    }),
+  ])
+
+  // Create some forum replies
+  await prisma.forumReply.createMany({
+    data: [
+      {
+        postId: forumPosts[0].id,
+        authorId: dealerUsers[1].id,
+        dealerId: dealers[1].id,
+        content: 'Great tips! We also recommend customers use moisture absorbers like DampRid inside the RV during storage. Works wonders for preventing mold and mildew.',
+        status: 'published',
+        likeCount: 8,
+      },
+      {
+        postId: forumPosts[0].id,
+        authorId: dealerUsers[2].id,
+        dealerId: dealers[2].id,
+        content: 'Don\'t forget to close the propane tank valve and cover the LP regulator! We\'ve seen some issues with wasps building nests in unprotected regulators.',
+        status: 'published',
+        likeCount: 12,
+      },
+      {
+        postId: forumPosts[1].id,
+        authorId: adminUser.id,
+        content: 'The MORryde IS has a 7,000 lb axle capacity while the new upgrade supports up to 8,000 lbs. I\'ll get the official spec sheet from the product team and share it here.',
+        status: 'published',
+        likeCount: 6,
+      },
+      {
+        postId: forumPosts[2].id,
+        authorId: dealerUsers[1].id,
+        dealerId: dealers[1].id,
+        content: 'This is gold! We\'ve started using a simple spreadsheet that compares 10 weekend trips via RV vs hotels. The visual really helps first-timers see the value.',
+        status: 'published',
+        likeCount: 15,
+      },
+    ],
+  })
+
+  console.log('💬 Created forum posts and replies')
 
   // Create sample orders
   const order1 = await prisma.order.create({

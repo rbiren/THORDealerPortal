@@ -63,6 +63,22 @@ const config: Config = {
         'light-gray': '#D9D6CF',
         'light-beige': '#F7F4F0',
 
+        // Action/Primary color for buttons and interactive elements
+        primary: {
+          DEFAULT: '#A46807',
+          50: '#fdf8ed',
+          100: '#f9eacc',
+          200: '#f3d494',
+          300: '#ecb85c',
+          400: '#e69f35',
+          500: '#de831d',
+          600: '#c46216',
+          700: '#a46807',
+          800: '#86500f',
+          900: '#6f4311',
+          950: '#402205',
+        },
+
         // Semantic Colors
         success: {
           DEFAULT: '#495737',
@@ -82,7 +98,7 @@ const config: Config = {
         },
 
         // Background shortcuts
-        'bg-primary': '#FFFFFF',
+        'bg-page': '#FFFFFF',
         'bg-secondary': '#F7F4F0',
         'bg-tertiary': '#D9D6CF',
         'bg-dark': '#181817',

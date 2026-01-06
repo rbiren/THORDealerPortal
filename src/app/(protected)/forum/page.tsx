@@ -172,11 +172,10 @@ function PostRow({ post }: { post: ForumPostListItem }) {
               <span className="text-xs text-gray-400">
                 in{' '}
                 <span
-                  className="font-medium hover:underline"
+                  className="font-medium"
                   style={{ color: post.categoryColor || '#6b7280' }}
-                  onClick={(e) => e.stopPropagation()}
                 >
-                  <Link href={`/forum/${post.categorySlug}`}>{post.categoryName}</Link>
+                  {post.categoryName}
                 </span>
               </span>
             </div>
@@ -260,6 +259,7 @@ export default function ForumPage() {
     totalPages: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [showCategories, setShowCategories] = useState(true)
 
@@ -272,23 +272,29 @@ export default function ForumPage() {
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
 
-    const [categoriesResult, postsResult, statsResult] = await Promise.all([
-      getForumCategoriesAction(),
-      getForumPostsAction({
+    try {
+      // Call actions sequentially to avoid Next.js server action batching issues
+      const categoriesResult = await getForumCategoriesAction()
+      const postsResult = await getForumPostsAction({
         search: search || undefined,
         postType: postType !== 'all' ? postType : undefined,
         page,
         pageSize: 20,
-      }),
-      getForumStatsAction(),
-    ])
+      })
+      const statsResult = await getForumStatsAction()
 
-    setCategories(categoriesResult)
-    setPosts(postsResult.posts)
-    setPagination(postsResult.pagination)
-    setStats(statsResult)
-    setIsLoading(false)
+      setCategories(categoriesResult)
+      setPosts(postsResult.posts)
+      setPagination(postsResult.pagination)
+      setStats(statsResult)
+    } catch (err) {
+      console.error('Failed to load forum data:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load forum data')
+    } finally {
+      setIsLoading(false)
+    }
   }, [search, postType, page])
 
   useEffect(() => {
@@ -324,7 +330,7 @@ export default function ForumPage() {
         </div>
         <Link
           href="/forum/new"
-          className="inline-flex items-center px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           New Post
@@ -499,6 +505,22 @@ export default function ForumPage() {
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
             <p className="mt-4 text-gray-500">Loading posts...</p>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <div className="text-red-500 mb-4">
+              <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">Error loading forum</h3>
+            <p className="text-gray-500 mb-4">{error}</p>
+            <button
+              onClick={() => loadData()}
+              className="inline-flex items-center px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Try Again
+            </button>
           </div>
         ) : posts.length === 0 ? (
           <div className="p-12 text-center">
