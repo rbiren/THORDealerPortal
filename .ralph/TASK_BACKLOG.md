@@ -476,7 +476,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 8.2.2 | 🔴 | ✅ | Build program admin CRUD | Manual | *Completed 2026-01-06 (/admin/incentives page, list, create, edit, detail views, enrollments tab, claims tab, payouts tab)* |
 | 8.2.3 | 🔴 | ✅ | Create dealer enrollment flow | Manual | *Completed 2026-01-06 (/incentives page, program cards, enrollment modal, program detail, withdrawal flow)* |
 | 8.2.4 | 🔴 | ✅ | Implement rebate calculation engine | Manual | *Completed 2026-01-06 (batch accrual processing, projected rebates, admin UI for running calculations)* |
-| 8.2.5 | 🟠 | ⏳ | Build dealer incentives dashboard | 15 | `/ralph-loop "Create incentives dashboard: /incentives/dashboard, enrolled programs, accrued amounts, pending claims, paid history, program progress visualization" --max-iterations 15` |
+| 8.2.5 | 🟠 | ✅ | Build dealer incentives dashboard | Manual | *Completed 2026-01-06 (/incentives/dashboard, /incentives/claims, /incentives/payouts pages, progress visualization)* |
 | 8.2.6 | 🟠 | ⏳ | Create co-op fund tracking | 15 | `/ralph-loop "Build co-op module: fund balance per dealer, accrual rules, claim submission with receipts, approval workflow, payout tracking" --max-iterations 15` |
 | 8.2.7 | 🟠 | ⏳ | Build claim submission workflow | 15 | `/ralph-loop "Create claim flow: /incentives/claims/new, select program, enter amount/details, upload supporting docs, submit for review, track status" --max-iterations 15` |
 | 8.2.8 | 🟠 | ⏳ | Add claim approval workflow | 12 | `/ralph-loop "Build admin claim review: /admin/incentives/claims, pending claims queue, review details, approve/deny with notes, batch approval, payout scheduling" --max-iterations 12` |
@@ -618,6 +618,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 8.2.2 | Program admin CRUD | Manual | 2026-01-06 | Admin pages, forms, detail view |
 | 8.2.3 | Dealer enrollment flow | Manual | 2026-01-06 | /incentives page, enrollment modal, program detail |
 | 8.2.4 | Rebate calculation engine | Manual | 2026-01-06 | Batch accrual processing, projected rebates, admin accruals tab |
+| 8.2.5 | Dealer incentives dashboard | Manual | 2026-01-06 | Dashboard, claims, payouts pages with progress visualization |
 
 ---
 
