@@ -474,7 +474,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 |----|----------|--------|------|------------|---------|
 | 8.2.1 | 🔴 | ✅ | Design incentives schema | Manual | *Completed 2026-01-06 (6 models: IncentiveProgram, DealerProgramEnrollment, RebateAccrual, IncentiveClaim, IncentiveClaimDocument, IncentivePayout)* |
 | 8.2.2 | 🔴 | ✅ | Build program admin CRUD | Manual | *Completed 2026-01-06 (/admin/incentives page, list, create, edit, detail views, enrollments tab, claims tab, payouts tab)* |
-| 8.2.3 | 🔴 | ⏳ | Create dealer enrollment flow | 12 | `/ralph-loop "Build dealer program enrollment: /incentives page, available programs, enroll button, terms acceptance, enrollment status, unenroll option" --max-iterations 12` |
+| 8.2.3 | 🔴 | ✅ | Create dealer enrollment flow | Manual | *Completed 2026-01-06 (/incentives page, program cards, enrollment modal, program detail, withdrawal flow)* |
 | 8.2.4 | 🔴 | ⏳ | Implement rebate calculation engine | 18 | `/ralph-loop "Create rebate engine: calculate accruals from orders, tiered rate logic, monthly/quarterly accrual runs, accrual history per dealer, projected rebates" --max-iterations 18` |
 | 8.2.5 | 🟠 | ⏳ | Build dealer incentives dashboard | 15 | `/ralph-loop "Create incentives dashboard: /incentives/dashboard, enrolled programs, accrued amounts, pending claims, paid history, program progress visualization" --max-iterations 15` |
 | 8.2.6 | 🟠 | ⏳ | Create co-op fund tracking | 15 | `/ralph-loop "Build co-op module: fund balance per dealer, accrual rules, claim submission with receipts, approval workflow, payout tracking" --max-iterations 15` |
@@ -616,6 +616,7 @@ This document contains the complete task breakdown for building THORDealerPortal
 | 5.2.2 | In-App Notifications | Manual | 2026-01-01 | Bell icon, dropdown, filters |
 | 8.2.1 | Incentives schema | Manual | 2026-01-06 | 6 models + comprehensive service |
 | 8.2.2 | Program admin CRUD | Manual | 2026-01-06 | Admin pages, forms, detail view |
+| 8.2.3 | Dealer enrollment flow | Manual | 2026-01-06 | /incentives page, enrollment modal, program detail |
 
 ---
 
