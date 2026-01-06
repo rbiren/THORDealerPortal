@@ -3,22 +3,14 @@
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { adjustmentReasons, type AdjustmentReason } from '@/lib/inventory-utils'
+
+// Re-export type for client use
+export type { AdjustmentReason } from '@/lib/inventory-utils'
 
 // ============================================================================
 // SCHEMAS
 // ============================================================================
-
-const adjustmentReasons = [
-  'received',
-  'returned',
-  'damaged',
-  'lost',
-  'correction',
-  'transfer_in',
-  'transfer_out',
-  'cycle_count',
-  'other',
-] as const
 
 const adjustmentSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
@@ -34,8 +26,6 @@ type AdjustmentInput = z.infer<typeof adjustmentSchema>
 // ============================================================================
 // TYPES
 // ============================================================================
-
-export type AdjustmentReason = typeof adjustmentReasons[number]
 
 export type InventoryAdjustment = {
   id: string
@@ -331,22 +321,4 @@ export async function getAdjustmentHistory(
   }
 
   return { items, total }
-}
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-export function getAdjustmentReasons(): { value: AdjustmentReason; label: string }[] {
-  return [
-    { value: 'received', label: 'Stock Received' },
-    { value: 'returned', label: 'Customer Return' },
-    { value: 'damaged', label: 'Damaged Goods' },
-    { value: 'lost', label: 'Lost/Missing' },
-    { value: 'correction', label: 'Count Correction' },
-    { value: 'transfer_in', label: 'Transfer In' },
-    { value: 'transfer_out', label: 'Transfer Out' },
-    { value: 'cycle_count', label: 'Cycle Count' },
-    { value: 'other', label: 'Other' },
-  ]
 }

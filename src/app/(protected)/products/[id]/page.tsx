@@ -306,6 +306,5 @@ export default async function ProductDetailPage({ params }: Props) {
           <RelatedProducts productId={product.id} categoryId={product.categoryId} />
         </Suspense>
       </div>
-    </div>
   )
 }

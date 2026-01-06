@@ -8,7 +8,6 @@ import {
   getProductSales,
   getCategorySales,
   getSalesComparison,
-  getPresetDateRanges,
   type SalesSummary,
   type SalesByPeriod,
   type ProductSales,
@@ -16,6 +15,7 @@ import {
   type SalesComparison,
   type DateRange,
 } from './actions'
+import { getPresetDateRanges } from '@/lib/date-utils'
 
 export default function SalesReportsPage() {
   const [dateRange, setDateRange] = useState<DateRange>(() => {
