@@ -59,6 +59,12 @@ model User {
   // Phase 8: Marketing
   assetDownloads          MarketingAssetDownload[]
 
+  // Phase 8: Community Forum
+  forumPosts              ForumPost[] @relation("ForumPostAuthor")
+  forumReplies            ForumReply[] @relation("ForumReplyAuthor")
+  forumPostLikes          ForumPostLike[]
+  forumReplyLikes         ForumReplyLike[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -148,6 +154,10 @@ model Dealer {
 
   // Phase 8: Marketing Asset Library
   assetDownloads          MarketingAssetDownload[]
+
+  // Phase 8: Community Forum
+  forumPosts              ForumPost[]
+  forumReplies            ForumReply[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -2233,4 +2243,175 @@ model CampaignTemplate {
 
   @@index([templateType])
   @@index([status])
+}
+
+// ============================================================================
+// 8.7 COMMUNITY FORUM
+// ============================================================================
+
+model ForumCategory {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  icon            String?   // Icon name for display
+  color           String?   // Hex color for theming
+
+  // Targeting - which roles/audiences can access
+  targetAudience  String    @default("all") // all, techs, sales, marketing, admin
+
+  // Hierarchy
+  parentId        String?
+  parent          ForumCategory?  @relation("ForumCategoryHierarchy", fields: [parentId], references: [id])
+  children        ForumCategory[] @relation("ForumCategoryHierarchy")
+  sortOrder       Int       @default(0)
+
+  // Status
+  isActive        Boolean   @default(true)
+
+  // Stats (denormalized for performance)
+  postCount       Int       @default(0)
+  lastPostAt      DateTime?
+
+  posts           ForumPost[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+  @@index([targetAudience])
+  @@index([isActive])
+}
+
+model ForumPost {
+  id              String    @id @default(cuid())
+  categoryId      String
+  category        ForumCategory @relation(fields: [categoryId], references: [id])
+  authorId        String
+  author          User      @relation("ForumPostAuthor", fields: [authorId], references: [id])
+  dealerId        String?
+  dealer          Dealer?   @relation(fields: [dealerId], references: [id])
+
+  // Content
+  title           String
+  content         String    // Rich text / markdown
+  excerpt         String?   // Short preview
+
+  // Post type
+  postType        String    @default("discussion") // discussion, question, announcement, tip
+
+  // Tags for searchability (JSON array)
+  tags            String?   // JSON array of tags
+
+  // Status
+  status          String    @default("published") // draft, published, hidden, locked
+  isPinned        Boolean   @default(false) // Sticky post at top
+  isLocked        Boolean   @default(false) // No new replies allowed
+  isFeatured      Boolean   @default(false) // Featured/highlighted post
+
+  // Question-specific (if postType = question)
+  isResolved      Boolean   @default(false)
+  acceptedReplyId String?   // The reply that answered the question
+
+  // Stats (denormalized for performance)
+  viewCount       Int       @default(0)
+  replyCount      Int       @default(0)
+  likeCount       Int       @default(0)
+  lastReplyAt     DateTime?
+  lastReplyById   String?
+
+  // Moderation
+  moderatedById   String?
+  moderatedAt     DateTime?
+  moderationReason String?
+
+  replies         ForumReply[]
+  likes           ForumPostLike[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([dealerId])
+  @@index([status])
+  @@index([isPinned])
+  @@index([postType])
+  @@index([createdAt])
+  @@index([lastReplyAt])
+}
+
+model ForumReply {
+  id              String    @id @default(cuid())
+  postId          String
+  post            ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId        String
+  author          User      @relation("ForumReplyAuthor", fields: [authorId], references: [id])
+  dealerId        String?
+  dealer          Dealer?   @relation(fields: [dealerId], references: [id])
+
+  // Nested replies
+  parentReplyId   String?
+  parentReply     ForumReply?  @relation("ReplyThread", fields: [parentReplyId], references: [id])
+  childReplies    ForumReply[] @relation("ReplyThread")
+
+  // Content
+  content         String    // Rich text / markdown
+
+  // Status
+  status          String    @default("published") // published, hidden, deleted
+  isAcceptedAnswer Boolean  @default(false) // For question posts
+
+  // Stats
+  likeCount       Int       @default(0)
+
+  // Moderation
+  moderatedById   String?
+  moderatedAt     DateTime?
+  moderationReason String?
+
+  // Edit tracking
+  isEdited        Boolean   @default(false)
+  editedAt        DateTime?
+
+  likes           ForumReplyLike[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([dealerId])
+  @@index([parentReplyId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ForumPostLike {
+  id              String    @id @default(cuid())
+  postId          String
+  post            ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model ForumReplyLike {
+  id              String    @id @default(cuid())
+  replyId         String
+  reply           ForumReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([replyId, userId])
+  @@index([replyId])
+  @@index([userId])
 }
