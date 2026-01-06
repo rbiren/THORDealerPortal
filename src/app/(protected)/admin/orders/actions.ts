@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { updateOrderStatus, releaseInventory } from '@/lib/services/order'
 import { createInvoiceFromOrder } from '@/lib/services/invoice'
 
@@ -79,6 +80,7 @@ export async function getAdminOrders(options: {
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       where: where as any,
       include: {
         dealer: {
@@ -95,11 +97,26 @@ export async function getAdminOrders(options: {
       skip: (page - 1) * limit,
       take: limit,
     }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prisma.order.count({ where: where as any }),
   ])
 
+  type OrderQueryResult = {
+    id: string
+    orderNumber: string
+    status: string
+    poNumber: string | null
+    subtotal: number
+    totalAmount: number
+    createdAt: Date
+    submittedAt: Date | null
+    dealer: { id: string; name: string; code: string; tier: string }
+    items: Array<{ id: string; quantity: number; totalPrice: number }>
+    _count: { items: number }
+  }
+
   return {
-    orders: orders.map((order) => ({
+    orders: orders.map((order: OrderQueryResult) => ({
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status,
@@ -265,7 +282,7 @@ export async function getAdminOrderDetail(orderId: string) {
     billingAddress,
     orderNotes: order.notes,
     dealer: order.dealer,
-    items: order.items.map((item) => ({
+    items: order.items.map((item: { id: string; productId: string; quantity: number; unitPrice: number; totalPrice: number; product: { name: string; sku: string; price: number; images?: string[] } }) => ({
       id: item.id,
       productId: item.productId,
       productName: item.product.name,
@@ -276,14 +293,14 @@ export async function getAdminOrderDetail(orderId: string) {
       totalPrice: item.totalPrice,
       image: item.product.images?.[0] || null,
     })),
-    statusHistory: order.statusHistory.map((h) => ({
+    statusHistory: order.statusHistory.map((h: { status: string; note: string | null; changedBy: string | null; createdAt: Date }) => ({
       status: h.status,
       statusLabel: ADMIN_ORDER_STATUSES[h.status as AdminOrderStatus]?.label || h.status,
       note: h.note,
       changedBy: h.changedBy,
       createdAt: h.createdAt.toISOString(),
     })),
-    notes: orderNotes.map((n) => ({
+    notes: orderNotes.map((n: { id: string; content: string; isInternal: boolean; userId: string; createdAt: Date; user?: { name: string } | null }) => ({
       id: n.id,
       content: n.content,
       isInternal: n.isInternal,
@@ -319,7 +336,7 @@ export async function updateOrderItem(
       return { success: false, error: 'Cannot edit order in current status' }
     }
 
-    const item = order.items.find((i) => i.id === itemId)
+    const item = order.items.find((i: { id: string }) => i.id === itemId)
     if (!item) {
       return { success: false, error: 'Item not found' }
     }
@@ -393,7 +410,7 @@ export async function removeOrderItem(
       return { success: false, error: 'Cannot remove last item. Cancel the order instead.' }
     }
 
-    const item = order.items.find((i) => i.id === itemId)
+    const item = order.items.find((i: { id: string }) => i.id === itemId)
     if (!item) {
       return { success: false, error: 'Item not found' }
     }
@@ -430,7 +447,7 @@ async function recalculateOrderTotals(orderId: string) {
 
   if (!order) return
 
-  const subtotal = order.items.reduce((sum, item) => sum + item.totalPrice, 0)
+  const subtotal = order.items.reduce((sum: number, item: { totalPrice: number }) => sum + item.totalPrice, 0)
   const taxAmount = subtotal * 0.08
   const shippingAmount = subtotal > 500 ? 0 : 25
   const totalAmount = subtotal + taxAmount + shippingAmount
@@ -509,7 +526,20 @@ export async function exportOrdersCsv(options: {
     'Submitted At',
   ]
 
-  const rows = result.orders.map((order) => [
+  type OrderExportItem = {
+    orderNumber: string
+    statusLabel: string
+    dealerCode: string
+    dealerName: string
+    poNumber: string | null
+    itemCount: number
+    subtotal: number
+    totalAmount: number
+    createdAt: string
+    submittedAt: string | null
+  }
+
+  const rows = result.orders.map((order: OrderExportItem) => [
     order.orderNumber,
     order.statusLabel,
     order.dealerCode,
@@ -524,7 +554,7 @@ export async function exportOrdersCsv(options: {
 
   const csvContent = [
     headers.join(','),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ...rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(',')),
   ].join('\n')
 
   return csvContent

@@ -40,7 +40,7 @@ async function getAccessibleCategoryIds(userRole: string): Promise<string[]> {
       where: { isActive: true },
       select: { id: true },
     })
-    return categories.map(c => c.id)
+    return categories.map((c: { id: string }) => c.id)
   }
 
   // For non-admins, filter by audience
@@ -53,7 +53,7 @@ async function getAccessibleCategoryIds(userRole: string): Promise<string[]> {
     },
     select: { id: true },
   })
-  return categories.map(c => c.id)
+  return categories.map((c: { id: string }) => c.id)
 }
 
 // ============================================================================
@@ -86,7 +86,8 @@ export async function listForumCategories(userRole: string) {
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   })
 
-  return categories.map(cat => ({
+  type CategoryWithCount = typeof categories[number]
+  return categories.map((cat: CategoryWithCount) => ({
     ...cat,
     postCount: cat._count.posts,
   }))
@@ -321,8 +322,9 @@ export async function listForumPosts(
     take: filters.pageSize,
   })
 
+  type PostWithCounts = typeof posts[number]
   return {
-    posts: posts.map(post => ({
+    posts: posts.map((post: PostWithCounts) => ({
       ...post,
       replyCount: post._count.replies,
       likeCount: post._count.likes,
@@ -449,20 +451,22 @@ export async function getForumPost(
   })
 
   // Get user likes for replies
+  type ReplyWithId = { id: string }
   const replyLikes = await prisma.forumReplyLike.findMany({
     where: {
-      replyId: { in: post.replies.map(r => r.id) },
+      replyId: { in: post.replies.map((r: ReplyWithId) => r.id) },
       userId,
     },
     select: { replyId: true },
   })
-  const likedReplyIds = new Set(replyLikes.map(l => l.replyId))
+  const likedReplyIds = new Set(replyLikes.map((l: { replyId: string }) => l.replyId))
 
+  type ReplyWithCounts = typeof post.replies[number]
   return {
     ...post,
     likeCount: post._count.likes,
     hasLiked: !!userLike,
-    replies: post.replies.map(reply => ({
+    replies: post.replies.map((reply: ReplyWithCounts) => ({
       ...reply,
       likeCount: reply._count.likes,
       childReplyCount: reply._count.childReplies,
@@ -1115,7 +1119,8 @@ export async function getRecentActivity(
     take: limit,
   })
 
-  return recentPosts.map(post => ({
+  type RecentPostType = typeof recentPosts[number]
+  return recentPosts.map((post: RecentPostType) => ({
     ...post,
     replyCount: post._count.replies,
   }))

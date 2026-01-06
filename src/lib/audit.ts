@@ -288,7 +288,22 @@ export async function getAuditLogs(filter: AuditLogFilter = {}): Promise<AuditLo
   })
 
   // Parse JSON values
-  const parsedLogs: AuditLogEntry[] = logs.map((log) => ({
+  type AuditLogQueryResult = {
+    id: string
+    action: string
+    entityType: string
+    entityId: string
+    description: string | null
+    oldValues: string | null
+    newValues: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    createdAt: Date
+    user: { id: string; firstName: string; lastName: string; email: string } | null
+    dealer: { id: string; companyName: string; code: string } | null
+  }
+
+  const parsedLogs: AuditLogEntry[] = logs.map((log: AuditLogQueryResult) => ({
     ...log,
     oldValues: log.oldValues ? JSON.parse(log.oldValues) : null,
     newValues: log.newValues ? JSON.parse(log.newValues) : null,
@@ -337,7 +352,20 @@ export async function getEntityAuditLogs(
     orderBy: { createdAt: 'desc' },
   })
 
-  return logs.map((log) => ({
+  type EntityAuditLogQueryResult = {
+    id: string
+    action: string
+    entityType: string
+    entityId: string
+    oldValues: string | null
+    newValues: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    createdAt: Date
+    user: { id: string; firstName: string; lastName: string } | null
+  }
+
+  return logs.map((log: EntityAuditLogQueryResult) => ({
     ...log,
     oldValues: log.oldValues ? JSON.parse(log.oldValues) : null,
     newValues: log.newValues ? JSON.parse(log.newValues) : null,
@@ -373,7 +401,20 @@ export async function getUserAuditLogs(userId: string): Promise<AuditLogEntry[]>
     take: 100,
   })
 
-  return logs.map((log) => ({
+  type UserAuditLogQueryResult = {
+    id: string
+    action: string
+    entityType: string
+    entityId: string
+    oldValues: string | null
+    newValues: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    createdAt: Date
+    dealer: { id: string; companyName: string } | null
+  }
+
+  return logs.map((log: UserAuditLogQueryResult) => ({
     ...log,
     oldValues: log.oldValues ? JSON.parse(log.oldValues) : null,
     newValues: log.newValues ? JSON.parse(log.newValues) : null,
@@ -408,12 +449,12 @@ export async function getAuditStats(): Promise<{
   ])
 
   const logsByAction: Record<string, number> = {}
-  byAction.forEach((item) => {
+  byAction.forEach((item: { action: string; _count: { action: number } }) => {
     logsByAction[item.action] = item._count.action
   })
 
   const logsByEntityType: Record<string, number> = {}
-  byEntityType.forEach((item) => {
+  byEntityType.forEach((item: { entityType: string; _count: { entityType: number } }) => {
     logsByEntityType[item.entityType] = item._count.entityType
   })
 

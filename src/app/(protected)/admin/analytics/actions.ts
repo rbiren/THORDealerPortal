@@ -2,6 +2,18 @@
 
 import { prisma } from '@/lib/prisma'
 
+// Query result types
+type DealerWithOrders = {
+  id: string
+  code: string
+  name: string
+  tier: string
+  orders: Array<{
+    totalAmount: number
+    submittedAt: Date | null
+  }>
+}
+
 // Types
 export type NetworkStats = {
   totalDealers: number
@@ -119,8 +131,8 @@ export async function getNetworkStats(): Promise<NetworkStats> {
     ? Math.round(((monthlyRevenue - lastMonthTotal) / lastMonthTotal) * 100)
     : 0
 
-  const totalProducts = productCounts.reduce((sum, p) => sum + p._count, 0)
-  const activeProducts = productCounts.find((p) => p.status === 'active')?._count || 0
+  const totalProducts = productCounts.reduce((sum: number, p: { status: string; _count: number }) => sum + p._count, 0)
+  const activeProducts = productCounts.find((p: { status: string; _count: number }) => p.status === 'active')?._count || 0
 
   return {
     totalDealers,
@@ -190,8 +202,8 @@ export async function getDealerPerformance(options: {
     previousMap.set(order.dealerId, (previousMap.get(order.dealerId) || 0) + order.totalAmount)
   }
 
-  const performance: DealerPerformance[] = dealers.map((dealer) => {
-    const totalRevenue = dealer.orders.reduce((sum, o) => sum + o.totalAmount, 0)
+  const performance: DealerPerformance[] = dealers.map((dealer: DealerWithOrders) => {
+    const totalRevenue = dealer.orders.reduce((sum: number, o) => sum + o.totalAmount, 0)
     const orderCount = dealer.orders.length
     const lastOrder = dealer.orders.sort((a, b) =>
       (b.submittedAt?.getTime() || 0) - (a.submittedAt?.getTime() || 0)
@@ -245,7 +257,7 @@ export async function getTierDistribution(): Promise<TierDistribution[]> {
   const tierMap = new Map<string, { count: number; revenue: number }>()
 
   for (const dealer of dealers) {
-    const revenue = dealer.orders.reduce((sum, o) => sum + o.totalAmount, 0)
+    const revenue = dealer.orders.reduce((sum: number, o: { totalAmount: number }) => sum + o.totalAmount, 0)
     const existing = tierMap.get(dealer.tier) || { count: 0, revenue: 0 }
     existing.count++
     existing.revenue += revenue
@@ -273,12 +285,12 @@ export async function getOrderStatusDistribution(): Promise<OrderStatusDistribut
     _count: true,
   })
 
-  const total = orderCounts.reduce((sum, o) => sum + o._count, 0)
+  const total = orderCounts.reduce((sum: number, o: { status: string; _count: number }) => sum + o._count, 0)
 
   const statusOrder = ['submitted', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
 
   return statusOrder.map((status) => {
-    const found = orderCounts.find((o) => o.status === status)
+    const found = orderCounts.find((o: { status: string; _count: number }) => o.status === status)
     const count = found?._count || 0
     return {
       status,
@@ -312,14 +324,15 @@ export async function getTopProducts(options: {
     take: limit,
   })
 
-  const productIds = productSales.map((p) => p.productId)
+  const productIds = productSales.map((p: { productId: string }) => p.productId)
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
   })
 
-  const productMap = new Map(products.map((p) => [p.id, p]))
+  type ProductInfo = { id: string; name: string; sku: string }
+  const productMap = new Map<string, ProductInfo>(products.map((p: ProductInfo) => [p.id, p]))
 
-  return productSales.map((ps) => {
+  return productSales.map((ps: { productId: string; _sum: { quantity: number | null; totalPrice: number | null }; _count: { orderId: number } }) => {
     const product = productMap.get(ps.productId)
     return {
       productId: ps.productId,
@@ -344,7 +357,7 @@ export async function getSystemUsage(): Promise<SystemUsage> {
     prisma.session.groupBy({
       by: ['userId'],
       where: { createdAt: { gte: weekAgo } },
-    }).then((s) => s.length),
+    }).then((s: Array<{ userId: string }>) => s.length),
     // Logins today
     prisma.session.count({
       where: { createdAt: { gte: todayStart } },

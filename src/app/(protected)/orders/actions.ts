@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import {
   getOrderById,
   getOrderByNumber,
@@ -11,6 +12,9 @@ import {
 } from '@/lib/services/order'
 import { sendEmail } from '@/lib/services/email'
 import { ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses'
+
+// Re-export for use by client components
+export { ORDER_STATUSES, type OrderStatus }
 
 // Get order details for display
 export async function getOrder(orderIdOrNumber: string) {
@@ -38,7 +42,7 @@ export async function changeOrderStatus(
   const statusConfig = ORDER_STATUSES[currentStatus]
 
   // Validate status transition
-  if (!statusConfig.next.includes(newStatus)) {
+  if (!(statusConfig.next as readonly string[]).includes(newStatus)) {
     return {
       success: false,
       error: `Cannot change status from ${statusConfig.label} to ${ORDER_STATUSES[newStatus].label}`,
@@ -101,6 +105,7 @@ export async function getOrdersForDealer(
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       where: where as any,
       include: {
         items: {
@@ -115,11 +120,24 @@ export async function getOrdersForDealer(
       skip: (page - 1) * limit,
       take: limit,
     }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prisma.order.count({ where: where as any }),
   ])
 
+  type OrderQueryItem = {
+    id: string
+    orderNumber: string
+    status: string
+    poNumber: string | null
+    subtotal: number
+    totalAmount: number
+    items: Array<{ quantity: number }>
+    createdAt: Date
+    submittedAt: Date | null
+  }
+
   return {
-    orders: orders.map((order) => ({
+    orders: orders.map((order: OrderQueryItem) => ({
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status,
@@ -128,7 +146,7 @@ export async function getOrdersForDealer(
       poNumber: order.poNumber,
       subtotal: order.subtotal,
       totalAmount: order.totalAmount,
-      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      itemCount: order.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0),
       createdAt: order.createdAt.toISOString(),
       submittedAt: order.submittedAt?.toISOString() || null,
     })),
@@ -153,7 +171,14 @@ export async function getOrderStatusHistory(orderId: string) {
     orderBy: { createdAt: 'desc' },
   })
 
-  return history.map((entry) => ({
+  type HistoryEntry = {
+    status: string
+    note: string | null
+    changedBy: string | null
+    createdAt: Date
+  }
+
+  return history.map((entry: HistoryEntry) => ({
     status: entry.status,
     statusLabel: ORDER_STATUSES[entry.status as OrderStatus]?.label || entry.status,
     note: entry.note,
@@ -170,7 +195,14 @@ export async function reorderItems(orderId: string) {
   }
 
   // Return items that can be added to cart
-  const items = order.items.map((item) => ({
+  type ReorderItemQuery = {
+    productId: string
+    product: { name: string; sku: string; images?: Array<string | null> }
+    quantity: number
+    unitPrice: number
+  }
+
+  const items = order.items.map((item: ReorderItemQuery) => ({
     productId: item.productId,
     name: item.product.name,
     sku: item.product.sku,

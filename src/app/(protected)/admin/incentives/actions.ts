@@ -16,10 +16,20 @@ import {
   finalizeAccruals,
   getProgramAccrualSummary,
   calculatePeriodDates,
+  getPendingClaims,
+  reviewClaimAction as reviewClaimService,
+  markClaimUnderReview,
+  batchApproveClaims,
+  createPayoutFromClaim,
+  processPayoutAction as processPayoutService,
+  getPayoutReport,
+  getScheduledPayouts,
+  runCoopAccrualBatch,
   type CreateProgramInput,
   type UpdateProgramInput,
   type ProgramRules,
   type AccrualRunResult,
+  type ReviewClaimInput,
 } from '@/lib/services/incentives'
 
 // Types
@@ -135,7 +145,24 @@ export async function getAdminPrograms(input: ProgramFilterInput): Promise<Progr
     prisma.incentiveProgram.count({ where }),
   ])
 
-  const result: ProgramListItem[] = programs.map((p) => ({
+  type ProgramQueryResult = {
+    id: string
+    name: string
+    code: string
+    type: string
+    subtype: string | null
+    status: string
+    startDate: Date | null
+    endDate: Date | null
+    enrollmentDeadline: Date | null
+    eligibleTiers: string | null
+    budgetAmount: number | null
+    spentAmount: number
+    createdAt: Date
+    _count: { enrollments: number }
+  }
+
+  const result: ProgramListItem[] = programs.map((p: ProgramQueryResult) => ({
     id: p.id,
     name: p.name,
     code: p.code,
@@ -482,7 +509,18 @@ export async function getProgramEnrollments(programId: string): Promise<Enrollme
     orderBy: { enrolledAt: 'desc' },
   })
 
-  return enrollments.map((e) => ({
+  type EnrollmentQueryResult = {
+    id: string
+    dealer: { id: string; name: string; code: string; tier: string }
+    status: string
+    enrolledAt: Date
+    approvedAt: Date | null
+    accruedAmount: number
+    paidAmount: number
+    pendingAmount: number
+  }
+
+  return enrollments.map((e: EnrollmentQueryResult) => ({
     id: e.id,
     dealer: e.dealer,
     status: e.status,
@@ -522,7 +560,7 @@ export async function approveEnrollmentAction(enrollmentId: string): Promise<Upd
 }
 
 // Get program types for filter dropdown
-export function getProgramTypes() {
+export async function getProgramTypes() {
   return [
     { value: 'rebate', label: 'Rebate' },
     { value: 'coop', label: 'Co-op Fund' },
@@ -532,7 +570,7 @@ export function getProgramTypes() {
 }
 
 // Get status options for filter dropdown
-export function getStatusOptions() {
+export async function getStatusOptions() {
   return [
     { value: 'draft', label: 'Draft' },
     { value: 'active', label: 'Active' },
@@ -679,7 +717,7 @@ export async function getAccrualSummaryAction(programId: string): Promise<Accrua
 }
 
 // Get available periods for calculation
-export function getAvailablePeriods() {
+export async function getAvailablePeriods() {
   const now = new Date()
   const periods: Array<{
     label: string
@@ -772,7 +810,18 @@ export async function getPeriodAccruals(
     orderBy: { finalAmount: 'desc' },
   })
 
-  return accruals.map((a) => ({
+  type AccrualQueryResult = {
+    id: string
+    dealer: { id: string; name: string; code: string }
+    qualifyingVolume: number
+    rebateRate: number
+    accruedAmount: number
+    finalAmount: number
+    tierAchieved: string | null
+    status: string
+  }
+
+  return accruals.map((a: AccrualQueryResult) => ({
     id: a.id,
     dealer: a.dealer,
     qualifyingVolume: a.qualifyingVolume,
@@ -781,5 +830,526 @@ export async function getPeriodAccruals(
     finalAmount: a.finalAmount,
     tierAchieved: a.tierAchieved,
     status: a.status,
+  }))
+}
+
+// ============================================================================
+// CO-OP FUND MANAGEMENT (8.2.6)
+// ============================================================================
+
+export async function runCoopAccrualAction(
+  programId: string,
+  periodStart: string,
+  periodEnd: string
+): Promise<UpdateProgramState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    const result = await runCoopAccrualBatch(
+      programId,
+      new Date(periodStart),
+      new Date(periodEnd)
+    )
+
+    revalidatePath(`/admin/incentives/${programId}`)
+    return {
+      success: true,
+      message: `Processed ${result.processed} dealers. Total accrued: $${result.totalAccrued.toFixed(2)}`,
+    }
+  } catch (error) {
+    console.error('Co-op accrual error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    return { success: false, message: errorMessage }
+  }
+}
+
+// ============================================================================
+// CLAIM APPROVAL WORKFLOW (8.2.8)
+// ============================================================================
+
+export type ClaimListItem = {
+  id: string
+  claimNumber: string
+  program: { id: string; name: string; type: string }
+  dealer: { id: string; name: string; code: string }
+  submittedBy: { id: string; firstName: string; lastName: string } | null
+  claimType: string
+  requestedAmount: number
+  status: string
+  submittedAt: Date | null
+  documents: Array<{ id: string; fileName: string; documentType: string }>
+}
+
+export type ClaimListResult = {
+  claims: ClaimListItem[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export async function getAdminClaims(options: {
+  programId?: string
+  status?: string[]
+  page?: number
+  pageSize?: number
+} = {}): Promise<ClaimListResult> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { claims: [], total: 0, page: 1, pageSize: 20, totalPages: 0 }
+  }
+
+  const { programId, status, page = 1, pageSize = 20 } = options
+
+  const result = await getPendingClaims({
+    programId,
+    status: status || ['submitted', 'under_review'],
+    page,
+    limit: pageSize,
+  })
+
+  type ClaimQueryResult = {
+    id: string
+    claimNumber: string
+    program: { id: string; name: string }
+    dealer: { id: string; name: string; code: string }
+    submittedBy: { id: string; firstName: string | null; lastName: string | null } | null
+    claimType: string
+    requestedAmount: number
+    status: string
+    submittedAt: Date | null
+    documents: Array<{ id: string; fileName: string }>
+  }
+
+  return {
+    claims: result.claims.map((c: ClaimQueryResult) => ({
+      id: c.id,
+      claimNumber: c.claimNumber,
+      program: c.program,
+      dealer: c.dealer,
+      submittedBy: c.submittedBy,
+      claimType: c.claimType,
+      requestedAmount: c.requestedAmount,
+      status: c.status,
+      submittedAt: c.submittedAt,
+      documents: c.documents,
+    })),
+    total: result.pagination.total,
+    page: result.pagination.page,
+    pageSize: result.pagination.limit,
+    totalPages: result.pagination.totalPages,
+  }
+}
+
+export type ClaimDetail = {
+  id: string
+  claimNumber: string
+  programId: string
+  program: { id: string; name: string; type: string }
+  dealer: { id: string; name: string; code: string }
+  submittedBy: { id: string; firstName: string; lastName: string } | null
+  reviewedBy: { id: string; firstName: string; lastName: string } | null
+  claimType: string
+  requestedAmount: number
+  approvedAmount: number | null
+  status: string
+  description: string | null
+  supportingInfo: string | null
+  submittedAt: Date | null
+  reviewedAt: Date | null
+  approvedAt: Date | null
+  reviewNotes: string | null
+  denialReason: string | null
+  documents: Array<{
+    id: string
+    fileName: string
+    fileType: string
+    fileSize: number
+    documentType: string
+    uploadedAt: Date
+  }>
+}
+
+export async function getClaimDetail(claimId: string): Promise<ClaimDetail | null> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return null
+  }
+
+  const claim = await prisma.incentiveClaim.findUnique({
+    where: { id: claimId },
+    include: {
+      program: { select: { id: true, name: true, type: true } },
+      dealer: { select: { id: true, name: true, code: true } },
+      submittedBy: { select: { id: true, firstName: true, lastName: true } },
+      reviewedBy: { select: { id: true, firstName: true, lastName: true } },
+      documents: true,
+    },
+  })
+
+  if (!claim) return null
+
+  return {
+    id: claim.id,
+    claimNumber: claim.claimNumber,
+    programId: claim.programId,
+    program: claim.program,
+    dealer: claim.dealer,
+    submittedBy: claim.submittedBy,
+    reviewedBy: claim.reviewedBy,
+    claimType: claim.claimType,
+    requestedAmount: claim.requestedAmount,
+    approvedAmount: claim.approvedAmount,
+    status: claim.status,
+    description: claim.description,
+    supportingInfo: claim.supportingInfo,
+    submittedAt: claim.submittedAt,
+    reviewedAt: claim.reviewedAt,
+    approvedAt: claim.approvedAt,
+    reviewNotes: claim.reviewNotes,
+    denialReason: claim.denialReason,
+    documents: claim.documents.map((d: { id: string; fileName: string; fileType: string; fileSize: number; documentType: string | null; uploadedAt: Date }) => ({
+      id: d.id,
+      fileName: d.fileName,
+      fileType: d.fileType,
+      fileSize: d.fileSize,
+      documentType: d.documentType,
+      uploadedAt: d.uploadedAt,
+    })),
+  }
+}
+
+export type ReviewClaimState = {
+  success: boolean
+  message: string
+}
+
+export async function reviewClaimAction(
+  claimId: string,
+  input: ReviewClaimInput
+): Promise<ReviewClaimState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    await reviewClaimService(claimId, session.user.id, input)
+
+    revalidatePath('/admin/incentives/claims')
+    return {
+      success: true,
+      message: input.decision === 'approved' ? 'Claim approved successfully' : 'Claim denied',
+    }
+  } catch (error) {
+    console.error('Review claim error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    return { success: false, message: errorMessage }
+  }
+}
+
+export async function startClaimReview(claimId: string): Promise<UpdateProgramState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    await markClaimUnderReview(claimId, session.user.id)
+
+    revalidatePath('/admin/incentives/claims')
+    return { success: true, message: 'Claim marked for review' }
+  } catch (error) {
+    console.error('Start claim review error:', error)
+    return { success: false, message: 'An error occurred' }
+  }
+}
+
+export async function batchApproveClaimsAction(
+  claimIds: string[],
+  reviewNotes?: string
+): Promise<{ success: boolean; message: string; approved: number; errors: string[] }> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized', approved: 0, errors: [] }
+  }
+
+  try {
+    const result = await batchApproveClaims(claimIds, session.user.id, reviewNotes)
+
+    revalidatePath('/admin/incentives/claims')
+    return {
+      success: result.errors.length === 0,
+      message: `Approved ${result.approved} claims`,
+      approved: result.approved,
+      errors: result.errors,
+    }
+  } catch (error) {
+    console.error('Batch approve error:', error)
+    return { success: false, message: 'An error occurred', approved: 0, errors: [] }
+  }
+}
+
+// Get claim statistics for dashboard
+export async function getClaimStats(): Promise<{
+  pending: number
+  underReview: number
+  approvedToday: number
+  deniedToday: number
+  totalPendingAmount: number
+}> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { pending: 0, underReview: 0, approvedToday: 0, deniedToday: 0, totalPendingAmount: 0 }
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const [pending, underReview, approvedToday, deniedToday, pendingAmount] = await Promise.all([
+    prisma.incentiveClaim.count({ where: { status: 'submitted' } }),
+    prisma.incentiveClaim.count({ where: { status: 'under_review' } }),
+    prisma.incentiveClaim.count({
+      where: { status: 'approved', approvedAt: { gte: today } },
+    }),
+    prisma.incentiveClaim.count({
+      where: { status: 'denied', reviewedAt: { gte: today } },
+    }),
+    prisma.incentiveClaim.aggregate({
+      where: { status: { in: ['submitted', 'under_review'] } },
+      _sum: { requestedAmount: true },
+    }),
+  ])
+
+  return {
+    pending,
+    underReview,
+    approvedToday,
+    deniedToday,
+    totalPendingAmount: pendingAmount._sum.requestedAmount || 0,
+  }
+}
+
+// ============================================================================
+// PAYOUT MANAGEMENT (8.2.9)
+// ============================================================================
+
+export type PayoutListItem = {
+  id: string
+  program: { id: string; name: string; type: string }
+  dealer: { id: string; name: string; code: string }
+  amount: number
+  payoutType: string
+  status: string
+  scheduledDate: Date | null
+  paidDate: Date | null
+  referenceNumber: string | null
+  createdAt: Date
+}
+
+export type PayoutListResult = {
+  payouts: PayoutListItem[]
+  totals: {
+    totalAmount: number
+    completedAmount: number
+    pendingAmount: number
+    count: number
+    completedCount: number
+    pendingCount: number
+  }
+}
+
+export async function getAdminPayouts(options: {
+  programId?: string
+  dealerId?: string
+  status?: string
+  startDate?: string
+  endDate?: string
+} = {}): Promise<PayoutListResult> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return {
+      payouts: [],
+      totals: { totalAmount: 0, completedAmount: 0, pendingAmount: 0, count: 0, completedCount: 0, pendingCount: 0 },
+    }
+  }
+
+  const result = await getPayoutReport({
+    programId: options.programId,
+    dealerId: options.dealerId,
+    status: options.status,
+    startDate: options.startDate ? new Date(options.startDate) : undefined,
+    endDate: options.endDate ? new Date(options.endDate) : undefined,
+  })
+
+  type PayoutQueryResult = {
+    id: string
+    program: { id: string; name: string }
+    dealer: { id: string; name: string; code: string }
+    amount: number
+    payoutType: string
+    status: string
+    scheduledDate: Date | null
+    paidDate: Date | null
+    referenceNumber: string | null
+    createdAt: Date
+  }
+
+  return {
+    payouts: result.payouts.map((p: PayoutQueryResult) => ({
+      id: p.id,
+      program: p.program,
+      dealer: p.dealer,
+      amount: p.amount,
+      payoutType: p.payoutType,
+      status: p.status,
+      scheduledDate: p.scheduledDate,
+      paidDate: p.paidDate,
+      referenceNumber: p.referenceNumber,
+      createdAt: p.createdAt,
+    })),
+    totals: result.totals,
+  }
+}
+
+export async function createPayoutFromApprovedClaim(
+  claimId: string,
+  scheduledDate?: string
+): Promise<UpdateProgramState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    await createPayoutFromClaim(claimId, scheduledDate ? new Date(scheduledDate) : undefined)
+
+    revalidatePath('/admin/incentives/claims')
+    revalidatePath('/admin/incentives/payouts')
+    return { success: true, message: 'Payout created successfully' }
+  } catch (error) {
+    console.error('Create payout error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    return { success: false, message: errorMessage }
+  }
+}
+
+export async function processPayoutAction(
+  payoutId: string,
+  referenceNumber: string
+): Promise<UpdateProgramState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    await processPayoutService(payoutId, session.user.id, referenceNumber)
+
+    revalidatePath('/admin/incentives/payouts')
+    return { success: true, message: 'Payout processed successfully' }
+  } catch (error) {
+    console.error('Process payout error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    return { success: false, message: errorMessage }
+  }
+}
+
+export async function getScheduledPayoutsAction(
+  startDate?: string,
+  endDate?: string
+): Promise<PayoutListItem[]> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  const payouts = await getScheduledPayouts(
+    startDate ? new Date(startDate) : undefined,
+    endDate ? new Date(endDate) : undefined
+  )
+
+  type ScheduledPayoutResult = {
+    id: string
+    program: { id: string; name: string }
+    dealer: { id: string; name: string; code: string }
+    amount: number
+    payoutType: string
+    status: string
+    scheduledDate: Date | null
+    paidDate: Date | null
+    referenceNumber: string | null
+    createdAt: Date
+  }
+
+  return payouts.map((p: ScheduledPayoutResult) => ({
+    id: p.id,
+    program: p.program,
+    dealer: p.dealer,
+    amount: p.amount,
+    payoutType: p.payoutType,
+    status: p.status,
+    scheduledDate: p.scheduledDate,
+    paidDate: p.paidDate,
+    referenceNumber: p.referenceNumber,
+    createdAt: p.createdAt,
+  }))
+}
+
+// Get payout summary by program
+export async function getPayoutSummaryByProgram(): Promise<Array<{
+  programId: string
+  programName: string
+  programType: string
+  totalPaid: number
+  pendingAmount: number
+  payoutCount: number
+}>> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  const programs = await prisma.incentiveProgram.findMany({
+    where: { status: 'active' },
+    include: {
+      payouts: {
+        select: {
+          amount: true,
+          status: true,
+        },
+      },
+    },
+  })
+
+  type ProgramPayoutSummary = {
+    id: string
+    name: string
+    type: string
+    payouts: Array<{ amount: number; status: string }>
+  }
+
+  return programs.map((p: ProgramPayoutSummary) => ({
+    programId: p.id,
+    programName: p.name,
+    programType: p.type,
+    totalPaid: p.payouts.filter((py: { amount: number; status: string }) => py.status === 'completed').reduce((sum: number, py: { amount: number }) => sum + py.amount, 0),
+    pendingAmount: p.payouts.filter((py: { amount: number; status: string }) => py.status === 'pending').reduce((sum: number, py: { amount: number }) => sum + py.amount, 0),
+    payoutCount: p.payouts.length,
   }))
 }

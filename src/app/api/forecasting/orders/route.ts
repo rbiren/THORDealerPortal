@@ -46,7 +46,29 @@ export async function GET(request: NextRequest) {
     const orders = await getSuggestedOrders(dealerId, status || undefined);
 
     // Transform to response format
-    const transformedOrders = orders.map(order => ({
+    type SuggestedOrderItem = {
+      id: string
+      productId: string
+      product: { name: string; sku: string }
+      suggestedOrderDate: Date
+      expectedDeliveryDate: Date | null
+      suggestedQuantity: number
+      minimumQuantity: number | null
+      economicOrderQty: number | null
+      currentStock: number
+      projectedStock: number | null
+      projectedDemand: number | null
+      estimatedCost: number | null
+      estimatedValue: number | null
+      priority: string
+      status: string
+      reasoning: string | null
+      acceptedAt: Date | null
+      orderedAt: Date | null
+      actualOrderId: string | null
+    }
+
+    const transformedOrders = orders.map((order: SuggestedOrderItem) => ({
       id: order.id,
       productId: order.productId,
       productName: order.product.name,
@@ -70,13 +92,21 @@ export async function GET(request: NextRequest) {
     }));
 
     // Calculate summary
+    type TransformedOrder = {
+      suggestedQuantity: number
+      estimatedCost: number | null
+      estimatedValue: number | null
+      priority: string
+      status: string
+    }
+
     const summary = {
       totalOrders: transformedOrders.length,
-      totalUnits: transformedOrders.reduce((sum, o) => sum + o.suggestedQuantity, 0),
-      totalEstimatedCost: transformedOrders.reduce((sum, o) => sum + (o.estimatedCost || 0), 0),
-      totalEstimatedValue: transformedOrders.reduce((sum, o) => sum + (o.estimatedValue || 0), 0),
-      criticalOrders: transformedOrders.filter(o => o.priority === 'critical').length,
-      pendingOrders: transformedOrders.filter(o => o.status === 'pending').length,
+      totalUnits: transformedOrders.reduce((sum: number, o: TransformedOrder) => sum + o.suggestedQuantity, 0),
+      totalEstimatedCost: transformedOrders.reduce((sum: number, o: TransformedOrder) => sum + (o.estimatedCost || 0), 0),
+      totalEstimatedValue: transformedOrders.reduce((sum: number, o: TransformedOrder) => sum + (o.estimatedValue || 0), 0),
+      criticalOrders: transformedOrders.filter((o: TransformedOrder) => o.priority === 'critical').length,
+      pendingOrders: transformedOrders.filter((o: TransformedOrder) => o.status === 'pending').length,
     };
 
     return NextResponse.json({

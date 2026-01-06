@@ -100,6 +100,7 @@ export function CategoryForm({ category, allCategories, onClose, onSuccess }: Pr
         slug: formData.slug,
         description: formData.description || undefined,
         parentId: formData.parentId || null,
+        sortOrder: category?.sortOrder ?? 0,
       }
 
       const result = category

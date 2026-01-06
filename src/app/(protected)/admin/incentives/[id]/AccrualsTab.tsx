@@ -27,22 +27,33 @@ type AccrualDetail = {
   status: string
 }
 
+type Period = {
+  label: string
+  periodType: 'monthly' | 'quarterly' | 'annual'
+  periodStart: string
+  periodEnd: string
+}
+
 export function AccrualsTab({ programId, programType, programStatus }: Props) {
   const [summary, setSummary] = useState<AccrualSummary | null>(null)
   const [accruals, setAccruals] = useState<AccrualDetail[]>([])
+  const [periods, setPeriods] = useState<Period[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState<string>('')
   const [recalculate, setRecalculate] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isRunning, setIsRunning] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const periods = getAvailablePeriods()
-
   useEffect(() => {
-    loadSummary()
-    if (periods.length > 0) {
-      setSelectedPeriod(periods[0].periodStart)
+    async function loadInitialData() {
+      const periodsData = await getAvailablePeriods()
+      setPeriods(periodsData)
+      if (periodsData.length > 0) {
+        setSelectedPeriod(periodsData[0].periodStart)
+      }
+      loadSummary()
     }
+    loadInitialData()
   }, [])
 
   useEffect(() => {

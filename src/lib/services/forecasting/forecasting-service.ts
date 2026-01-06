@@ -377,10 +377,10 @@ export async function generateSuggestedOrderPlan(
 
   const suggestedOrders: SuggestedOrderItem[] = [];
 
-  for (const [productId, productForecasts] of forecastsByProduct) {
+  Array.from(forecastsByProduct.entries()).forEach(([productId, productForecasts]) => {
     const product = productForecasts[0].product;
     const currentStock = product.inventory.reduce(
-      (sum, inv) => sum + (inv.quantity - inv.reserved),
+      (sum: number, inv: { quantity: number; reserved: number }) => sum + (inv.quantity - inv.reserved),
       0
     );
 
@@ -397,7 +397,7 @@ export async function generateSuggestedOrderPlan(
     );
 
     suggestedOrders.push(...orders);
-  }
+  });
 
   // Sort by date
   suggestedOrders.sort(
@@ -656,7 +656,7 @@ export async function getForecastChartData(
         data: upperData,
         borderColor: '#94a3b8',
         backgroundColor: 'rgba(148, 163, 184, 0.1)',
-        fill: '-1',
+        fill: '-1' as unknown as boolean, // Chart.js fill between datasets
         tension: 0.4,
       },
     ],

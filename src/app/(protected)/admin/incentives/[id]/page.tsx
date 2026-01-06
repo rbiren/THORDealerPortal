@@ -169,10 +169,22 @@ function TabSkeleton() {
   )
 }
 
+type ClaimWithRelations = {
+  id: string
+  claimNumber: string
+  claimType: string
+  requestedAmount: number
+  approvedAmount: number | null
+  status: string
+  submittedAt: Date | null
+  dealer: { name: string; code: string }
+  submittedBy: { firstName: string | null; lastName: string | null } | null
+}
+
 async function ClaimsTab({ programId }: { programId: string }) {
   const { prisma } = await import('@/lib/prisma')
 
-  const claims = await prisma.incentiveClaim.findMany({
+  const claims: ClaimWithRelations[] = await prisma.incentiveClaim.findMany({
     where: { programId },
     include: {
       dealer: { select: { name: true, code: true } },
@@ -260,10 +272,21 @@ async function ClaimsTab({ programId }: { programId: string }) {
   )
 }
 
+type PayoutWithRelations = {
+  id: string
+  amount: number
+  payoutType: string
+  periodCovered: string | null
+  status: string
+  paidDate: Date | null
+  referenceNumber: string | null
+  dealer: { name: string; code: string }
+}
+
 async function PayoutsTab({ programId }: { programId: string }) {
   const { prisma } = await import('@/lib/prisma')
 
-  const payouts = await prisma.incentivePayout.findMany({
+  const payouts: PayoutWithRelations[] = await prisma.incentivePayout.findMany({
     where: { programId },
     include: {
       dealer: { select: { name: true, code: true } },

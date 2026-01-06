@@ -44,11 +44,16 @@ export async function getInvoicesForDealer(
 ) {
   const result = await getDealerInvoices(dealerId, options)
 
+  type InvoiceItem = {
+    status: string
+    [key: string]: unknown
+  }
+
   return {
-    invoices: result.invoices.map((invoice) => ({
+    invoices: result.invoices.map((invoice: InvoiceItem) => ({
       ...invoice,
-      statusLabel: INVOICE_STATUSES[invoice.status]?.label || invoice.status,
-      statusColor: INVOICE_STATUSES[invoice.status]?.color || 'gray',
+      statusLabel: INVOICE_STATUSES[invoice.status as keyof typeof INVOICE_STATUSES]?.label || invoice.status,
+      statusColor: INVOICE_STATUSES[invoice.status as keyof typeof INVOICE_STATUSES]?.color || 'gray',
     })),
     pagination: result.pagination,
   }

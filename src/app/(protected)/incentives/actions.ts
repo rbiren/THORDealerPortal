@@ -10,6 +10,12 @@ import {
   getDealerIncentivesDashboard,
   getDealerAccrualSummary,
   getProjectedRebate,
+  getCoopFundBalance,
+  submitClaim as submitClaimService,
+  addClaimDocument,
+  getClaimWithDocuments,
+  type SubmitClaimInput,
+  type CoopFundBalance,
 } from '@/lib/services/incentives'
 
 // Types
@@ -114,16 +120,33 @@ export async function getAvailablePrograms(): Promise<AvailableProgram[]> {
     select: { programId: true, status: true },
   })
 
-  const enrollmentMap = new Map(enrollments.map((e) => [e.programId, e.status]))
+  const enrollmentMap = new Map(enrollments.map((e: { programId: string; status: string }) => [e.programId, e.status]))
+
+  type ProgramQueryResult = {
+    id: string
+    name: string
+    code: string
+    description: string | null
+    type: string
+    subtype: string | null
+    startDate: Date
+    endDate: Date | null
+    enrollmentDeadline: Date | null
+    eligibleTiers: string | null
+    rules: string
+    totalBudget: number
+    usedBudget: number
+    _count: { enrollments: number }
+  }
 
   // Filter by eligible tier and map to result
   return programs
-    .filter((p) => {
+    .filter((p: ProgramQueryResult) => {
       if (!p.eligibleTiers) return true
       const tiers = JSON.parse(p.eligibleTiers)
       return tiers.length === 0 || tiers.includes(dealer?.tier || '')
     })
-    .map((p) => ({
+    .map((p: ProgramQueryResult) => ({
       id: p.id,
       name: p.name,
       code: p.code,
@@ -218,7 +241,18 @@ export async function getProgramDetail(programId: string): Promise<{
           tierProgress: enrollment.tierProgress,
         }
       : null,
-    accrualHistory: accrualHistory.map((a) => ({
+    accrualHistory: accrualHistory.map((a: {
+      id: string
+      periodType: string
+      periodStart: Date
+      periodEnd: Date
+      qualifyingVolume: number
+      rebateRate: number
+      accruedAmount: number
+      finalAmount: number | null
+      tierAchieved: string | null
+      status: string
+    }) => ({
       id: a.id,
       periodType: a.periodType,
       periodStart: a.periodStart,
@@ -250,7 +284,21 @@ export async function getMyEnrollments(): Promise<DealerEnrollment[]> {
     orderBy: { enrolledAt: 'desc' },
   })
 
-  return enrollments.map((e) => ({
+  type EnrollmentQueryResult = {
+    id: string
+    programId: string
+    program: unknown
+    status: string
+    enrolledAt: Date
+    approvedAt: Date | null
+    accruedAmount: number
+    paidAmount: number
+    pendingAmount: number
+    tierAchieved: string | null
+    tierProgress: number
+  }
+
+  return enrollments.map((e: EnrollmentQueryResult) => ({
     id: e.id,
     programId: e.programId,
     program: e.program,
@@ -446,4 +494,190 @@ export async function getMyProjectedRebate(
     console.error('Get projected rebate error:', error)
     return null
   }
+}
+
+// ============================================================================
+// CO-OP FUND MANAGEMENT
+// ============================================================================
+
+export async function getMyCoopFundBalances(): Promise<CoopFundBalance[]> {
+  const session = await auth()
+
+  if (!session?.user?.dealerId) {
+    return []
+  }
+
+  try {
+    return await getCoopFundBalance(session.user.dealerId)
+  } catch (error) {
+    console.error('Get co-op fund balance error:', error)
+    return []
+  }
+}
+
+export async function getCoopFundBalanceForProgram(
+  programId: string
+): Promise<CoopFundBalance | null> {
+  const session = await auth()
+
+  if (!session?.user?.dealerId) {
+    return null
+  }
+
+  try {
+    const balances = await getCoopFundBalance(session.user.dealerId, programId)
+    return balances[0] || null
+  } catch (error) {
+    console.error('Get co-op fund balance error:', error)
+    return null
+  }
+}
+
+// ============================================================================
+// CLAIM SUBMISSION
+// ============================================================================
+
+export type ClaimSubmissionResult = {
+  success: boolean
+  message: string
+  claimId?: string
+  claimNumber?: string
+}
+
+export async function submitNewClaim(input: {
+  programId: string
+  claimType: string
+  requestedAmount: number
+  description?: string
+  activityDate?: string
+  vendorName?: string
+  invoiceNumber?: string
+}): Promise<ClaimSubmissionResult> {
+  const session = await auth()
+
+  if (!session?.user?.dealerId || !session.user.id) {
+    return { success: false, message: 'Not authenticated' }
+  }
+
+  try {
+    const claimInput: SubmitClaimInput = {
+      programId: input.programId,
+      claimType: input.claimType,
+      requestedAmount: input.requestedAmount,
+      description: input.description,
+      activityDate: input.activityDate ? new Date(input.activityDate) : undefined,
+      vendorName: input.vendorName,
+      invoiceNumber: input.invoiceNumber,
+      supportingInfo: {
+        vendorName: input.vendorName,
+        invoiceNumber: input.invoiceNumber,
+        activityDate: input.activityDate,
+      },
+    }
+
+    const claim = await submitClaimService(
+      session.user.dealerId,
+      session.user.id,
+      claimInput
+    )
+
+    revalidatePath('/incentives/claims')
+    revalidatePath('/incentives/dashboard')
+    revalidatePath(`/incentives/${input.programId}`)
+
+    return {
+      success: true,
+      message: 'Claim submitted successfully',
+      claimId: claim.id,
+      claimNumber: claim.claimNumber,
+    }
+  } catch (error) {
+    console.error('Submit claim error:', error)
+    const message = error instanceof Error ? error.message : 'Failed to submit claim'
+    return { success: false, message }
+  }
+}
+
+export async function getClaimDetails(claimId: string) {
+  const session = await auth()
+
+  if (!session?.user?.dealerId) {
+    return null
+  }
+
+  try {
+    const claim = await getClaimWithDocuments(claimId)
+
+    // Verify claim belongs to dealer
+    if (!claim || claim.dealerId !== session.user.dealerId) {
+      return null
+    }
+
+    return claim
+  } catch (error) {
+    console.error('Get claim details error:', error)
+    return null
+  }
+}
+
+// Get co-op programs for claim submission dropdown
+export async function getCoopProgramsForClaims(): Promise<Array<{
+  id: string
+  name: string
+  type: string
+  balance: CoopFundBalance | null
+}>> {
+  const session = await auth()
+
+  if (!session?.user?.dealerId) {
+    return []
+  }
+
+  const dealerId = session.user.dealerId
+
+  // Get enrollments in co-op programs
+  const enrollments = await prisma.dealerProgramEnrollment.findMany({
+    where: {
+      dealerId,
+      status: 'active',
+      program: { type: 'coop', status: 'active' },
+    },
+    include: {
+      program: true,
+    },
+  })
+
+  // Get balances for each program
+  type CoopEnrollmentItem = {
+    programId: string
+    program: { id: string; name: string; type: string }
+  }
+
+  const programs = await Promise.all(
+    enrollments.map(async (e: CoopEnrollmentItem) => {
+      const balances = await getCoopFundBalance(dealerId, e.programId)
+      return {
+        id: e.program.id,
+        name: e.program.name,
+        type: e.program.type,
+        balance: balances[0] || null,
+      }
+    })
+  )
+
+  return programs
+}
+
+// Claim types for dropdown
+export async function getClaimTypes() {
+  return [
+    { value: 'advertising', label: 'Advertising' },
+    { value: 'marketing_materials', label: 'Marketing Materials' },
+    { value: 'trade_show', label: 'Trade Show/Event' },
+    { value: 'training', label: 'Training' },
+    { value: 'promotional', label: 'Promotional Activity' },
+    { value: 'digital_marketing', label: 'Digital Marketing' },
+    { value: 'signage', label: 'Signage/Displays' },
+    { value: 'other', label: 'Other' },
+  ]
 }

@@ -45,7 +45,18 @@ export async function exportSalesReport(
     orderBy: { createdAt: 'desc' },
   })
 
-  const data = orders.map((order) => ({
+  type OrderExportItem = {
+    createdAt: Date
+    orderNumber: string
+    dealer: { companyName: string }
+    status: string
+    items: Array<unknown>
+    subtotal: number
+    taxAmount: number
+    totalAmount: number
+  }
+
+  const data = orders.map((order: OrderExportItem) => ({
     date: formatDateForExport(order.createdAt),
     orderNumber: order.orderNumber,
     dealerName: order.dealer.companyName,
@@ -70,7 +81,7 @@ export async function exportSalesReport(
   const timestamp = new Date().toISOString().slice(0, 10)
 
   if (format === 'pdf') {
-    const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0)
+    const totalRevenue = orders.reduce((sum: number, o: { totalAmount: number }) => sum + o.totalAmount, 0)
     const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0
 
     const report: PDFReport = {
@@ -89,7 +100,7 @@ export async function exportSalesReport(
           type: 'table',
           content: [
             columns.map((c) => c.header),
-            ...data.map((row) => columns.map((c) => row[c.key])),
+            ...data.map((row: Record<string, string>) => columns.map((c) => row[c.key])),
           ],
         },
       ],
@@ -125,7 +136,18 @@ export async function exportInventoryReport(format: ExportFormat): Promise<Expor
     orderBy: [{ product: { sku: 'asc' } }, { location: { name: 'asc' } }],
   })
 
-  const data = inventory.map((inv) => ({
+  type InventoryExportItem = {
+    quantity: number
+    product: {
+      sku: string
+      name: string
+      price: number
+      category: { name: string } | null
+    }
+    location: { name: string }
+  }
+
+  const data = inventory.map((inv: InventoryExportItem) => ({
     sku: inv.product.sku,
     productName: inv.product.name,
     category: inv.product.category?.name || 'Uncategorized',
@@ -149,10 +171,10 @@ export async function exportInventoryReport(format: ExportFormat): Promise<Expor
 
   if (format === 'pdf') {
     const totalValue = inventory.reduce(
-      (sum, inv) => sum + inv.quantity * inv.product.price,
+      (sum: number, inv: InventoryExportItem) => sum + inv.quantity * inv.product.price,
       0
     )
-    const totalQuantity = inventory.reduce((sum, inv) => sum + inv.quantity, 0)
+    const totalQuantity = inventory.reduce((sum: number, inv: InventoryExportItem) => sum + inv.quantity, 0)
 
     const report: PDFReport = {
       title: 'Inventory Report',
@@ -170,7 +192,7 @@ export async function exportInventoryReport(format: ExportFormat): Promise<Expor
           type: 'table',
           content: [
             columns.map((c) => c.header),
-            ...data.map((row) => columns.map((c) => row[c.key])),
+            ...data.map((row: Record<string, string>) => columns.map((c) => row[c.key])),
           ],
         },
       ],
@@ -208,8 +230,14 @@ export async function exportDealerPerformanceReport(
     },
   })
 
-  const data = dealers.map((dealer) => {
-    const totalRevenue = dealer.orders.reduce((sum, o) => sum + o.totalAmount, 0)
+  type DealerExportItem = {
+    companyName: string
+    tier: string
+    orders: Array<{ totalAmount: number }>
+  }
+
+  const data = dealers.map((dealer: DealerExportItem) => {
+    const totalRevenue = dealer.orders.reduce((sum: number, o: { totalAmount: number }) => sum + o.totalAmount, 0)
     const orderCount = dealer.orders.length
     const avgOrderValue = orderCount > 0 ? totalRevenue / orderCount : 0
 
@@ -224,7 +252,7 @@ export async function exportDealerPerformanceReport(
   })
 
   // Sort by revenue descending
-  data.sort((a, b) => parseFloat(b.totalRevenue) - parseFloat(a.totalRevenue))
+  data.sort((a: { totalRevenue: string }, b: { totalRevenue: string }) => parseFloat(b.totalRevenue) - parseFloat(a.totalRevenue))
 
   const columns = [
     { key: 'dealerName' as const, header: 'Dealer Name' },
@@ -239,7 +267,7 @@ export async function exportDealerPerformanceReport(
 
   if (format === 'pdf') {
     const totalNetworkRevenue = data.reduce(
-      (sum, d) => sum + parseFloat(d.totalRevenue),
+      (sum: number, d: { totalRevenue: string }) => sum + parseFloat(d.totalRevenue),
       0
     )
 
@@ -259,7 +287,7 @@ export async function exportDealerPerformanceReport(
           type: 'table',
           content: [
             columns.map((c) => c.header),
-            ...data.map((row) => columns.map((c) => row[c.key])),
+            ...data.map((row: Record<string, string>) => columns.map((c) => row[c.key])),
           ],
         },
       ],
@@ -304,7 +332,17 @@ export async function exportInvoiceReport(
     orderBy: { createdAt: 'desc' },
   })
 
-  const data = invoices.map((invoice) => ({
+  type InvoiceExportItem = {
+    invoiceNumber: string
+    createdAt: Date
+    dueDate: Date
+    status: string
+    totalAmount: number
+    dealer: { companyName: string }
+    order: { orderNumber: string } | null
+  }
+
+  const data = invoices.map((invoice: InvoiceExportItem) => ({
     invoiceNumber: invoice.invoiceNumber,
     orderNumber: invoice.order?.orderNumber || '-',
     dealerName: invoice.dealer.companyName,
@@ -327,8 +365,8 @@ export async function exportInvoiceReport(
   const timestamp = new Date().toISOString().slice(0, 10)
 
   if (format === 'pdf') {
-    const totalAmount = invoices.reduce((sum, i) => sum + i.totalAmount, 0)
-    const overdueCount = invoices.filter((i) => i.status === 'overdue').length
+    const totalAmount = invoices.reduce((sum: number, i: InvoiceExportItem) => sum + i.totalAmount, 0)
+    const overdueCount = invoices.filter((i: InvoiceExportItem) => i.status === 'overdue').length
 
     const report: PDFReport = {
       title: 'Invoice Report',
@@ -346,7 +384,7 @@ export async function exportInvoiceReport(
           type: 'table',
           content: [
             columns.map((c) => c.header),
-            ...data.map((row) => columns.map((c) => row[c.key])),
+            ...data.map((row: Record<string, string>) => columns.map((c) => row[c.key])),
           ],
         },
       ],
@@ -389,7 +427,20 @@ export async function exportAllOrdersReport(
     orderBy: { createdAt: 'desc' },
   })
 
-  const data = orders.map((order) => ({
+  type AllOrderExportItem = {
+    createdAt: Date
+    orderNumber: string
+    status: string
+    subtotal: number
+    taxAmount: number
+    shippingAmount: number
+    totalAmount: number
+    poNumber: string | null
+    dealer: { companyName: string }
+    items: Array<unknown>
+  }
+
+  const data = orders.map((order: AllOrderExportItem) => ({
     date: formatDateForExport(order.createdAt),
     orderNumber: order.orderNumber,
     dealerName: order.dealer.companyName,
@@ -418,9 +469,9 @@ export async function exportAllOrdersReport(
   const timestamp = new Date().toISOString().slice(0, 10)
 
   if (format === 'pdf') {
-    const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0)
+    const totalRevenue = orders.reduce((sum: number, o: { totalAmount: number }) => sum + o.totalAmount, 0)
     const statusCounts = orders.reduce(
-      (acc, o) => {
+      (acc: Record<string, number>, o: AllOrderExportItem) => {
         acc[o.status] = (acc[o.status] || 0) + 1
         return acc
       },
@@ -449,7 +500,7 @@ export async function exportAllOrdersReport(
           type: 'table',
           content: [
             columns.map((c) => c.header),
-            ...data.map((row) => columns.map((c) => row[c.key])),
+            ...data.map((row: Record<string, string>) => columns.map((c) => row[c.key])),
           ],
         },
       ],

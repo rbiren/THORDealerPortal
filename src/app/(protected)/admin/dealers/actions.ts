@@ -185,7 +185,7 @@ export async function getDealerStats() {
   ])
 
   const tierMap = Object.fromEntries(
-    tierCounts.map((t) => [t.tier, t._count.tier])
+    tierCounts.map((t: { tier: string; _count: { tier: number } }) => [t.tier, t._count.tier])
   )
 
   return {
@@ -630,8 +630,18 @@ export async function getDealerHierarchy(): Promise<DealerHierarchyNode[]> {
   const dealerMap = new Map<string, DealerHierarchyNode>()
   const rootDealers: DealerHierarchyNode[] = []
 
+  type DealerQueryResult = {
+    id: string
+    code: string
+    name: string
+    status: string
+    tier: string
+    parentDealerId: string | null
+    _count: { users: number; orders: number }
+  }
+
   // First pass: create all nodes
-  allDealers.forEach((dealer) => {
+  allDealers.forEach((dealer: DealerQueryResult) => {
     dealerMap.set(dealer.id, {
       id: dealer.id,
       code: dealer.code,
@@ -644,7 +654,7 @@ export async function getDealerHierarchy(): Promise<DealerHierarchyNode[]> {
   })
 
   // Second pass: build tree
-  allDealers.forEach((dealer) => {
+  allDealers.forEach((dealer: DealerQueryResult) => {
     const node = dealerMap.get(dealer.id)!
     if (dealer.parentDealerId) {
       const parent = dealerMap.get(dealer.parentDealerId)

@@ -331,7 +331,7 @@ export default function TicketDetailPage() {
             {error || 'Ticket Not Found'}
           </h2>
           <p className="text-gray-500 mb-6">
-            The ticket you're looking for doesn't exist or you don't have access to it.
+            The ticket you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
           </p>
           <Link
             href="/support"

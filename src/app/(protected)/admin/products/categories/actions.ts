@@ -62,7 +62,17 @@ export async function getCategoriesFlat(): Promise<CategoryListItem[]> {
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   })
 
-  return categories.map((c) => ({
+  type CategoryQueryResult = {
+    id: string
+    name: string
+    slug: string
+    description: string | null
+    parentId: string | null
+    sortOrder: number
+    _count: { products: number }
+  }
+
+  return categories.map((c: CategoryQueryResult) => ({
     ...c,
     productCount: c._count.products,
   }))
@@ -92,12 +102,22 @@ export async function getCategoriesTree(): Promise<CategoryListItem[]> {
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   })
 
+  type CategoryTreeItem = {
+    id: string
+    name: string
+    slug: string
+    description: string | null
+    parentId: string | null
+    sortOrder: number
+    _count: { products: number }
+  }
+
   // Build tree
   const categoryMap = new Map<string, CategoryListItem>()
   const rootCategories: CategoryListItem[] = []
 
   // First pass: create map
-  categories.forEach((cat) => {
+  categories.forEach((cat: CategoryTreeItem) => {
     categoryMap.set(cat.id, {
       ...cat,
       productCount: cat._count.products,
@@ -106,7 +126,7 @@ export async function getCategoriesTree(): Promise<CategoryListItem[]> {
   })
 
   // Second pass: build tree
-  categories.forEach((cat) => {
+  categories.forEach((cat: CategoryTreeItem) => {
     const node = categoryMap.get(cat.id)!
     if (cat.parentId && categoryMap.has(cat.parentId)) {
       const parent = categoryMap.get(cat.parentId)!
@@ -535,6 +555,6 @@ async function getMaxChildrenDepth(categoryId: string): Promise<number> {
     return 0
   }
 
-  const depths = await Promise.all(children.map((c) => getMaxChildrenDepth(c.id)))
+  const depths = await Promise.all(children.map((c: { id: string }) => getMaxChildrenDepth(c.id)))
   return 1 + Math.max(...depths)
 }

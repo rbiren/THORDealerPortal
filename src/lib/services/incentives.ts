@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 // Types
 export interface CreateProgramInput {
@@ -135,7 +134,7 @@ export async function listPrograms(options: {
 } = {}) {
   const { type, status, dealerTier, page = 1, limit = 20 } = options;
 
-  const where: Prisma.IncentiveProgramWhereInput = {};
+  const where: Record<string, unknown> = {};
 
   if (type) where.type = type;
   if (status) {
@@ -158,9 +157,10 @@ export async function listPrograms(options: {
   ]);
 
   // Filter by dealer tier eligibility if provided
+  type ProgramType = typeof programs[number];
   let filteredPrograms = programs;
   if (dealerTier) {
-    filteredPrograms = programs.filter((p) => {
+    filteredPrograms = programs.filter((p: ProgramType) => {
       if (!p.eligibleTiers) return true;
       const tiers = JSON.parse(p.eligibleTiers);
       return tiers.length === 0 || tiers.includes(dealerTier);
@@ -168,7 +168,7 @@ export async function listPrograms(options: {
   }
 
   return {
-    programs: filteredPrograms.map((p) => ({
+    programs: filteredPrograms.map((p: ProgramType) => ({
       ...p,
       eligibleTiers: p.eligibleTiers ? JSON.parse(p.eligibleTiers) : [],
       eligibleRegions: p.eligibleRegions ? JSON.parse(p.eligibleRegions) : [],
@@ -187,7 +187,7 @@ export async function listPrograms(options: {
  * Update a program
  */
 export async function updateProgram(id: string, input: UpdateProgramInput) {
-  const updateData: Prisma.IncentiveProgramUpdateInput = {};
+  const updateData: Record<string, unknown> = {};
 
   if (input.name !== undefined) updateData.name = input.name;
   if (input.description !== undefined) updateData.description = input.description;
@@ -291,7 +291,7 @@ export async function approveEnrollment(enrollmentId: string, approvedById: stri
  * Get dealer's enrollments
  */
 export async function getDealerEnrollments(dealerId: string, status?: string) {
-  const where: Prisma.DealerProgramEnrollmentWhereInput = { dealerId };
+  const where: Record<string, unknown> = { dealerId };
   if (status) where.status = status;
 
   return prisma.dealerProgramEnrollment.findMany({
@@ -346,9 +346,11 @@ export async function calculateRebateAccrual(
   });
 
   // Calculate qualifying volume
-  const qualifyingVolume = orders.reduce((sum, order) => {
+  type OrderType = typeof orders[number];
+  type OrderItemType = OrderType['items'][number];
+  const qualifyingVolume = orders.reduce((sum: number, order: OrderType) => {
     // Apply product filters if specified in rules
-    const qualifyingItems = order.items.filter((item) => {
+    const qualifyingItems = order.items.filter((item: OrderItemType) => {
       if (program.rules.qualifyingProducts?.length) {
         return program.rules.qualifyingProducts.includes(item.product.categoryId || '');
       }
@@ -358,7 +360,7 @@ export async function calculateRebateAccrual(
       return true;
     });
 
-    return sum + qualifyingItems.reduce((itemSum, item) => itemSum + item.totalPrice, 0);
+    return sum + qualifyingItems.reduce((itemSum: number, item: OrderItemType) => itemSum + item.totalPrice, 0);
   }, 0);
 
   // Determine rebate rate based on tier structure
@@ -383,9 +385,10 @@ export async function calculateRebateAccrual(
   );
 
   // Calculate tier progress
+  type TierType = { name: string; minVolume: number; rate: number };
   let tierProgress = 0;
   if (program.rules.tiers?.length && tierAchieved) {
-    const currentTierIndex = program.rules.tiers.findIndex((t) => t.name === tierAchieved);
+    const currentTierIndex = program.rules.tiers.findIndex((t: TierType) => t.name === tierAchieved);
     const nextTier = program.rules.tiers[currentTierIndex - 1];
     if (nextTier) {
       const currentTier = program.rules.tiers[currentTierIndex];
@@ -451,7 +454,7 @@ function getPeriodType(start: Date, end: Date): string {
  * Get dealer's accrual summary
  */
 export async function getDealerAccrualSummary(dealerId: string, programId?: string) {
-  const where: Prisma.RebateAccrualWhereInput = { dealerId };
+  const where: Record<string, unknown> = { dealerId };
   if (programId) where.programId = programId;
 
   const accruals = await prisma.rebateAccrual.findMany({
@@ -460,10 +463,11 @@ export async function getDealerAccrualSummary(dealerId: string, programId?: stri
     orderBy: { periodStart: 'desc' },
   });
 
+  type AccrualType = typeof accruals[number];
   const summary = {
-    totalAccrued: accruals.reduce((sum, a) => sum + a.finalAmount, 0),
-    totalPaid: accruals.filter((a) => a.status === 'paid').reduce((sum, a) => sum + a.finalAmount, 0),
-    pending: accruals.filter((a) => a.status === 'calculated').reduce((sum, a) => sum + a.finalAmount, 0),
+    totalAccrued: accruals.reduce((sum: number, a: AccrualType) => sum + a.finalAmount, 0),
+    totalPaid: accruals.filter((a: AccrualType) => a.status === 'paid').reduce((sum: number, a: AccrualType) => sum + a.finalAmount, 0),
+    pending: accruals.filter((a: AccrualType) => a.status === 'calculated').reduce((sum: number, a: AccrualType) => sum + a.finalAmount, 0),
     accruals,
   };
 
@@ -521,9 +525,9 @@ export async function createClaim(input: CreateClaimInput) {
 }
 
 /**
- * Submit a claim for review
+ * Mark a draft claim as submitted for review
  */
-export async function submitClaim(claimId: string) {
+export async function markClaimAsSubmitted(claimId: string) {
   return prisma.incentiveClaim.update({
     where: { id: claimId },
     data: {
@@ -542,7 +546,7 @@ export async function reviewClaim(
   decision: 'approved' | 'denied',
   options: { approvedAmount?: number; reviewNotes?: string; denialReason?: string }
 ) {
-  const updateData: Prisma.IncentiveClaimUpdateInput = {
+  const updateData: Record<string, unknown> = {
     status: decision,
     reviewedById,
     reviewedAt: new Date(),
@@ -578,7 +582,7 @@ export async function listClaims(options: {
 } = {}) {
   const { dealerId, programId, status, page = 1, limit = 20 } = options;
 
-  const where: Prisma.IncentiveClaimWhereInput = {};
+  const where: Record<string, unknown> = {};
   if (dealerId) where.dealerId = dealerId;
   if (programId) where.programId = programId;
   if (status) {
@@ -715,7 +719,7 @@ export async function getDealerIncentivesDashboard(dealerId: string) {
     ytdPaid: ytdPayouts._sum.amount || 0,
     recentClaims,
     recentPayouts,
-    enrollments: enrollments.map((e) => ({
+    enrollments: enrollments.map((e: typeof enrollments[number]) => ({
       ...e,
       program: {
         ...e.program,
@@ -758,7 +762,7 @@ export async function getProgramStats(programId: string) {
     activeEnrollments,
     totalAccrued: totalAccrued._sum.finalAmount || 0,
     totalPaid: totalPaid._sum.amount || 0,
-    claims: Object.fromEntries(claimStats.map((c) => [c.status, c._count.id])),
+    claims: Object.fromEntries(claimStats.map((c: { status: string; _count: { id: number } }) => [c.status, c._count.id])),
   };
 }
 
@@ -960,8 +964,10 @@ export async function getProjectedRebate(
   });
 
   // Calculate current qualifying volume
-  const currentVolume = orders.reduce((sum, order) => {
-    const qualifyingItems = order.items.filter((item) => {
+  type OrderItem = { product: { categoryId: string | null }; totalPrice: number };
+  type Order = { items: OrderItem[] };
+  const currentVolume = orders.reduce((sum: number, order: Order) => {
+    const qualifyingItems = order.items.filter((item: OrderItem) => {
       if (program.rules.qualifyingProducts?.length) {
         return program.rules.qualifyingProducts.includes(item.product.categoryId || '');
       }
@@ -970,7 +976,7 @@ export async function getProjectedRebate(
       }
       return true;
     });
-    return sum + qualifyingItems.reduce((itemSum, item) => itemSum + item.totalPrice, 0);
+    return sum + qualifyingItems.reduce((itemSum: number, item: OrderItem) => itemSum + item.totalPrice, 0);
   }, 0);
 
   // Calculate days elapsed and remaining
@@ -1012,11 +1018,14 @@ export async function getProjectedRebate(
   let volumeToNextTier: number | null = null;
 
   if (program.rules.tiers?.length) {
-    const sortedTiers = [...program.rules.tiers].sort((a, b) => a.minVolume - b.minVolume);
-    const currentTierIndex = sortedTiers.findIndex((t) => t.name === currentTierInfo.tierName);
+    type TierDef = { name: string; minVolume: number; rate: number };
+    const sortedTiers = [...program.rules.tiers].sort((a: TierDef, b: TierDef) => a.minVolume - b.minVolume);
+    const currentTierIndex = sortedTiers.findIndex((t: TierDef) => t.name === currentTierInfo.tierName);
     if (currentTierIndex < sortedTiers.length - 1) {
       nextTier = sortedTiers[currentTierIndex + 1] || sortedTiers[0];
-      volumeToNextTier = nextTier.minVolume - currentVolume;
+      if (nextTier) {
+        volumeToNextTier = nextTier.minVolume - currentVolume;
+      }
     }
   }
 
@@ -1104,8 +1113,9 @@ export async function getProgramAccrualSummary(programId: string): Promise<{
     }),
   ]);
 
+  type StatusCount = { status: string; _count: { id: number }; _sum: { finalAmount: number | null } };
   const statusMap = Object.fromEntries(
-    statusCounts.map((s) => [s.status, { count: s._count.id, amount: s._sum.finalAmount || 0 }])
+    statusCounts.map((s: StatusCount) => [s.status, { count: s._count.id, amount: s._sum.finalAmount || 0 }])
   );
 
   // Aggregate periods
@@ -1146,5 +1156,669 @@ export async function getProgramAccrualSummary(programId: string): Promise<{
     periods: Array.from(periodMap.values()).sort((a, b) =>
       b.periodStart.getTime() - a.periodStart.getTime()
     ),
+  };
+}
+
+// ============================================================================
+// CO-OP FUND MANAGEMENT
+// ============================================================================
+
+export interface CoopFundBalance {
+  programId: string;
+  programName: string;
+  availableBalance: number;
+  totalAccrued: number;
+  totalClaimed: number;
+  totalApproved: number;
+  totalPaid: number;
+  pendingClaims: number;
+}
+
+/**
+ * Calculate co-op fund accrual for a dealer based on purchases
+ */
+export async function calculateCoopAccrual(
+  programId: string,
+  dealerId: string,
+  periodStart: Date,
+  periodEnd: Date
+): Promise<{ accruedAmount: number; qualifyingVolume: number }> {
+  const program = await getProgram(programId);
+  if (!program) throw new Error('Program not found');
+  if (program.type !== 'coop') throw new Error('Program is not a co-op fund');
+
+  // Get qualifying orders for the period
+  const orders = await prisma.order.findMany({
+    where: {
+      dealerId,
+      status: { in: ['delivered', 'shipped'] },
+      createdAt: { gte: periodStart, lte: periodEnd },
+    },
+    include: {
+      items: { include: { product: true } },
+    },
+  });
+
+  // Calculate qualifying volume
+  type OrderItem2 = { product: { categoryId: string | null }; totalPrice: number };
+  type Order2 = { items: OrderItem2[] };
+  const qualifyingVolume = orders.reduce((sum: number, order: Order2) => {
+    const qualifyingItems = order.items.filter((item: OrderItem2) => {
+      if (program.rules.qualifyingProducts?.length) {
+        return program.rules.qualifyingProducts.includes(item.product.categoryId || '');
+      }
+      if (program.rules.excludedProducts?.length) {
+        return !program.rules.excludedProducts.includes(item.product.categoryId || '');
+      }
+      return true;
+    });
+    return sum + qualifyingItems.reduce((itemSum: number, item: OrderItem2) => itemSum + item.totalPrice, 0);
+  }, 0);
+
+  // Calculate accrual based on flat rate or tiered rates
+  let accruedAmount = 0;
+  if (program.rules.flatRate) {
+    accruedAmount = qualifyingVolume * program.rules.flatRate;
+  } else if (program.rules.tiers?.length) {
+    const sortedTiers = [...program.rules.tiers].sort((a, b) => b.minVolume - a.minVolume);
+    for (const tier of sortedTiers) {
+      if (qualifyingVolume >= tier.minVolume) {
+        accruedAmount = qualifyingVolume * tier.rate;
+        break;
+      }
+    }
+  }
+
+  // Apply max payout limit
+  if (program.rules.maxPayoutPerDealer) {
+    accruedAmount = Math.min(accruedAmount, program.rules.maxPayoutPerDealer);
+  }
+
+  return { accruedAmount, qualifyingVolume };
+}
+
+/**
+ * Get co-op fund balance for a dealer
+ */
+export async function getCoopFundBalance(
+  dealerId: string,
+  programId?: string
+): Promise<CoopFundBalance[]> {
+  const whereClause: Record<string, unknown> = {
+    dealerId,
+    status: 'active',
+    program: { type: 'coop', status: 'active' },
+  };
+
+  if (programId) {
+    whereClause.programId = programId;
+  }
+
+  const enrollments = await prisma.dealerProgramEnrollment.findMany({
+    where: whereClause,
+    include: {
+      program: true,
+    },
+  });
+
+  const balances: CoopFundBalance[] = [];
+
+  for (const enrollment of enrollments) {
+    // Get claims for this program
+    const claims = await prisma.incentiveClaim.findMany({
+      where: {
+        dealerId,
+        programId: enrollment.programId,
+      },
+    });
+
+    type ClaimRecord = { requestedAmount: number; approvedAmount: number | null; status: string };
+    const totalClaimed = claims.reduce((sum: number, c: ClaimRecord) => sum + c.requestedAmount, 0);
+    const totalApproved = claims
+      .filter((c: ClaimRecord) => ['approved', 'paid'].includes(c.status))
+      .reduce((sum: number, c: ClaimRecord) => sum + (c.approvedAmount || 0), 0);
+    const totalPaid = claims
+      .filter((c: ClaimRecord) => c.status === 'paid')
+      .reduce((sum: number, c: ClaimRecord) => sum + (c.approvedAmount || 0), 0);
+    const pendingClaims = claims.filter((c: ClaimRecord) =>
+      ['submitted', 'under_review'].includes(c.status)
+    ).length;
+
+    // Available balance = accrued - approved (not yet paid counts against balance)
+    const availableBalance = Math.max(0, enrollment.accruedAmount - totalApproved);
+
+    balances.push({
+      programId: enrollment.programId,
+      programName: enrollment.program.name,
+      availableBalance,
+      totalAccrued: enrollment.accruedAmount,
+      totalClaimed,
+      totalApproved,
+      totalPaid,
+      pendingClaims,
+    });
+  }
+
+  return balances;
+}
+
+/**
+ * Run co-op fund accrual for all enrolled dealers
+ */
+export async function runCoopAccrualBatch(
+  programId: string,
+  periodStart: Date,
+  periodEnd: Date
+): Promise<{ processed: number; totalAccrued: number }> {
+  const program = await getProgram(programId);
+  if (!program) throw new Error('Program not found');
+  if (program.type !== 'coop') throw new Error('Program is not a co-op fund');
+
+  const enrollments = await prisma.dealerProgramEnrollment.findMany({
+    where: { programId, status: 'active' },
+  });
+
+  let totalAccrued = 0;
+
+  for (const enrollment of enrollments) {
+    const { accruedAmount } = await calculateCoopAccrual(
+      programId,
+      enrollment.dealerId,
+      periodStart,
+      periodEnd
+    );
+
+    // Update enrollment with new accrued amount
+    await prisma.dealerProgramEnrollment.update({
+      where: { id: enrollment.id },
+      data: {
+        accruedAmount: { increment: accruedAmount },
+      },
+    });
+
+    totalAccrued += accruedAmount;
+  }
+
+  return { processed: enrollments.length, totalAccrued };
+}
+
+// ============================================================================
+// CLAIM SUBMISSION & MANAGEMENT
+// ============================================================================
+
+export interface SubmitClaimInput {
+  programId: string;
+  claimType: string;
+  requestedAmount: number;
+  description?: string;
+  activityDate?: Date;
+  vendorName?: string;
+  invoiceNumber?: string;
+  supportingInfo?: Record<string, unknown>;
+}
+
+/**
+ * Submit a new claim
+ */
+export async function submitClaim(
+  dealerId: string,
+  submittedById: string,
+  input: SubmitClaimInput
+) {
+  // Validate program exists and dealer is enrolled
+  const enrollment = await prisma.dealerProgramEnrollment.findUnique({
+    where: { dealerId_programId: { dealerId, programId: input.programId } },
+    include: { program: true },
+  });
+
+  if (!enrollment) {
+    throw new Error('Not enrolled in this program');
+  }
+
+  if (enrollment.status !== 'active') {
+    throw new Error('Enrollment is not active');
+  }
+
+  // For co-op claims, check available balance
+  if (enrollment.program.type === 'coop') {
+    const balances = await getCoopFundBalance(dealerId, input.programId);
+    const balance = balances[0];
+    if (balance && input.requestedAmount > balance.availableBalance) {
+      throw new Error(`Requested amount exceeds available balance of $${balance.availableBalance.toFixed(2)}`);
+    }
+  }
+
+  // Generate claim number
+  const claimNumber = await generateClaimNumber();
+
+  // Create claim
+  const claim = await prisma.incentiveClaim.create({
+    data: {
+      claimNumber,
+      programId: input.programId,
+      dealerId,
+      submittedById,
+      claimType: input.claimType,
+      requestedAmount: input.requestedAmount,
+      description: input.description,
+      supportingInfo: input.supportingInfo ? JSON.stringify(input.supportingInfo) : null,
+      status: 'submitted',
+      submittedAt: new Date(),
+    },
+    include: {
+      program: true,
+      dealer: { select: { id: true, name: true, code: true } },
+    },
+  });
+
+  return claim;
+}
+
+/**
+ * Add document to a claim
+ */
+export async function addClaimDocument(
+  claimId: string,
+  document: {
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    filePath: string;
+    documentType: string;
+    uploadedById: string;
+  }
+) {
+  return prisma.incentiveClaimDocument.create({
+    data: {
+      claimId,
+      fileName: document.fileName,
+      fileType: document.fileType,
+      fileSize: document.fileSize,
+      filePath: document.filePath,
+      documentType: document.documentType,
+      uploadedById: document.uploadedById,
+    },
+  });
+}
+
+/**
+ * Get claim with documents
+ */
+export async function getClaimWithDocuments(claimId: string) {
+  return prisma.incentiveClaim.findUnique({
+    where: { id: claimId },
+    include: {
+      program: true,
+      dealer: { select: { id: true, name: true, code: true } },
+      submittedBy: { select: { id: true, firstName: true, lastName: true } },
+      reviewedBy: { select: { id: true, firstName: true, lastName: true } },
+      documents: {
+        orderBy: { uploadedAt: 'desc' },
+      },
+    },
+  });
+}
+
+// ============================================================================
+// CLAIM APPROVAL WORKFLOW
+// ============================================================================
+
+export interface ReviewClaimInput {
+  decision: 'approved' | 'denied';
+  approvedAmount?: number;
+  reviewNotes?: string;
+  denialReason?: string;
+}
+
+/**
+ * Review and approve/deny a claim
+ */
+export async function reviewClaimAction(
+  claimId: string,
+  reviewedById: string,
+  input: ReviewClaimInput
+) {
+  const claim = await prisma.incentiveClaim.findUnique({
+    where: { id: claimId },
+    include: { program: true },
+  });
+
+  if (!claim) throw new Error('Claim not found');
+  if (!['submitted', 'under_review'].includes(claim.status)) {
+    throw new Error('Claim cannot be reviewed in current status');
+  }
+
+  const updateData: Record<string, unknown> = {
+    status: input.decision,
+    reviewedById,
+    reviewedAt: new Date(),
+    reviewNotes: input.reviewNotes,
+  };
+
+  if (input.decision === 'approved') {
+    updateData.approvedAmount = input.approvedAmount ?? claim.requestedAmount;
+    updateData.approvedAt = new Date();
+  } else {
+    updateData.denialReason = input.denialReason;
+  }
+
+  return prisma.incentiveClaim.update({
+    where: { id: claimId },
+    data: updateData,
+    include: {
+      program: true,
+      dealer: { select: { id: true, name: true, code: true } },
+    },
+  });
+}
+
+/**
+ * Mark claim as under review
+ */
+export async function markClaimUnderReview(claimId: string, reviewerId: string) {
+  return prisma.incentiveClaim.update({
+    where: { id: claimId },
+    data: {
+      status: 'under_review',
+      reviewedById: reviewerId,
+    },
+  });
+}
+
+/**
+ * Batch approve claims
+ */
+export async function batchApproveClaims(
+  claimIds: string[],
+  reviewedById: string,
+  reviewNotes?: string
+): Promise<{ approved: number; errors: string[] }> {
+  const errors: string[] = [];
+  let approved = 0;
+
+  for (const claimId of claimIds) {
+    try {
+      await reviewClaimAction(claimId, reviewedById, {
+        decision: 'approved',
+        reviewNotes,
+      });
+      approved++;
+    } catch (error) {
+      errors.push(`${claimId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  return { approved, errors };
+}
+
+/**
+ * Get pending claims for admin review
+ */
+export async function getPendingClaims(options: {
+  programId?: string;
+  status?: string[];
+  page?: number;
+  limit?: number;
+} = {}) {
+  const { programId, status = ['submitted', 'under_review'], page = 1, limit = 20 } = options;
+
+  const where: Record<string, unknown> = {
+    status: { in: status },
+  };
+
+  if (programId) where.programId = programId;
+
+  const [claims, total] = await Promise.all([
+    prisma.incentiveClaim.findMany({
+      where,
+      include: {
+        program: { select: { id: true, name: true, type: true } },
+        dealer: { select: { id: true, name: true, code: true } },
+        submittedBy: { select: { id: true, firstName: true, lastName: true } },
+        documents: { select: { id: true, fileName: true, documentType: true } },
+      },
+      orderBy: { submittedAt: 'asc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.incentiveClaim.count({ where }),
+  ]);
+
+  return {
+    claims,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  };
+}
+
+// ============================================================================
+// PAYOUT MANAGEMENT & REPORTING
+// ============================================================================
+
+export interface CreatePayoutInput {
+  programId: string;
+  dealerId: string;
+  amount: number;
+  payoutType: string;
+  paymentMethod?: string;
+  periodCovered?: string;
+  scheduledDate?: Date;
+  claimId?: string;
+  notes?: string;
+}
+
+/**
+ * Create a payout from an approved claim
+ */
+export async function createPayoutFromClaim(claimId: string, scheduledDate?: Date) {
+  const claim = await prisma.incentiveClaim.findUnique({
+    where: { id: claimId },
+    include: { program: true },
+  });
+
+  if (!claim) throw new Error('Claim not found');
+  if (claim.status !== 'approved') throw new Error('Claim is not approved');
+  if (!claim.approvedAmount) throw new Error('No approved amount');
+
+  const payout = await prisma.incentivePayout.create({
+    data: {
+      programId: claim.programId,
+      dealerId: claim.dealerId,
+      amount: claim.approvedAmount,
+      payoutType: claim.program.type,
+      periodCovered: `Claim ${claim.claimNumber}`,
+      scheduledDate,
+      status: 'pending',
+      notes: `Payout for claim ${claim.claimNumber}`,
+    },
+  });
+
+  // Update claim status to reflect payout created
+  await prisma.incentiveClaim.update({
+    where: { id: claimId },
+    data: { status: 'paid' },
+  });
+
+  return payout;
+}
+
+/**
+ * Process a payout (mark as completed)
+ */
+export async function processPayoutAction(
+  payoutId: string,
+  processedById: string,
+  referenceNumber: string
+) {
+  const payout = await prisma.incentivePayout.findUnique({
+    where: { id: payoutId },
+  });
+
+  if (!payout) throw new Error('Payout not found');
+  if (payout.status === 'completed') throw new Error('Payout already completed');
+
+  // Update enrollment paid amount
+  await prisma.dealerProgramEnrollment.updateMany({
+    where: {
+      dealerId: payout.dealerId,
+      programId: payout.programId,
+    },
+    data: {
+      paidAmount: { increment: payout.amount },
+      pendingAmount: { decrement: payout.amount },
+    },
+  });
+
+  return prisma.incentivePayout.update({
+    where: { id: payoutId },
+    data: {
+      status: 'completed',
+      paidDate: new Date(),
+      referenceNumber,
+      processedById,
+    },
+  });
+}
+
+/**
+ * Get payout report data
+ */
+export async function getPayoutReport(options: {
+  programId?: string;
+  dealerId?: string;
+  status?: string;
+  startDate?: Date;
+  endDate?: Date;
+  groupBy?: 'program' | 'dealer' | 'month';
+}) {
+  const { programId, dealerId, status, startDate, endDate, groupBy } = options;
+
+  const where: Record<string, unknown> = {};
+  if (programId) where.programId = programId;
+  if (dealerId) where.dealerId = dealerId;
+  if (status) where.status = status;
+  if (startDate || endDate) {
+    const createdAtFilter: Record<string, Date> = {};
+    if (startDate) createdAtFilter.gte = startDate;
+    if (endDate) createdAtFilter.lte = endDate;
+    where.createdAt = createdAtFilter;
+  }
+
+  const payouts = await prisma.incentivePayout.findMany({
+    where,
+    include: {
+      program: { select: { id: true, name: true, type: true } },
+      dealer: { select: { id: true, name: true, code: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Calculate totals
+  type PayoutRecord = typeof payouts[number];
+  const totals = {
+    totalAmount: payouts.reduce((sum: number, p: PayoutRecord) => sum + p.amount, 0),
+    completedAmount: payouts.filter((p: PayoutRecord) => p.status === 'completed').reduce((sum: number, p: PayoutRecord) => sum + p.amount, 0),
+    pendingAmount: payouts.filter((p: PayoutRecord) => p.status === 'pending').reduce((sum: number, p: PayoutRecord) => sum + p.amount, 0),
+    count: payouts.length,
+    completedCount: payouts.filter((p: PayoutRecord) => p.status === 'completed').length,
+    pendingCount: payouts.filter((p: PayoutRecord) => p.status === 'pending').length,
+  };
+
+  // Group if requested
+  let grouped: Record<string, { amount: number; count: number }> = {};
+  if (groupBy) {
+    grouped = payouts.reduce((acc: Record<string, { amount: number; count: number }>, p: PayoutRecord) => {
+      let key: string;
+      switch (groupBy) {
+        case 'program':
+          key = p.program.name;
+          break;
+        case 'dealer':
+          key = p.dealer.name;
+          break;
+        case 'month':
+          key = new Date(p.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+          break;
+        default:
+          key = 'other';
+      }
+      if (!acc[key]) acc[key] = { amount: 0, count: 0 };
+      acc[key].amount += p.amount;
+      acc[key].count += 1;
+      return acc;
+    }, {} as Record<string, { amount: number; count: number }>);
+  }
+
+  return { payouts, totals, grouped };
+}
+
+/**
+ * Get scheduled payouts
+ */
+export async function getScheduledPayouts(startDate?: Date, endDate?: Date) {
+  const where: Record<string, unknown> = {
+    status: 'pending',
+    scheduledDate: { not: null },
+  };
+
+  if (startDate || endDate) {
+    const dateFilter: Record<string, Date | null> = { not: null };
+    if (startDate) dateFilter.gte = startDate;
+    if (endDate) dateFilter.lte = endDate;
+    where.scheduledDate = dateFilter;
+  }
+
+  return prisma.incentivePayout.findMany({
+    where,
+    include: {
+      program: { select: { id: true, name: true, type: true } },
+      dealer: { select: { id: true, name: true, code: true } },
+    },
+    orderBy: { scheduledDate: 'asc' },
+  });
+}
+
+/**
+ * Generate payout statement for a dealer
+ */
+export async function generatePayoutStatement(
+  dealerId: string,
+  startDate: Date,
+  endDate: Date
+) {
+  const payouts = await prisma.incentivePayout.findMany({
+    where: {
+      dealerId,
+      status: 'completed',
+      paidDate: { gte: startDate, lte: endDate },
+    },
+    include: {
+      program: { select: { name: true, type: true } },
+    },
+    orderBy: { paidDate: 'asc' },
+  });
+
+  const dealer = await prisma.dealer.findUnique({
+    where: { id: dealerId },
+    select: { id: true, name: true, code: true, email: true },
+  });
+
+  type PayoutType = typeof payouts[number];
+  type GroupedPayout = Record<string, { amount: number; count: number; type: string }>;
+  const byProgram = payouts.reduce((acc: GroupedPayout, p: PayoutType) => {
+    if (!acc[p.program.name]) acc[p.program.name] = { amount: 0, count: 0, type: p.program.type };
+    acc[p.program.name].amount += p.amount;
+    acc[p.program.name].count += 1;
+    return acc;
+  }, {} as GroupedPayout);
+
+  return {
+    dealer,
+    period: { startDate, endDate },
+    payouts,
+    summary: {
+      totalAmount: payouts.reduce((sum: number, p: PayoutType) => sum + p.amount, 0),
+      payoutCount: payouts.length,
+      byProgram,
+    },
   };
 }

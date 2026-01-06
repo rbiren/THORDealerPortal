@@ -208,7 +208,7 @@ function AvailableProgramsGrid({
               d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
             />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-charcoal">You're enrolled in all available programs</h3>
+          <h3 className="mt-4 text-lg font-medium text-charcoal">You&apos;re enrolled in all available programs</h3>
           <p className="mt-2 text-medium-gray">Check back later for new incentive opportunities</p>
         </div>
       </div>

@@ -150,7 +150,7 @@ export async function getStockAlerts(filters: AlertFilters = {}): Promise<{
   })
 
   // Find notifications for these inventory items to check acknowledged status
-  const inventoryIds = inventory.map(i => i.id)
+  const inventoryIds = inventory.map((i: { id: string }) => i.id)
   const notifications = await prisma.notification.findMany({
     where: {
       type: 'low_stock',
@@ -170,9 +170,18 @@ export async function getStockAlerts(filters: AlertFilters = {}): Promise<{
     }
   }
 
+  type AlertInventoryItem = {
+    id: string
+    quantity: number
+    reserved: number
+    lowStockThreshold: number
+    product: { id: string; sku: string; name: string; categoryId: string | null }
+    location: { id: string; name: string; code: string }
+  }
+
   // Transform to alerts
   let alerts: StockAlert[] = inventory
-    .map((item) => {
+    .map((item: AlertInventoryItem) => {
       const available = item.quantity - item.reserved
       const percentOfThreshold = item.lowStockThreshold > 0
         ? (available / item.lowStockThreshold) * 100
@@ -209,7 +218,7 @@ export async function getStockAlerts(filters: AlertFilters = {}): Promise<{
         acknowledgedAt: ackInfo?.at ?? null,
       }
     })
-    .filter((item) => item.available <= item.threshold) // Only show items below threshold
+    .filter((item: { available: number; threshold: number }) => item.available <= item.threshold) // Only show items below threshold
 
   // Filter by severity
   if (severity) {
