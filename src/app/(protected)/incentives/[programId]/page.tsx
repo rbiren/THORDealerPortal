@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { getProgramDetail, enrollInProgram, withdrawFromProgram, type AvailableProgram, type DealerEnrollment } from '../actions'
+import { getProgramDetail, enrollInProgram, withdrawFromProgram, getMyProjectedRebate, type AvailableProgram, type DealerEnrollment, type ProjectedRebateData } from '../actions'
 
 type Props = {
   params: Promise<{ programId: string }>
@@ -28,6 +28,7 @@ export default function ProgramDetailPage({ params }: Props) {
   const [program, setProgram] = useState<AvailableProgram | null>(null)
   const [enrollment, setEnrollment] = useState<DealerEnrollment | null>(null)
   const [accrualHistory, setAccrualHistory] = useState<AccrualHistory[]>([])
+  const [projectedRebate, setProjectedRebate] = useState<ProjectedRebateData | null>(null)
   const [isPending, startTransition] = useTransition()
   const [mounted, setMounted] = useState(false)
 
@@ -51,6 +52,12 @@ export default function ProgramDetailPage({ params }: Props) {
       setProgram(data.program)
       setEnrollment(data.enrollment)
       setAccrualHistory(data.accrualHistory)
+
+      // Load projected rebate if enrolled and program is rebate type
+      if (data.enrollment?.status === 'active' && data.program?.type === 'rebate') {
+        const projected = await getMyProjectedRebate(programId, 'monthly')
+        setProjectedRebate(projected)
+      }
     })
   }
 
@@ -239,6 +246,68 @@ export default function ProgramDetailPage({ params }: Props) {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Projected Rebate Card */}
+      {projectedRebate && program.type === 'rebate' && enrollment?.status === 'active' && (
+        <div className="card bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <div className="card-header">
+            <h2 className="card-title text-blue-900">Projected Earnings This Month</h2>
+          </div>
+          <div className="card-body">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Current Performance */}
+              <div>
+                <p className="text-sm text-blue-700 mb-1">Current Volume</p>
+                <p className="text-2xl font-bold text-blue-900">{formatCurrency(projectedRebate.currentVolume)}</p>
+                <p className="text-sm text-blue-600 mt-1">
+                  {projectedRebate.currentTier ? `${projectedRebate.currentTier} tier` : 'Base rate'} ({(projectedRebate.currentRate * 100).toFixed(1)}%)
+                </p>
+              </div>
+
+              {/* Projected */}
+              <div>
+                <p className="text-sm text-purple-700 mb-1">Projected Volume</p>
+                <p className="text-2xl font-bold text-purple-900">{formatCurrency(projectedRebate.projectedVolume)}</p>
+                <p className="text-sm text-purple-600 mt-1">
+                  Based on {formatCurrency(projectedRebate.averageDailyVolume)}/day avg
+                </p>
+              </div>
+
+              {/* Earnings */}
+              <div className="bg-white/50 rounded-lg p-4">
+                <p className="text-sm text-green-700 mb-1">Projected Rebate</p>
+                <p className="text-3xl font-bold text-green-600">{formatCurrency(projectedRebate.projectedAccrual)}</p>
+                {projectedRebate.projectedTier !== projectedRebate.currentTier && projectedRebate.projectedTier && (
+                  <p className="text-sm text-green-600 mt-1">
+                    On track for {projectedRebate.projectedTier} tier!
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Next Tier Progress */}
+            {projectedRebate.nextTier && projectedRebate.volumeToNextTier && projectedRebate.volumeToNextTier > 0 && (
+              <div className="mt-6 pt-4 border-t border-blue-200">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-medium">{formatCurrency(projectedRebate.volumeToNextTier)}</span> more to reach{' '}
+                    <span className="font-medium">{projectedRebate.nextTier.name}</span> tier ({(projectedRebate.nextTier.rate * 100).toFixed(1)}% rate)
+                  </p>
+                  <p className="text-sm text-blue-600">{projectedRebate.daysRemaining} days left this month</p>
+                </div>
+                <div className="h-2 bg-blue-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, (projectedRebate.currentVolume / projectedRebate.nextTier.minVolume) * 100)}%`
+                    }}
+                  />
+                </div>
               </div>
             )}
           </div>

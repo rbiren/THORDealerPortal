@@ -9,6 +9,7 @@ import {
   getDealerEnrollments,
   getDealerIncentivesDashboard,
   getDealerAccrualSummary,
+  getProjectedRebate,
 } from '@/lib/services/incentives'
 
 // Types
@@ -410,4 +411,39 @@ export async function getMyPayouts() {
     orderBy: { createdAt: 'desc' },
     take: 50,
   })
+}
+
+// Get projected rebate for dealer
+
+export type ProjectedRebateData = {
+  currentVolume: number
+  projectedVolume: number
+  currentRate: number
+  projectedRate: number
+  currentAccrual: number
+  projectedAccrual: number
+  currentTier: string | null
+  projectedTier: string | null
+  nextTier: { name: string; minVolume: number; rate: number } | null
+  volumeToNextTier: number | null
+  daysRemaining: number
+  averageDailyVolume: number
+}
+
+export async function getMyProjectedRebate(
+  programId: string,
+  periodType: 'monthly' | 'quarterly' | 'annual' = 'monthly'
+): Promise<ProjectedRebateData | null> {
+  const session = await auth()
+
+  if (!session?.user?.dealerId) {
+    return null
+  }
+
+  try {
+    return await getProjectedRebate(programId, session.user.dealerId, periodType)
+  } catch (error) {
+    console.error('Get projected rebate error:', error)
+    return null
+  }
 }

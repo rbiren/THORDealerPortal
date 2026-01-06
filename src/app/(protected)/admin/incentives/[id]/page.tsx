@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getAdminProgram, getProgramEnrollments, getDealerTiers } from '../actions'
 import { ProgramDetail } from './ProgramDetail'
 import { EnrollmentsTab } from './EnrollmentsTab'
+import { AccrualsTab } from './AccrualsTab'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -41,6 +42,7 @@ export default async function ProgramPage({ params, searchParams }: Props) {
   const tabs = [
     { id: 'details', label: 'Details' },
     { id: 'enrollments', label: `Enrollments (${program.stats.enrollmentCount})` },
+    ...(program.type === 'rebate' ? [{ id: 'accruals', label: 'Accruals' }] : []),
     { id: 'claims', label: `Claims (${Object.values(program.stats.claims).reduce((a, b) => a + b, 0)})` },
     { id: 'payouts', label: 'Payouts' },
   ]
@@ -129,6 +131,9 @@ export default async function ProgramPage({ params, searchParams }: Props) {
       <Suspense fallback={<TabSkeleton />}>
         {tab === 'details' && <ProgramDetail program={program} tiers={tiers} />}
         {tab === 'enrollments' && <EnrollmentsTab enrollments={enrollments} programId={id} />}
+        {tab === 'accruals' && (
+          <AccrualsTab programId={id} programType={program.type} programStatus={program.status} />
+        )}
         {tab === 'claims' && <ClaimsTab programId={id} />}
         {tab === 'payouts' && <PayoutsTab programId={id} />}
       </Suspense>

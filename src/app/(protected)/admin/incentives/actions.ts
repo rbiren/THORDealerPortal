@@ -12,9 +12,14 @@ import {
   activateProgram,
   pauseProgram,
   getProgramStats,
+  runBatchAccrual,
+  finalizeAccruals,
+  getProgramAccrualSummary,
+  calculatePeriodDates,
   type CreateProgramInput,
   type UpdateProgramInput,
   type ProgramRules,
+  type AccrualRunResult,
 } from '@/lib/services/incentives'
 
 // Types
@@ -545,4 +550,236 @@ export async function getDealerTiers() {
     { value: 'silver', label: 'Silver' },
     { value: 'bronze', label: 'Bronze' },
   ]
+}
+
+// ============================================================================
+// REBATE CALCULATION ACTIONS
+// ============================================================================
+
+export type RunAccrualState = {
+  success: boolean
+  message: string
+  result?: AccrualRunResult
+}
+
+export type AccrualSummary = {
+  totalCalculated: number
+  totalFinalized: number
+  totalPaid: number
+  calculatedAmount: number
+  finalizedAmount: number
+  paidAmount: number
+  periods: Array<{
+    periodStart: Date
+    periodEnd: Date
+    periodType: string
+    dealerCount: number
+    totalAmount: number
+    status: string
+  }>
+}
+
+// Run batch accrual calculation for a program
+export async function runAccrualCalculation(
+  programId: string,
+  options: {
+    periodType?: 'monthly' | 'quarterly' | 'annual'
+    periodStart?: string
+    periodEnd?: string
+    recalculate?: boolean
+  } = {}
+): Promise<RunAccrualState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    const program = await prisma.incentiveProgram.findUnique({
+      where: { id: programId },
+    })
+
+    if (!program) {
+      return { success: false, message: 'Program not found' }
+    }
+
+    if (program.type !== 'rebate') {
+      return { success: false, message: 'Accrual calculations only apply to rebate programs' }
+    }
+
+    if (program.status !== 'active') {
+      return { success: false, message: 'Program must be active to run calculations' }
+    }
+
+    const result = await runBatchAccrual(programId, {
+      periodType: options.periodType,
+      periodStart: options.periodStart ? new Date(options.periodStart) : undefined,
+      periodEnd: options.periodEnd ? new Date(options.periodEnd) : undefined,
+      recalculate: options.recalculate,
+    })
+
+    revalidatePath(`/admin/incentives/${programId}`)
+    return {
+      success: true,
+      message: `Calculated accruals for ${result.processedCount} dealers. Total: $${result.totalAccrued.toFixed(2)}`,
+      result,
+    }
+  } catch (error) {
+    console.error('Run accrual error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    return { success: false, message: errorMessage }
+  }
+}
+
+// Finalize accruals for payout
+export async function finalizeAccrualsAction(
+  programId: string,
+  periodStart: string,
+  periodEnd: string
+): Promise<UpdateProgramState> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return { success: false, message: 'Unauthorized' }
+  }
+
+  try {
+    const result = await finalizeAccruals(
+      programId,
+      new Date(periodStart),
+      new Date(periodEnd)
+    )
+
+    revalidatePath(`/admin/incentives/${programId}`)
+    return {
+      success: true,
+      message: `Finalized ${result.count} accruals totaling $${result.totalAmount.toFixed(2)}`,
+    }
+  } catch (error) {
+    console.error('Finalize accruals error:', error)
+    return { success: false, message: 'An error occurred while finalizing accruals' }
+  }
+}
+
+// Get accrual summary for a program
+export async function getAccrualSummaryAction(programId: string): Promise<AccrualSummary | null> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return null
+  }
+
+  try {
+    return await getProgramAccrualSummary(programId)
+  } catch (error) {
+    console.error('Get accrual summary error:', error)
+    return null
+  }
+}
+
+// Get available periods for calculation
+export function getAvailablePeriods() {
+  const now = new Date()
+  const periods: Array<{
+    label: string
+    periodType: 'monthly' | 'quarterly' | 'annual'
+    periodStart: string
+    periodEnd: string
+  }> = []
+
+  // Current month
+  const { periodStart: monthStart, periodEnd: monthEnd } = calculatePeriodDates('monthly', now)
+  periods.push({
+    label: `Current Month (${monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})`,
+    periodType: 'monthly',
+    periodStart: monthStart.toISOString(),
+    periodEnd: monthEnd.toISOString(),
+  })
+
+  // Previous month
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const { periodStart: prevMonthStart, periodEnd: prevMonthEnd } = calculatePeriodDates('monthly', prevMonth)
+  periods.push({
+    label: `Previous Month (${prevMonthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})`,
+    periodType: 'monthly',
+    periodStart: prevMonthStart.toISOString(),
+    periodEnd: prevMonthEnd.toISOString(),
+  })
+
+  // Current quarter
+  const { periodStart: qtrStart, periodEnd: qtrEnd } = calculatePeriodDates('quarterly', now)
+  const qtrLabel = `Q${Math.floor(now.getMonth() / 3) + 1} ${now.getFullYear()}`
+  periods.push({
+    label: `Current Quarter (${qtrLabel})`,
+    periodType: 'quarterly',
+    periodStart: qtrStart.toISOString(),
+    periodEnd: qtrEnd.toISOString(),
+  })
+
+  // Previous quarter
+  const prevQtr = new Date(now.getFullYear(), now.getMonth() - 3, 1)
+  const { periodStart: prevQtrStart, periodEnd: prevQtrEnd } = calculatePeriodDates('quarterly', prevQtr)
+  const prevQtrLabel = `Q${Math.floor(prevQtr.getMonth() / 3) + 1} ${prevQtr.getFullYear()}`
+  periods.push({
+    label: `Previous Quarter (${prevQtrLabel})`,
+    periodType: 'quarterly',
+    periodStart: prevQtrStart.toISOString(),
+    periodEnd: prevQtrEnd.toISOString(),
+  })
+
+  // Current year
+  const { periodStart: yearStart, periodEnd: yearEnd } = calculatePeriodDates('annual', now)
+  periods.push({
+    label: `Current Year (${now.getFullYear()})`,
+    periodType: 'annual',
+    periodStart: yearStart.toISOString(),
+    periodEnd: yearEnd.toISOString(),
+  })
+
+  return periods
+}
+
+// Get accrual details for a specific period
+export async function getPeriodAccruals(
+  programId: string,
+  periodStart: string,
+  periodEnd: string
+): Promise<Array<{
+  id: string
+  dealer: { id: string; name: string; code: string }
+  qualifyingVolume: number
+  rebateRate: number
+  accruedAmount: number
+  finalAmount: number
+  tierAchieved: string | null
+  status: string
+}>> {
+  const session = await auth()
+
+  if (!session?.user || !isAdmin(session.user.role)) {
+    return []
+  }
+
+  const accruals = await prisma.rebateAccrual.findMany({
+    where: {
+      programId,
+      periodStart: new Date(periodStart),
+    },
+    include: {
+      dealer: { select: { id: true, name: true, code: true } },
+    },
+    orderBy: { finalAmount: 'desc' },
+  })
+
+  return accruals.map((a) => ({
+    id: a.id,
+    dealer: a.dealer,
+    qualifyingVolume: a.qualifyingVolume,
+    rebateRate: a.rebateRate,
+    accruedAmount: a.accruedAmount,
+    finalAmount: a.finalAmount,
+    tierAchieved: a.tierAchieved,
+    status: a.status,
+  }))
 }

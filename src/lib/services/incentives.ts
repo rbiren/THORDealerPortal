@@ -761,3 +761,390 @@ export async function getProgramStats(programId: string) {
     claims: Object.fromEntries(claimStats.map((c) => [c.status, c._count.id])),
   };
 }
+
+// ============================================================================
+// BATCH ACCRUAL PROCESSING
+// ============================================================================
+
+export interface AccrualRunResult {
+  runId: string;
+  programId: string;
+  periodType: string;
+  periodStart: Date;
+  periodEnd: Date;
+  processedCount: number;
+  totalAccrued: number;
+  errors: Array<{ dealerId: string; error: string }>;
+  startedAt: Date;
+  completedAt: Date;
+}
+
+/**
+ * Calculate period dates for a given period type
+ */
+export function calculatePeriodDates(periodType: 'monthly' | 'quarterly' | 'annual', targetDate?: Date): {
+  periodStart: Date;
+  periodEnd: Date;
+} {
+  const date = targetDate || new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  switch (periodType) {
+    case 'monthly':
+      return {
+        periodStart: new Date(year, month, 1),
+        periodEnd: new Date(year, month + 1, 0, 23, 59, 59),
+      };
+    case 'quarterly':
+      const quarter = Math.floor(month / 3);
+      return {
+        periodStart: new Date(year, quarter * 3, 1),
+        periodEnd: new Date(year, (quarter + 1) * 3, 0, 23, 59, 59),
+      };
+    case 'annual':
+      return {
+        periodStart: new Date(year, 0, 1),
+        periodEnd: new Date(year, 11, 31, 23, 59, 59),
+      };
+    default:
+      return {
+        periodStart: new Date(year, month, 1),
+        periodEnd: new Date(year, month + 1, 0, 23, 59, 59),
+      };
+  }
+}
+
+/**
+ * Run batch accrual calculation for all enrolled dealers in a program
+ */
+export async function runBatchAccrual(
+  programId: string,
+  options: {
+    periodType?: 'monthly' | 'quarterly' | 'annual';
+    periodStart?: Date;
+    periodEnd?: Date;
+    recalculate?: boolean;
+  } = {}
+): Promise<AccrualRunResult> {
+  const startedAt = new Date();
+  const runId = `RUN-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const program = await getProgram(programId);
+  if (!program) throw new Error('Program not found');
+  if (program.type !== 'rebate') throw new Error('Batch accruals only apply to rebate programs');
+
+  // Determine period dates
+  let periodStart: Date;
+  let periodEnd: Date;
+
+  if (options.periodStart && options.periodEnd) {
+    periodStart = options.periodStart;
+    periodEnd = options.periodEnd;
+  } else {
+    const periodType = options.periodType || 'monthly';
+    const dates = calculatePeriodDates(periodType);
+    periodStart = dates.periodStart;
+    periodEnd = dates.periodEnd;
+  }
+
+  // Get all active enrollments
+  const enrollments = await prisma.dealerProgramEnrollment.findMany({
+    where: { programId, status: 'active' },
+    select: { dealerId: true },
+  });
+
+  const results: {
+    dealerId: string;
+    accrual?: Awaited<ReturnType<typeof calculateRebateAccrual>>;
+    error?: string;
+  }[] = [];
+
+  // Process each dealer
+  for (const enrollment of enrollments) {
+    try {
+      // Check if accrual already exists for this period
+      if (!options.recalculate) {
+        const existing = await prisma.rebateAccrual.findUnique({
+          where: {
+            programId_dealerId_periodStart: {
+              programId,
+              dealerId: enrollment.dealerId,
+              periodStart,
+            },
+          },
+        });
+        if (existing && existing.status !== 'calculated') {
+          results.push({ dealerId: enrollment.dealerId, error: 'Accrual already finalized' });
+          continue;
+        }
+      }
+
+      const accrual = await calculateRebateAccrual(
+        programId,
+        enrollment.dealerId,
+        periodStart,
+        periodEnd
+      );
+      results.push({ dealerId: enrollment.dealerId, accrual });
+
+      // Update enrollment tier progress
+      await prisma.dealerProgramEnrollment.update({
+        where: { dealerId_programId: { dealerId: enrollment.dealerId, programId } },
+        data: {
+          tierAchieved: accrual.tierAchieved,
+          tierProgress: accrual.tierProgress,
+          accruedAmount: { increment: accrual.accruedAmount - (accrual.qualifyingVolume > 0 ? 0 : 0) },
+        },
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      results.push({ dealerId: enrollment.dealerId, error: errorMessage });
+    }
+  }
+
+  const completedAt = new Date();
+  const successfulResults = results.filter((r) => r.accrual && !r.error);
+
+  return {
+    runId,
+    programId,
+    periodType: getPeriodType(periodStart, periodEnd),
+    periodStart,
+    periodEnd,
+    processedCount: successfulResults.length,
+    totalAccrued: successfulResults.reduce((sum, r) => sum + (r.accrual?.accruedAmount || 0), 0),
+    errors: results.filter((r) => r.error).map((r) => ({ dealerId: r.dealerId, error: r.error! })),
+    startedAt,
+    completedAt,
+  };
+}
+
+/**
+ * Get projected rebate for a dealer based on current period purchases
+ */
+export async function getProjectedRebate(
+  programId: string,
+  dealerId: string,
+  periodType: 'monthly' | 'quarterly' | 'annual' = 'monthly'
+): Promise<{
+  currentVolume: number;
+  projectedVolume: number;
+  currentRate: number;
+  projectedRate: number;
+  currentAccrual: number;
+  projectedAccrual: number;
+  currentTier: string | null;
+  projectedTier: string | null;
+  nextTier: { name: string; minVolume: number; rate: number } | null;
+  volumeToNextTier: number | null;
+  daysRemaining: number;
+  averageDailyVolume: number;
+}> {
+  const program = await getProgram(programId);
+  if (!program) throw new Error('Program not found');
+
+  const { periodStart, periodEnd } = calculatePeriodDates(periodType);
+  const now = new Date();
+
+  // Get orders so far this period
+  const orders = await prisma.order.findMany({
+    where: {
+      dealerId,
+      status: { in: ['delivered', 'shipped', 'confirmed', 'processing'] },
+      createdAt: { gte: periodStart, lte: now },
+    },
+    include: {
+      items: { include: { product: true } },
+    },
+  });
+
+  // Calculate current qualifying volume
+  const currentVolume = orders.reduce((sum, order) => {
+    const qualifyingItems = order.items.filter((item) => {
+      if (program.rules.qualifyingProducts?.length) {
+        return program.rules.qualifyingProducts.includes(item.product.categoryId || '');
+      }
+      if (program.rules.excludedProducts?.length) {
+        return !program.rules.excludedProducts.includes(item.product.categoryId || '');
+      }
+      return true;
+    });
+    return sum + qualifyingItems.reduce((itemSum, item) => itemSum + item.totalPrice, 0);
+  }, 0);
+
+  // Calculate days elapsed and remaining
+  const daysElapsed = Math.max(1, Math.ceil((now.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24)));
+  const totalDays = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+  const daysRemaining = Math.max(0, totalDays - daysElapsed);
+
+  // Calculate average daily volume and projected volume
+  const averageDailyVolume = currentVolume / daysElapsed;
+  const projectedVolume = currentVolume + (averageDailyVolume * daysRemaining);
+
+  // Determine current and projected tiers/rates
+  const getCurrentTierInfo = (volume: number) => {
+    let rate = program.rules.flatRate || 0;
+    let tierName: string | null = null;
+
+    if (program.rules.tiers?.length) {
+      const sortedTiers = [...program.rules.tiers].sort((a, b) => b.minVolume - a.minVolume);
+      for (const tier of sortedTiers) {
+        if (volume >= tier.minVolume) {
+          rate = tier.rate;
+          tierName = tier.name;
+          break;
+        }
+      }
+    }
+
+    return { rate, tierName };
+  };
+
+  const currentTierInfo = getCurrentTierInfo(currentVolume);
+  const projectedTierInfo = getCurrentTierInfo(projectedVolume);
+
+  const currentAccrual = currentVolume * currentTierInfo.rate;
+  const projectedAccrual = projectedVolume * projectedTierInfo.rate;
+
+  // Find next tier
+  let nextTier: { name: string; minVolume: number; rate: number } | null = null;
+  let volumeToNextTier: number | null = null;
+
+  if (program.rules.tiers?.length) {
+    const sortedTiers = [...program.rules.tiers].sort((a, b) => a.minVolume - b.minVolume);
+    const currentTierIndex = sortedTiers.findIndex((t) => t.name === currentTierInfo.tierName);
+    if (currentTierIndex < sortedTiers.length - 1) {
+      nextTier = sortedTiers[currentTierIndex + 1] || sortedTiers[0];
+      volumeToNextTier = nextTier.minVolume - currentVolume;
+    }
+  }
+
+  return {
+    currentVolume,
+    projectedVolume,
+    currentRate: currentTierInfo.rate,
+    projectedRate: projectedTierInfo.rate,
+    currentAccrual,
+    projectedAccrual,
+    currentTier: currentTierInfo.tierName,
+    projectedTier: projectedTierInfo.tierName,
+    nextTier,
+    volumeToNextTier,
+    daysRemaining,
+    averageDailyVolume,
+  };
+}
+
+/**
+ * Finalize accruals for a period (locks them for payout)
+ */
+export async function finalizeAccruals(
+  programId: string,
+  periodStart: Date,
+  periodEnd: Date
+): Promise<{ count: number; totalAmount: number }> {
+  const result = await prisma.rebateAccrual.updateMany({
+    where: {
+      programId,
+      periodStart: { gte: periodStart },
+      periodEnd: { lte: periodEnd },
+      status: 'calculated',
+    },
+    data: { status: 'finalized' },
+  });
+
+  const totals = await prisma.rebateAccrual.aggregate({
+    where: {
+      programId,
+      periodStart: { gte: periodStart },
+      periodEnd: { lte: periodEnd },
+      status: 'finalized',
+    },
+    _sum: { finalAmount: true },
+  });
+
+  return {
+    count: result.count,
+    totalAmount: totals._sum.finalAmount || 0,
+  };
+}
+
+/**
+ * Get accrual summary for a program
+ */
+export async function getProgramAccrualSummary(programId: string): Promise<{
+  totalCalculated: number;
+  totalFinalized: number;
+  totalPaid: number;
+  calculatedAmount: number;
+  finalizedAmount: number;
+  paidAmount: number;
+  periods: Array<{
+    periodStart: Date;
+    periodEnd: Date;
+    periodType: string;
+    dealerCount: number;
+    totalAmount: number;
+    status: string;
+  }>;
+}> {
+  const [statusCounts, periods] = await Promise.all([
+    prisma.rebateAccrual.groupBy({
+      by: ['status'],
+      where: { programId },
+      _count: { id: true },
+      _sum: { finalAmount: true },
+    }),
+    prisma.rebateAccrual.groupBy({
+      by: ['periodStart', 'periodEnd', 'periodType', 'status'],
+      where: { programId },
+      _count: { dealerId: true },
+      _sum: { finalAmount: true },
+    }),
+  ]);
+
+  const statusMap = Object.fromEntries(
+    statusCounts.map((s) => [s.status, { count: s._count.id, amount: s._sum.finalAmount || 0 }])
+  );
+
+  // Aggregate periods
+  const periodMap = new Map<string, {
+    periodStart: Date;
+    periodEnd: Date;
+    periodType: string;
+    dealerCount: number;
+    totalAmount: number;
+    status: string;
+  }>();
+
+  for (const p of periods) {
+    const key = `${p.periodStart.toISOString()}-${p.periodEnd.toISOString()}`;
+    if (!periodMap.has(key)) {
+      periodMap.set(key, {
+        periodStart: p.periodStart,
+        periodEnd: p.periodEnd,
+        periodType: p.periodType,
+        dealerCount: p._count.dealerId,
+        totalAmount: p._sum.finalAmount || 0,
+        status: p.status,
+      });
+    } else {
+      const existing = periodMap.get(key)!;
+      existing.dealerCount += p._count.dealerId;
+      existing.totalAmount += p._sum.finalAmount || 0;
+    }
+  }
+
+  return {
+    totalCalculated: statusMap['calculated']?.count || 0,
+    totalFinalized: statusMap['finalized']?.count || 0,
+    totalPaid: statusMap['paid']?.count || 0,
+    calculatedAmount: statusMap['calculated']?.amount || 0,
+    finalizedAmount: statusMap['finalized']?.amount || 0,
+    paidAmount: statusMap['paid']?.amount || 0,
+    periods: Array.from(periodMap.values()).sort((a, b) =>
+      b.periodStart.getTime() - a.periodStart.getTime()
+    ),
+  };
+}
