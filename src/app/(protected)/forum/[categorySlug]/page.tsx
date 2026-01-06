@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import {
   Plus,
   Search,
@@ -21,18 +21,14 @@ import {
   HelpCircle,
   Megaphone,
   Lightbulb,
-  Users,
-  TrendingUp,
-  Wrench,
+  ArrowLeft,
 } from 'lucide-react'
 import {
-  getForumCategoriesAction,
+  getForumCategoryAction,
   getForumPostsAction,
-  getForumStatsAction,
   type ForumCategoryListItem,
   type ForumPostListItem,
-  type ForumStats,
-} from './actions'
+} from '../actions'
 import {
   forumPostTypeOptions,
   forumPostTypeLabels,
@@ -44,9 +40,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   HelpCircle,
   Megaphone,
   Lightbulb,
-  Wrench,
-  TrendingUp,
-  Users,
 }
 
 function formatDate(dateString: string): string {
@@ -69,65 +62,6 @@ function formatDate(dateString: string): string {
   })
 }
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  color,
-}: {
-  label: string
-  value: number | string
-  icon: React.ComponentType<{ className?: string }>
-  color: string
-}) {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${color}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">{label}</p>
-          <p className="text-xl font-semibold text-gray-900">{value}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function CategoryCard({ category }: { category: ForumCategoryListItem }) {
-  const IconComponent = iconMap[category.icon || 'MessageSquare'] || MessageSquare
-
-  return (
-    <Link
-      href={`/forum/${category.slug}`}
-      className="block bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className="p-2 rounded-lg"
-          style={{ backgroundColor: `${category.color}20` || '#f3f4f6' }}
-        >
-          <span style={{ color: category.color || '#6b7280' }}>
-            <IconComponent className="h-5 w-5" />
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900">{category.name}</h3>
-          {category.description && (
-            <p className="text-sm text-gray-500 line-clamp-2 mt-0.5">
-              {category.description}
-            </p>
-          )}
-          <p className="text-xs text-gray-400 mt-2">
-            {category.postCount} {category.postCount === 1 ? 'post' : 'posts'}
-          </p>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
 function PostRow({ post }: { post: ForumPostListItem }) {
   const TypeIcon = iconMap[post.postTypeColor.icon] || MessageSquare
 
@@ -139,9 +73,7 @@ function PostRow({ post }: { post: ForumPostListItem }) {
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-start gap-4">
           {/* Type indicator */}
-          <div
-            className={`p-2 rounded-lg ${post.postTypeColor.bg}`}
-          >
+          <div className={`p-2 rounded-lg ${post.postTypeColor.bg}`}>
             <TypeIcon className={`h-5 w-5 ${post.postTypeColor.text}`} />
           </div>
 
@@ -168,16 +100,6 @@ function PostRow({ post }: { post: ForumPostListItem }) {
                 className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${post.postTypeColor.bg} ${post.postTypeColor.text}`}
               >
                 {post.postTypeLabel}
-              </span>
-              <span className="text-xs text-gray-400">
-                in{' '}
-                <span
-                  className="font-medium hover:underline"
-                  style={{ color: post.categoryColor || '#6b7280' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Link href={`/forum/${post.categorySlug}`}>{post.categoryName}</Link>
-                </span>
               </span>
             </div>
 
@@ -246,13 +168,14 @@ function PostRow({ post }: { post: ForumPostListItem }) {
   )
 }
 
-export default function ForumPage() {
+export default function ForumCategoryPage() {
+  const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const categorySlug = params.categorySlug as string
 
-  const [categories, setCategories] = useState<ForumCategoryListItem[]>([])
+  const [category, setCategory] = useState<ForumCategoryListItem | null>(null)
   const [posts, setPosts] = useState<ForumPostListItem[]>([])
-  const [stats, setStats] = useState<ForumStats | null>(null)
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 20,
@@ -261,7 +184,6 @@ export default function ForumPage() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
-  const [showCategories, setShowCategories] = useState(true)
 
   // Filter state
   const [search, setSearch] = useState(searchParams.get('search') || '')
@@ -273,23 +195,30 @@ export default function ForumPage() {
   const loadData = useCallback(async () => {
     setIsLoading(true)
 
-    const [categoriesResult, postsResult, statsResult] = await Promise.all([
-      getForumCategoriesAction(),
-      getForumPostsAction({
-        search: search || undefined,
-        postType: postType !== 'all' ? postType : undefined,
-        page,
-        pageSize: 20,
-      }),
-      getForumStatsAction(),
-    ])
+    // First get the category by slug
+    const categoryData = await getForumCategoryAction(categorySlug)
 
-    setCategories(categoriesResult)
+    if (!categoryData) {
+      // Category not found, redirect to forum home
+      router.push('/forum')
+      return
+    }
+
+    setCategory(categoryData)
+
+    // Then get posts for this category
+    const postsResult = await getForumPostsAction({
+      search: search || undefined,
+      categoryId: categoryData.id,
+      postType: postType !== 'all' ? postType : undefined,
+      page,
+      pageSize: 20,
+    })
+
     setPosts(postsResult.posts)
     setPagination(postsResult.pagination)
-    setStats(statsResult)
     setIsLoading(false)
-  }, [search, postType, page])
+  }, [categorySlug, search, postType, page, router])
 
   useEffect(() => {
     loadData()
@@ -303,8 +232,8 @@ export default function ForumPage() {
     if (page > 1) params.set('page', page.toString())
 
     const queryString = params.toString()
-    router.replace(`/forum${queryString ? `?${queryString}` : ''}`, { scroll: false })
-  }, [search, postType, page, router])
+    router.replace(`/forum/${categorySlug}${queryString ? `?${queryString}` : ''}`, { scroll: false })
+  }, [search, postType, page, categorySlug, router])
 
   const clearFilters = () => {
     setSearch('')
@@ -312,80 +241,49 @@ export default function ForumPage() {
     setPage(1)
   }
 
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="animate-pulse">
+          <div className="h-6 w-32 bg-gray-200 rounded mb-4" />
+          <div className="h-8 w-64 bg-gray-200 rounded mb-8" />
+          <div className="h-96 bg-gray-200 rounded" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!category) {
+    return null
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Community Forum</h1>
-          <p className="text-gray-600 mt-1">
-            Connect with fellow dealers, share knowledge, and get answers
-          </p>
-        </div>
+      <div className="mb-6">
         <Link
-          href="/forum/new"
-          className="inline-flex items-center px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          href="/forum"
+          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          New Post
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          All Categories
         </Link>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{category.name}</h1>
+            {category.description && (
+              <p className="text-gray-600 mt-1">{category.description}</p>
+            )}
+          </div>
+          <Link
+            href={`/forum/new?category=${categorySlug}`}
+            className="inline-flex items-center px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Post
+          </Link>
+        </div>
       </div>
-
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <StatCard
-            label="Total Posts"
-            value={stats.totalPosts}
-            icon={MessageSquare}
-            color="bg-blue-100 text-blue-600"
-          />
-          <StatCard
-            label="Replies"
-            value={stats.totalReplies}
-            icon={MessageSquare}
-            color="bg-green-100 text-green-600"
-          />
-          <StatCard
-            label="Contributors"
-            value={stats.totalUsers}
-            icon={Users}
-            color="bg-purple-100 text-purple-600"
-          />
-          <StatCard
-            label="Active This Week"
-            value={stats.activeThisWeek}
-            icon={TrendingUp}
-            color="bg-amber-100 text-amber-600"
-          />
-          <StatCard
-            label="Unanswered Questions"
-            value={stats.unresolvedQuestions}
-            icon={HelpCircle}
-            color="bg-red-100 text-red-600"
-          />
-        </div>
-      )}
-
-      {/* Categories Section */}
-      {showCategories && categories.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
-            <button
-              onClick={() => setShowCategories(false)}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Hide
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Search and Filters */}
       <div className="bg-white border border-gray-200 rounded-lg mb-6">
@@ -400,7 +298,7 @@ export default function ForumPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              placeholder="Search posts..."
+              placeholder="Search posts in this category..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
@@ -418,7 +316,7 @@ export default function ForumPage() {
             Filters
             {hasActiveFilters && (
               <span className="ml-2 px-1.5 py-0.5 bg-primary text-white text-xs rounded">
-                {[postType !== 'all', !!search].filter(Boolean).length}
+                {[postType !== 'all'].filter(Boolean).length}
               </span>
             )}
           </button>
@@ -428,29 +326,6 @@ export default function ForumPage() {
         {showFilters && (
           <div className="px-4 pb-4 border-t border-gray-100 pt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Category Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      router.push(`/forum/${e.target.value}`)
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((c) => (
-                    <option key={c.slug} value={c.slug}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               {/* Post Type Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -481,7 +356,7 @@ export default function ForumPage() {
                   className="text-sm text-gray-500 hover:text-gray-700 flex items-center"
                 >
                   <X className="h-4 w-4 mr-1" />
-                  Clear all filters
+                  Clear filters
                 </button>
               </div>
             )}
@@ -491,27 +366,24 @@ export default function ForumPage() {
 
       {/* Posts List */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="px-6 py-3 border-b border-gray-100 bg-gray-50">
-          <h3 className="font-medium text-gray-700">Recent Discussions</h3>
+        <div className="px-6 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+          <h3 className="font-medium text-gray-700">
+            {pagination.total} {pagination.total === 1 ? 'Post' : 'Posts'}
+          </h3>
         </div>
 
-        {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-            <p className="mt-4 text-gray-500">Loading posts...</p>
-          </div>
-        ) : posts.length === 0 ? (
+        {posts.length === 0 ? (
           <div className="p-12 text-center">
             <Inbox className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No posts found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No posts yet</h3>
             <p className="text-gray-500 mb-6">
               {hasActiveFilters
                 ? 'Try adjusting your filters or search terms.'
-                : 'Be the first to start a discussion!'}
+                : 'Be the first to start a discussion in this category!'}
             </p>
             {!hasActiveFilters && (
               <Link
-                href="/forum/new"
+                href={`/forum/new?category=${categorySlug}`}
                 className="inline-flex items-center px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Plus className="h-4 w-4 mr-2" />

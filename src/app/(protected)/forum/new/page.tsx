@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -39,6 +39,8 @@ const postTypeDescriptions: Record<ForumPostType, string> = {
 
 export default function NewForumPostPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const preselectedCategorySlug = searchParams.get('category')
 
   const [categories, setCategories] = useState<ForumCategoryListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -56,10 +58,19 @@ export default function NewForumPostPage() {
     async function loadCategories() {
       const result = await getForumCategoriesAction()
       setCategories(result)
+
+      // Pre-select category if provided via URL
+      if (preselectedCategorySlug) {
+        const matchingCategory = result.find(c => c.slug === preselectedCategorySlug)
+        if (matchingCategory) {
+          setCategoryId(matchingCategory.id)
+        }
+      }
+
       setIsLoading(false)
     }
     loadCategories()
-  }, [])
+  }, [preselectedCategorySlug])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,7 +88,7 @@ export default function NewForumPostPage() {
     const result = await createForumPostAction(formData)
 
     if (result.success && result.postId) {
-      router.push(`/forum/${result.postId}`)
+      router.push(`/forum/post/${result.postId}`)
     } else {
       setError(result.error || 'Failed to create post')
       setIsSubmitting(false)

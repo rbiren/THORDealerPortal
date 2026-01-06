@@ -35,7 +35,7 @@ import {
   getForumUserInfo,
   type ForumPostDetail,
   type ForumReplyItem,
-} from '../actions'
+} from '../../actions'
 import { type ForumPostType } from '@/lib/validations/forum'
 
 // Icon mapping for post types
@@ -434,7 +434,7 @@ export default function ForumPostPage() {
                   </span>
                 )}
                 <Link
-                  href={`/forum?category=${post.categoryId}`}
+                  href={`/forum/${post.categorySlug}`}
                   className="text-xs px-2 py-0.5 rounded"
                   style={{
                     backgroundColor: `${post.categoryColor}20` || '#f3f4f6',
