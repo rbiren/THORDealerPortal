@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { SidebarLayout } from '@/components/layout/SidebarLayout'
+import { ChatWidgetWrapper } from '@/components/chat/ChatWidgetWrapper'
 
 export default async function ProtectedLayout({
   children,
@@ -18,6 +19,7 @@ export default async function ProtectedLayout({
   return (
     <SidebarLayout user={user}>
       {children}
+      <ChatWidgetWrapper />
     </SidebarLayout>
   )
 }

@@ -19,6 +19,10 @@ export type RealtimeEventType =
   | 'announcement'
   | 'document_update'
   | 'system'
+  | 'chat_message'
+  | 'chat_typing'
+  | 'chat_status'
+  | 'chat_assigned'
 
 export interface RealtimeEvent<T = unknown> {
   type: RealtimeEventType
@@ -60,6 +64,49 @@ export interface AnnouncementEvent {
   type: 'info' | 'warning' | 'alert' | 'maintenance'
   priority: 'low' | 'normal' | 'high' | 'critical'
   showAsBanner: boolean
+}
+
+// Chat Events
+export interface ChatMessageEvent {
+  channelId: string
+  channelNumber: string
+  messageId: string
+  senderId: string
+  senderName: string
+  senderRole: string
+  content: string
+  messageType: 'text' | 'system' | 'attachment'
+  attachments?: Array<{ filename: string; url: string; mimeType: string; size: number }>
+  isSystemMessage: boolean
+  systemAction?: string
+  createdAt: string
+}
+
+export interface ChatTypingEvent {
+  channelId: string
+  userId: string
+  userName: string
+  isTyping: boolean
+}
+
+export interface ChatStatusEvent {
+  channelId: string
+  channelNumber: string
+  status: 'open' | 'waiting' | 'active' | 'resolved' | 'closed'
+  previousStatus?: string
+  updatedById?: string
+  updatedByName?: string
+  closeReason?: string
+}
+
+export interface ChatAssignedEvent {
+  channelId: string
+  channelNumber: string
+  assignedToId: string
+  assignedToName: string
+  previousAssigneeId?: string
+  previousAssigneeName?: string
+  department: string
 }
 
 // ============================================================================
@@ -307,4 +354,100 @@ export function createClientSubscription(
   return () => {
     unsubscribers.forEach((unsub) => unsub())
   }
+}
+
+// ============================================================================
+// CHAT EVENT EMISSION HELPERS
+// ============================================================================
+
+/**
+ * Emit a chat message event to channel participants
+ */
+export function emitChatMessage(
+  message: ChatMessageEvent,
+  targetUserIds: string[],
+  targetDealerId?: string
+): void {
+  realtimeEmitter.emit({
+    type: 'chat_message',
+    payload: message,
+    timestamp: new Date(),
+    targetUserIds,
+    targetDealerIds: targetDealerId ? [targetDealerId] : undefined,
+  })
+}
+
+/**
+ * Emit a typing indicator event
+ */
+export function emitChatTyping(
+  typing: ChatTypingEvent,
+  targetUserIds: string[]
+): void {
+  realtimeEmitter.emit({
+    type: 'chat_typing',
+    payload: typing,
+    timestamp: new Date(),
+    targetUserIds,
+  })
+}
+
+/**
+ * Emit a chat status change event
+ */
+export function emitChatStatus(
+  status: ChatStatusEvent,
+  targetUserIds: string[],
+  targetDealerId?: string
+): void {
+  realtimeEmitter.emit({
+    type: 'chat_status',
+    payload: status,
+    timestamp: new Date(),
+    targetUserIds,
+    targetDealerIds: targetDealerId ? [targetDealerId] : undefined,
+    targetRoles: ['admin', 'super_admin'], // Admins see all status changes
+  })
+}
+
+/**
+ * Emit a chat assignment event
+ */
+export function emitChatAssigned(
+  assignment: ChatAssignedEvent,
+  targetUserIds: string[],
+  targetDealerId?: string
+): void {
+  realtimeEmitter.emit({
+    type: 'chat_assigned',
+    payload: assignment,
+    timestamp: new Date(),
+    targetUserIds,
+    targetDealerIds: targetDealerId ? [targetDealerId] : undefined,
+    targetRoles: ['admin', 'super_admin'],
+  })
+}
+
+/**
+ * Emit a new chat notification to available agents
+ */
+export function emitNewChatNotification(
+  channelId: string,
+  channelNumber: string,
+  dealerName: string,
+  department: string,
+  subject?: string
+): void {
+  realtimeEmitter.emit({
+    type: 'notification',
+    payload: {
+      id: channelId,
+      type: 'new_chat',
+      title: 'New Chat Request',
+      body: `${dealerName} started a chat${subject ? `: ${subject}` : ''} (${department})`,
+      data: { channelId, channelNumber, department },
+    },
+    timestamp: new Date(),
+    targetRoles: ['admin', 'super_admin'],
+  })
 }

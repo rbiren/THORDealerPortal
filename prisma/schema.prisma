@@ -65,6 +65,13 @@ model User {
   forumPostLikes          ForumPostLike[]
   forumReplyLikes         ForumReplyLike[]
 
+  // Phase 8.8: Live Chat
+  chatsInitiated          ChatChannel[] @relation("ChatInitiator")
+  chatsAssigned           ChatChannel[] @relation("ChatAssignee")
+  chatMessages            ChatMessage[]
+  chatChannelAgents       ChatChannelAgent[]
+  chatAgentStatus         ChatAgentStatus?
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -158,6 +165,9 @@ model Dealer {
   // Phase 8: Community Forum
   forumPosts              ForumPost[]
   forumReplies            ForumReply[]
+
+  // Phase 8.8: Live Chat
+  chatChannels            ChatChannel[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -2414,4 +2424,160 @@ model ForumReplyLike {
   @@unique([replyId, userId])
   @@index([replyId])
   @@index([userId])
+}
+
+// ============================================================================
+// 8.8 LIVE CHAT SYSTEM
+// ============================================================================
+
+model ChatChannel {
+  id              String    @id @default(cuid())
+  channelNumber   String    @unique // CHAT-2025-00001 format
+
+  // Dealer initiating the chat
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id])
+  initiatedById   String
+  initiatedBy     User      @relation("ChatInitiator", fields: [initiatedById], references: [id])
+
+  // Department routing
+  department      String    @default("general") // general, sales, service, warranty, billing, technical
+
+  // Assignment
+  assignedToId    String?
+  assignedTo      User?     @relation("ChatAssignee", fields: [assignedToId], references: [id])
+
+  // Subject/Topic
+  subject         String?
+
+  // Status: open, waiting, active, resolved, closed
+  status          String    @default("open")
+  priority        String    @default("normal") // low, normal, high, urgent
+
+  // Timestamps
+  lastMessageAt   DateTime?
+  lastMessageById String?
+
+  // Resolution
+  resolvedAt      DateTime?
+  resolvedById    String?
+  closedAt        DateTime?
+  closedById      String?
+  closeReason     String?   // resolved, dealer_closed, agent_closed, timeout, transferred
+
+  // Satisfaction
+  satisfactionRating Int?   // 1-5 rating
+  satisfactionComment String?
+
+  // Transfer tracking
+  transferredFrom String?   // Previous channel ID if transferred
+  transferCount   Int       @default(0)
+
+  // Stats
+  messageCount    Int       @default(0)
+
+  messages        ChatMessage[]
+  agents          ChatChannelAgent[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([channelNumber])
+  @@index([dealerId])
+  @@index([status])
+  @@index([department])
+  @@index([assignedToId])
+  @@index([createdAt])
+  @@index([lastMessageAt])
+}
+
+model ChatMessage {
+  id              String    @id @default(cuid())
+  channelId       String
+  channel         ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User      @relation(fields: [senderId], references: [id])
+
+  // Message content
+  content         String
+  messageType     String    @default("text") // text, system, attachment, typing
+
+  // Attachments (JSON array of { filename, url, mimeType, size })
+  attachments     String?   // JSON array
+
+  // Read tracking
+  readAt          DateTime?
+  readById        String?
+
+  // For system messages
+  isSystemMessage Boolean   @default(false)
+  systemAction    String?   // joined, left, transferred, assigned, closed, reopened
+
+  // Edit/Delete tracking
+  isEdited        Boolean   @default(false)
+  editedAt        DateTime?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([channelId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model ChatChannelAgent {
+  id              String    @id @default(cuid())
+  channelId       String
+  channel         ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+
+  // Role in channel
+  role            String    @default("agent") // agent, observer, supervisor
+
+  // Activity tracking
+  joinedAt        DateTime  @default(now())
+  leftAt          DateTime?
+  isActive        Boolean   @default(true)
+
+  // Last activity
+  lastSeenAt      DateTime  @default(now())
+  lastTypingAt    DateTime?
+
+  @@unique([channelId, userId])
+  @@index([channelId])
+  @@index([userId])
+  @@index([isActive])
+}
+
+model ChatAgentStatus {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+
+  // Availability
+  status          String    @default("offline") // online, away, busy, offline
+  statusMessage   String?
+
+  // Capacity
+  maxActiveChats  Int       @default(5)
+  activeChatsCount Int      @default(0)
+
+  // Department specializations (JSON array)
+  departments     String?   // JSON array of departments they can handle
+
+  // Auto-assign settings
+  autoAssignEnabled Boolean @default(true)
+
+  // Tracking
+  lastOnlineAt    DateTime?
+  lastActivityAt  DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status])
+  @@index([autoAssignEnabled])
 }
