@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
+import type { Adapter } from 'next-auth/adapters'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import prisma from '@/lib/db'
@@ -12,7 +13,8 @@ const credentialsSchema = z.object({
 })
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  // Cast adapter to handle extended User type with custom fields (role, dealerId)
+  adapter: PrismaAdapter(prisma) as Adapter,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',

@@ -147,7 +147,20 @@ export async function getLocations(): Promise<LocationListItem[]> {
     orderBy: { name: 'asc' },
   })
 
-  return locations.map((location) => {
+  type LocationQueryItem = {
+    id: string
+    name: string
+    code: string
+    type: string
+    address: string | null
+    isActive: boolean
+    inventory: Array<{
+      quantity: number
+      product: { costPrice: number | null; price: number }
+    }>
+  }
+
+  return locations.map((location: LocationQueryItem) => {
     let totalStock = 0
     let totalValue = 0
 

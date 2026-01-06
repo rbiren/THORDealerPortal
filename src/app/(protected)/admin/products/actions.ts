@@ -168,11 +168,26 @@ export async function getAdminProducts(input: AdminProductFilterInput): Promise<
     prisma.product.count({ where }),
   ])
 
+  type ProductQueryResult = {
+    id: string
+    sku: string
+    name: string
+    description: string | null
+    price: number
+    costPrice: number | null
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    category: { id: string; name: string } | null
+    images: Array<{ url: string; altText: string | null }>
+    inventory: Array<{ quantity: number; reserved: number }>
+  }
+
   // Map to final structure
-  const result: AdminProductListItem[] = products.map((p) => ({
+  const result: AdminProductListItem[] = products.map((p: ProductQueryResult) => ({
     ...p,
     primaryImage: p.images[0] || null,
-    totalStock: p.inventory.reduce((sum, inv) => sum + (inv.quantity - inv.reserved), 0),
+    totalStock: p.inventory.reduce((sum: number, inv: { quantity: number; reserved: number }) => sum + (inv.quantity - inv.reserved), 0),
   }))
 
   return {

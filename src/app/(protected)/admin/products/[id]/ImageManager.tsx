@@ -250,7 +250,7 @@ export function ImageManager({ product }: Props) {
             />
           </svg>
           <p className="mt-2">No images uploaded yet</p>
-          <p className="text-sm">Click "Add Image" to upload the first image</p>
+          <p className="text-sm">Click &quot;Add Image&quot; to upload the first image</p>
         </div>
       )}
     </div>

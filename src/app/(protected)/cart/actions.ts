@@ -101,9 +101,21 @@ export async function getActiveCart(dealerId: string): Promise<CartData | null> 
     return null
   }
 
-  const items: CartItemData[] = cart.items.map((item) => {
+  type CartItemQueryResult = {
+    productId: string
+    quantity: number
+    product: {
+      sku: string
+      name: string
+      price: number
+      images: Array<{ url: string }>
+      inventory: Array<{ quantity: number; reserved: number }>
+    }
+  }
+
+  const items: CartItemData[] = cart.items.map((item: CartItemQueryResult) => {
     const totalStock = item.product.inventory.reduce(
-      (sum, inv) => sum + inv.quantity - inv.reserved,
+      (sum: number, inv: { quantity: number; reserved: number }) => sum + inv.quantity - inv.reserved,
       0
     )
 
@@ -118,8 +130,8 @@ export async function getActiveCart(dealerId: string): Promise<CartData | null> 
     }
   })
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+  const subtotal = items.reduce((sum: number, item: CartItemData) => sum + item.price * item.quantity, 0)
+  const itemCount = items.reduce((sum: number, item: CartItemData) => sum + item.quantity, 0)
 
   return {
     id: cart.id,
@@ -197,9 +209,21 @@ export async function getOrCreateCart(dealerId: string, userId?: string): Promis
     })
   }
 
-  const items: CartItemData[] = cart.items.map((item) => {
+  type CartItemQueryResult2 = {
+    productId: string
+    quantity: number
+    product: {
+      sku: string
+      name: string
+      price: number
+      images: Array<{ url: string }>
+      inventory: Array<{ quantity: number; reserved: number }>
+    }
+  }
+
+  const items: CartItemData[] = cart.items.map((item: CartItemQueryResult2) => {
     const totalStock = item.product.inventory.reduce(
-      (sum, inv) => sum + inv.quantity - inv.reserved,
+      (sum: number, inv: { quantity: number; reserved: number }) => sum + inv.quantity - inv.reserved,
       0
     )
 
@@ -266,7 +290,7 @@ export async function addToCart(
 
     // Check available stock
     const available = product.inventory.reduce(
-      (sum, inv) => sum + inv.quantity - inv.reserved,
+      (sum: number, inv: { quantity: number; reserved: number }) => sum + inv.quantity - inv.reserved,
       0
     )
 
@@ -386,7 +410,7 @@ export async function updateCartItemQuantity(
       }
 
       const available = product.inventory.reduce(
-        (sum, inv) => sum + inv.quantity - inv.reserved,
+        (sum: number, inv: { quantity: number; reserved: number }) => sum + inv.quantity - inv.reserved,
         0
       )
 
@@ -512,7 +536,7 @@ export async function syncCart(
       }
 
       const available = product.inventory.reduce(
-        (sum, inv) => sum + inv.quantity - inv.reserved,
+        (sum: number, inv: { quantity: number; reserved: number }) => sum + inv.quantity - inv.reserved,
         0
       )
 
@@ -590,7 +614,7 @@ export async function saveCurrentCart(
         name,
         isSaved: true,
         items: {
-          create: cart.items.map((item) => ({
+          create: cart.items.map((item: { productId: string; quantity: number }) => ({
             productId: item.productId,
             quantity: item.quantity,
           })),
@@ -606,11 +630,11 @@ export async function saveCurrentCart(
     })
 
     const subtotal = savedCart.items.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      (sum: number, item: { product: { price: number }; quantity: number }) => sum + item.product.price * item.quantity,
       0
     )
 
-    const itemCount = savedCart.items.reduce((sum, item) => sum + item.quantity, 0)
+    const itemCount = savedCart.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0)
 
     return {
       success: true,
@@ -650,12 +674,20 @@ export async function getSavedCarts(dealerId: string): Promise<SavedCartSummary[
     orderBy: { updatedAt: 'desc' },
   })
 
-  return carts.map((cart) => {
+  type SavedCartQueryResult = {
+    id: string
+    name: string | null
+    items: Array<{ product: { price: number }; quantity: number }>
+    createdAt: Date
+    updatedAt: Date
+  }
+
+  return carts.map((cart: SavedCartQueryResult) => {
     const subtotal = cart.items.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      (sum: number, item: { product: { price: number }; quantity: number }) => sum + item.product.price * item.quantity,
       0
     )
-    const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0)
+    const itemCount = cart.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0)
 
     return {
       id: cart.id,
@@ -722,7 +754,7 @@ export async function restoreSavedCart(
       }
 
       const available = product.inventory.reduce(
-        (sum, inv) => sum + inv.quantity - inv.reserved,
+        (sum: number, inv: { quantity: number; reserved: number }) => sum + inv.quantity - inv.reserved,
         0
       )
 
@@ -853,7 +885,7 @@ export async function validateCart(cartId: string): Promise<CartValidationResult
 
     // Check stock availability
     const available = product.inventory.reduce(
-      (sum, inv) => sum + inv.quantity - inv.reserved,
+      (sum: number, inv: { quantity: number; reserved: number }) => sum + inv.quantity - inv.reserved,
       0
     )
 

@@ -62,7 +62,7 @@ export async function getFilterUsers(): Promise<{ id: string; name: string; emai
     take: 100,
   })
 
-  return users.map((u) => ({
+  return users.map((u: { id: string; firstName: string | null; lastName: string | null; email: string }) => ({
     id: u.id,
     name: `${u.firstName} ${u.lastName}`,
     email: u.email,
@@ -78,7 +78,7 @@ export async function getEntityTypes(): Promise<string[]> {
     distinct: ['entityType'],
     orderBy: { entityType: 'asc' },
   })
-  return result.map((r) => r.entityType)
+  return result.map((r: { entityType: string }) => r.entityType)
 }
 
 /**
@@ -90,5 +90,5 @@ export async function getActionTypes(): Promise<string[]> {
     distinct: ['action'],
     orderBy: { action: 'asc' },
   })
-  return result.map((r) => r.action)
+  return result.map((r: { action: string }) => r.action)
 }

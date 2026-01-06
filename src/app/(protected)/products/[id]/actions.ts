@@ -115,7 +115,14 @@ export async function getRelatedProducts(
     orderBy: { createdAt: 'desc' },
   })
 
-  return products.map((p) => ({
+  type RelatedProductItem = {
+    id: string
+    name: string
+    price: number
+    images: Array<{ url: string }>
+  }
+
+  return products.map((p: RelatedProductItem) => ({
     id: p.id,
     name: p.name,
     price: p.price,

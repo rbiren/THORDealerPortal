@@ -124,7 +124,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderNum
     startTransition(async () => {
       const result = await reorderItems(order.id)
       if (result.success && result.items) {
-        result.items.forEach((item) => {
+        type ReorderItem = {
+          productId: string
+          sku: string
+          name: string
+          price: number
+          image: string | null
+          quantity: number
+        }
+        result.items.forEach((item: ReorderItem) => {
           addItem(
             {
               productId: item.productId,

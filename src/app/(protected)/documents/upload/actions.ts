@@ -151,7 +151,7 @@ export async function getUploadQuota(dealerId: string): Promise<{
     select: { size: true },
   })
 
-  const usedSpace = documents.reduce((sum, doc) => sum + doc.size, 0)
+  const usedSpace = documents.reduce((sum: number, doc: { size: number }) => sum + doc.size, 0)
 
   return {
     used: usedSpace,

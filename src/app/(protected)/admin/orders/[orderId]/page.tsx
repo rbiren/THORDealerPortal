@@ -94,7 +94,9 @@ export default function AdminOrderDetailPage({
     setLoading(true)
     try {
       const data = await getAdminOrderDetail(resolvedParams.orderId)
-      setOrder(data as OrderDetail)
+      if (data) {
+        setOrder(data as unknown as OrderDetail)
+      }
     } catch (error) {
       console.error('Failed to load order:', error)
     } finally {

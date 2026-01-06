@@ -164,7 +164,14 @@ export async function getOrderDetails(orderNumber: string) {
     notes: order.notes,
     shippingAddress,
     billingAddress,
-    items: order.items.map((item) => ({
+    items: order.items.map((item: {
+      id: string
+      productId: string
+      product: { name: string; sku: string; images?: Array<unknown> }
+      quantity: number
+      unitPrice: number
+      totalPrice: number
+    }) => ({
       id: item.id,
       productId: item.productId,
       productName: item.product.name,
@@ -175,7 +182,7 @@ export async function getOrderDetails(orderNumber: string) {
       image: item.product.images?.[0] || null,
     })),
     dealer: order.dealer,
-    statusHistory: order.statusHistory.map((h) => ({
+    statusHistory: order.statusHistory.map((h: { status: string; note: string | null; createdAt: Date }) => ({
       status: h.status,
       note: h.note,
       createdAt: h.createdAt.toISOString(),

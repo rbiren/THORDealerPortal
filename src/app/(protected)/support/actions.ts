@@ -101,7 +101,25 @@ export async function getSupportTickets(filters?: {
   )
 
   // Transform for UI
-  const tickets: SupportTicketListItem[] = result.tickets.map((ticket) => ({
+  type TicketQueryResult = {
+    id: string
+    ticketNumber: string
+    status: string
+    category: string
+    subject: string
+    priority: string
+    createdAt: Date
+    updatedAt: Date
+    slaResponseDue: Date | null
+    slaResolutionDue: Date | null
+    firstResponseAt: Date | null
+    _count: { messages: number; attachments: number }
+    dealer: { name: string; code: string }
+    submittedBy: { firstName: string; lastName: string }
+    assignedTo: { firstName: string; lastName: string } | null
+  }
+
+  const tickets: SupportTicketListItem[] = result.tickets.map((ticket: TicketQueryResult) => ({
     id: ticket.id,
     ticketNumber: ticket.ticketNumber,
     status: ticket.status as TicketStatus,

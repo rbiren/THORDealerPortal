@@ -96,8 +96,17 @@ export async function getDocuments(options?: {
     prisma.document.count({ where }),
   ])
 
+  type DocumentQueryResult = {
+    id: string
+    name: string
+    size: number
+    expiresAt: Date | null
+    dealer: { companyName: string } | null
+    [key: string]: unknown
+  }
+
   return {
-    documents: documents.map((doc) => {
+    documents: documents.map((doc: DocumentQueryResult) => {
       const expiration = checkExpiration(doc.expiresAt)
       return {
         ...doc,
@@ -230,7 +239,16 @@ export async function getExpiringDocuments(
     orderBy: { expiresAt: 'asc' },
   })
 
-  return documents.map((doc) => ({
+  type ExpiringDocQueryResult = {
+    id: string
+    name: string
+    size: number
+    expiresAt: Date | null
+    dealer: { companyName: string } | null
+    [key: string]: unknown
+  }
+
+  return documents.map((doc: ExpiringDocQueryResult) => ({
     ...doc,
     dealerName: doc.dealer?.companyName,
     isExpired: false,
@@ -270,7 +288,7 @@ export async function getDocumentStats(): Promise<{
     }),
   ])
 
-  const totalSize = documents.reduce((sum, doc) => sum + doc.size, 0)
+  const totalSize = documents.reduce((sum: number, doc: { size: number }) => sum + doc.size, 0)
 
   return {
     totalDocuments: documents.length,
@@ -299,7 +317,16 @@ export async function searchDocuments(query: string): Promise<DocumentWithDetail
     orderBy: { createdAt: 'desc' },
   })
 
-  return documents.map((doc) => {
+  type SearchDocQueryResult = {
+    id: string
+    name: string
+    size: number
+    expiresAt: Date | null
+    dealer: { companyName: string } | null
+    [key: string]: unknown
+  }
+
+  return documents.map((doc: SearchDocQueryResult) => {
     const expiration = checkExpiration(doc.expiresAt)
     return {
       ...doc,
@@ -322,7 +349,16 @@ export async function getRecentDocuments(limit: number = 10): Promise<DocumentWi
     take: limit,
   })
 
-  return documents.map((doc) => {
+  type RecentDocQueryResult = {
+    id: string
+    name: string
+    size: number
+    expiresAt: Date | null
+    dealer: { companyName: string } | null
+    [key: string]: unknown
+  }
+
+  return documents.map((doc: RecentDocQueryResult) => {
     const expiration = checkExpiration(doc.expiresAt)
     return {
       ...doc,

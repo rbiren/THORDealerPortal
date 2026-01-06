@@ -174,7 +174,16 @@ export async function getRecentOrders(
     },
   })
 
-  return orders.map((order) => ({
+  type OrderQueryResult = {
+    id: string
+    orderNumber: string
+    status: string
+    totalAmount: number
+    createdAt: Date
+    _count: { items: number }
+  }
+
+  return orders.map((order: OrderQueryResult) => ({
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
@@ -278,10 +287,18 @@ export async function getLowStockAlerts(limit = 5): Promise<LowStockAlert[]> {
     take: limit * 2, // Get more to filter
   })
 
+  type InventoryQueryResult = {
+    id: string
+    quantity: number
+    lowStockThreshold: number
+    product: { id: string; name: string; sku: string }
+    location: { name: string }
+  }
+
   return inventory
-    .filter((inv) => inv.quantity < inv.lowStockThreshold)
+    .filter((inv: InventoryQueryResult) => inv.quantity < inv.lowStockThreshold)
     .slice(0, limit)
-    .map((inv) => ({
+    .map((inv: InventoryQueryResult) => ({
       id: inv.id,
       productId: inv.product.id,
       productName: inv.product.name,

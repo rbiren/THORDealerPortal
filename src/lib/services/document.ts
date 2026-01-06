@@ -373,7 +373,15 @@ export async function getExpiringDocuments(
     orderBy: { expiresAt: 'asc' },
   })
 
-  return documents.map((doc) => ({
+  type ExpiringDocQueryResult = {
+    id: string
+    name: string
+    category: string
+    expiresAt: Date | null
+    dealer: { name: string } | null
+  }
+
+  return documents.map((doc: ExpiringDocQueryResult) => ({
     id: doc.id,
     name: doc.name,
     category: doc.category,
@@ -410,7 +418,15 @@ export async function getExpiredDocuments(
     orderBy: { expiresAt: 'desc' },
   })
 
-  return documents.map((doc) => ({
+  type ExpiredDocQueryResult = {
+    id: string
+    name: string
+    category: string
+    expiresAt: Date | null
+    dealer: { name: string } | null
+  }
+
+  return documents.map((doc: ExpiredDocQueryResult) => ({
     id: doc.id,
     name: doc.name,
     category: doc.category,
@@ -479,13 +495,21 @@ export async function getPendingExpiryReminders(): Promise<Array<{
     }
   })
 
-  return reminders.filter((reminder) => {
+  type ReminderQueryResult = {
+    id: string
+    documentId: string
+    userId: string
+    reminderDays: number
+    document: { name: string; expiresAt: Date | null }
+  }
+
+  return reminders.filter((reminder: ReminderQueryResult) => {
     if (!reminder.document.expiresAt) return false
     const daysUntilExpiry = Math.ceil(
       (reminder.document.expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
     )
     return daysUntilExpiry <= reminder.reminderDays && daysUntilExpiry > 0
-  }).map((reminder) => ({
+  }).map((reminder: ReminderQueryResult) => ({
     id: reminder.id,
     documentId: reminder.documentId,
     documentName: reminder.document.name,

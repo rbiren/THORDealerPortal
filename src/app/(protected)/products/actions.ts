@@ -133,20 +133,34 @@ export async function getProducts(filters: ProductFilterInput): Promise<ProductL
   ])
 
   // Filter by stock if needed
-  let filteredProducts = products.map((p) => ({
+  type ProductQueryItem = {
+    images: Array<unknown>
+    inventory: Array<{ quantity: number; reserved: number }>
+    [key: string]: unknown
+  }
+
+  let filteredProducts = products.map((p: ProductQueryItem) => ({
     ...p,
     primaryImage: p.images[0] || null,
-    totalStock: p.inventory.reduce((sum, inv) => sum + (inv.quantity - inv.reserved), 0),
+    totalStock: p.inventory.reduce((sum: number, inv: { quantity: number; reserved: number }) => sum + (inv.quantity - inv.reserved), 0),
   }))
 
   if (inStock === 'yes') {
-    filteredProducts = filteredProducts.filter((p) => p.totalStock > 0)
+    filteredProducts = filteredProducts.filter((p: { totalStock: number }) => p.totalStock > 0)
   } else if (inStock === 'no') {
-    filteredProducts = filteredProducts.filter((p) => p.totalStock <= 0)
+    filteredProducts = filteredProducts.filter((p: { totalStock: number }) => p.totalStock <= 0)
   }
 
   // Map to final structure
-  const result: ProductListItem[] = filteredProducts.map(({ images, inventory, ...p }) => ({
+  type FilteredProduct = {
+    images: Array<unknown>
+    inventory: Array<unknown>
+    primaryImage: unknown
+    totalStock: number
+    [key: string]: unknown
+  }
+
+  const result: ProductListItem[] = filteredProducts.map(({ images, inventory, ...p }: FilteredProduct) => ({
     ...p,
     primaryImage: p.primaryImage,
     totalStock: p.totalStock,
@@ -186,13 +200,19 @@ export async function getCategories(): Promise<CategoryWithCount[]> {
   const categoryMap = new Map<string, CategoryWithCount & { children: CategoryWithCount[] }>()
   const rootCategories: CategoryWithCount[] = []
 
+  type CategoryQueryItem = {
+    id: string
+    parentId: string | null
+    [key: string]: unknown
+  }
+
   // First pass: create map
-  categories.forEach((cat) => {
-    categoryMap.set(cat.id, { ...cat, children: [] })
+  categories.forEach((cat: CategoryQueryItem) => {
+    categoryMap.set(cat.id, { ...cat, children: [] } as unknown as CategoryWithCount & { children: CategoryWithCount[] })
   })
 
   // Second pass: build tree
-  categories.forEach((cat) => {
+  categories.forEach((cat: CategoryQueryItem) => {
     const node = categoryMap.get(cat.id)!
     if (cat.parentId) {
       const parent = categoryMap.get(cat.parentId)
@@ -259,8 +279,12 @@ export async function getProductStats(): Promise<{
   let lowStock = 0
   let outOfStock = 0
 
-  productsWithInventory.forEach((product) => {
-    const available = product.inventory.reduce((sum, inv) => sum + (inv.quantity - inv.reserved), 0)
+  type ProductWithInventoryItem = {
+    inventory: Array<{ quantity: number; reserved: number }>
+  }
+
+  productsWithInventory.forEach((product: ProductWithInventoryItem) => {
+    const available = product.inventory.reduce((sum: number, inv: { quantity: number; reserved: number }) => sum + (inv.quantity - inv.reserved), 0)
     if (available <= 0) {
       outOfStock++
     } else if (available <= 10) {

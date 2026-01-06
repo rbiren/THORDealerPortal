@@ -92,7 +92,7 @@ export async function getAnnouncement(id: string): Promise<AnnouncementWithStats
   if (!announcement) return null
 
   const readCount = announcement.readReceipts.length
-  const dismissedCount = announcement.readReceipts.filter((r) => r.dismissed).length
+  const dismissedCount = announcement.readReceipts.filter((r: { dismissed: boolean }) => r.dismissed).length
   const totalTargeted = await countTargetedUsers(announcement)
 
   return {
@@ -128,13 +128,33 @@ export async function getAnnouncements(options?: {
     prisma.systemAnnouncement.count({ where }),
   ])
 
+  type AnnouncementQueryResult = {
+    id: string
+    title: string
+    body: string
+    type: string
+    priority: string
+    targetAll: boolean
+    targetRoles: string | null
+    targetTiers: string | null
+    isDismissible: boolean
+    showAsBanner: boolean
+    publishAt: Date
+    expiresAt: Date | null
+    isActive: boolean
+    createdBy: string | null
+    createdAt: Date
+    updatedAt: Date
+    readReceipts: Array<{ dismissed: boolean }>
+  }
+
   const announcementsWithStats = await Promise.all(
-    announcements.map(async (ann) => {
+    announcements.map(async (ann: AnnouncementQueryResult) => {
       const totalTargeted = await countTargetedUsers(ann)
       return {
         ...parseAnnouncement(ann),
         readCount: ann.readReceipts.length,
-        dismissedCount: ann.readReceipts.filter((r) => r.dismissed).length,
+        dismissedCount: ann.readReceipts.filter((r: { dismissed: boolean }) => r.dismissed).length,
         totalTargeted,
       }
     })
@@ -174,8 +194,28 @@ export async function getActiveAnnouncementsForUser(
   })
 
   // Filter by targeting and not dismissed
+  type UserAnnouncementQueryResult = {
+    id: string
+    title: string
+    body: string
+    type: string
+    priority: string
+    targetAll: boolean
+    targetRoles: string | null
+    targetTiers: string | null
+    isDismissible: boolean
+    showAsBanner: boolean
+    publishAt: Date
+    expiresAt: Date | null
+    isActive: boolean
+    createdBy: string | null
+    createdAt: Date
+    updatedAt: Date
+    readReceipts: Array<{ dismissed: boolean }>
+  }
+
   return announcements
-    .filter((ann) => {
+    .filter((ann: UserAnnouncementQueryResult) => {
       // Skip if user dismissed this announcement
       const receipt = ann.readReceipts[0]
       if (receipt?.dismissed) return false
@@ -485,7 +525,7 @@ async function getTargetedUsers(announcement: {
       where: { status: 'active' },
       select: { id: true },
     })
-    return users.map((u) => u.id)
+    return users.map((u: { id: string }) => u.id)
   }
 
   const userIds = new Set<string>()
@@ -500,7 +540,7 @@ async function getTargetedUsers(announcement: {
       },
       select: { id: true },
     })
-    users.forEach((u) => userIds.add(u.id))
+    users.forEach((u: { id: string }) => userIds.add(u.id))
   }
 
   // Get users by dealer tier
@@ -515,7 +555,7 @@ async function getTargetedUsers(announcement: {
       },
       select: { id: true },
     })
-    users.forEach((u) => userIds.add(u.id))
+    users.forEach((u: { id: string }) => userIds.add(u.id))
   }
 
   return Array.from(userIds)

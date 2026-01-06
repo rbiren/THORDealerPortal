@@ -50,7 +50,14 @@ export async function getMarketAnalysis(dealerId: string): Promise<MarketAnalysi
   let totalImpactFactor = 0;
   let indicatorCount = 0;
 
-  for (const [name, indicator] of latestByName) {
+  type IndicatorRecord = {
+    indicatorType: string
+    value: number
+    percentChange: number | null
+    impactFactor: number
+  }
+
+  Array.from(latestByName.entries()).forEach(([name, indicator]: [string, IndicatorRecord]) => {
     const trend: 'up' | 'down' | 'stable' =
       indicator.percentChange && indicator.percentChange > 2
         ? 'up'
@@ -86,7 +93,7 @@ export async function getMarketAnalysis(dealerId: string): Promise<MarketAnalysi
       trend,
       impact,
     });
-  }
+  });
 
   // Calculate overall outlook
   let overallOutlook: 'positive' | 'neutral' | 'negative';

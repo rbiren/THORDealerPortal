@@ -256,8 +256,16 @@ export async function getInventoryTurnover(options: {
   }
 
   // Calculate turnover for each product
-  const turnoverData: TurnoverData[] = products.map((product) => {
-    const currentStock = product.inventory.reduce((sum, i) => sum + i.quantity, 0)
+  type ProductTurnoverItem = {
+    id: string
+    name: string
+    sku: string
+    category: { name: string } | null
+    inventory: Array<{ quantity: number }>
+  }
+
+  const turnoverData: TurnoverData[] = products.map((product: ProductTurnoverItem) => {
+    const currentStock = product.inventory.reduce((sum: number, i: { quantity: number }) => sum + i.quantity, 0)
     const soldQuantity = soldMap.get(product.id) || 0
     const avgInventory = currentStock + soldQuantity / 2 // Simplified average
     const turnoverRate = avgInventory > 0 ? (soldQuantity / avgInventory) * (365 / periodDays) : 0
@@ -317,7 +325,14 @@ export async function getInventoryAging(): Promise<AgingData[]> {
 
   const now = new Date()
 
-  return inventory.map((item) => {
+  type InventoryAgingItem = {
+    quantity: number
+    updatedAt: Date
+    product: { id: string; name: string; sku: string; price: number }
+    location: { name: string }
+  }
+
+  return inventory.map((item: InventoryAgingItem) => {
     const lastUpdated = item.updatedAt
     const ageInDays = Math.floor((now.getTime() - lastUpdated.getTime()) / 86400000)
 
@@ -339,7 +354,7 @@ export async function getInventoryAging(): Promise<AgingData[]> {
       ageBucket,
       value: Math.round(item.quantity * item.product.price * 100) / 100,
     }
-  }).sort((a, b) => b.ageInDays - a.ageInDays)
+  }).sort((a: { ageInDays: number }, b: { ageInDays: number }) => b.ageInDays - a.ageInDays)
 }
 
 // Get aging summary by bucket

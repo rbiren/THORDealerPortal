@@ -99,13 +99,16 @@ export function DocumentPreview({
 
   // Prevent body scroll when modal is open
   useEffect(() => {
+    if (typeof globalThis.document === 'undefined') return
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
+      globalThis.document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = ''
+      globalThis.document.body.style.overflow = ''
     }
     return () => {
-      document.body.style.overflow = ''
+      if (typeof globalThis.document !== 'undefined') {
+        globalThis.document.body.style.overflow = ''
+      }
     }
   }, [isOpen])
 

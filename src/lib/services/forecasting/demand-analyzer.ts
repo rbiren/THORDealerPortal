@@ -276,14 +276,14 @@ export function aggregateToMonthly(
 
   const result: HistoricalDemandPoint[] = [];
 
-  for (const [key, quantity] of monthlyMap) {
+  Array.from(monthlyMap.entries()).forEach(([key, quantity]) => {
     const [year, month] = key.split('-').map(Number);
     result.push({
       date: new Date(year, month, 1),
       quantity,
       productId: data[0]?.productId || '',
     });
-  }
+  });
 
   return result.sort((a, b) => a.date.getTime() - b.date.getTime());
 }

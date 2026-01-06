@@ -136,7 +136,21 @@ export async function getForumCategoriesAction(): Promise<ForumCategoryListItem[
 
   const categories = await listForumCategories(session.user.role)
 
-  return categories.map((cat) => ({
+  type CategoryItem = {
+    id: string
+    name: string
+    slug: string
+    description: string | null
+    icon: string | null
+    color: string | null
+    targetAudience: string
+    postCount: number
+    lastPostAt: Date | null
+    isActive: boolean
+    sortOrder: number
+  }
+
+  return categories.map((cat: CategoryItem) => ({
     id: cat.id,
     name: cat.name,
     slug: cat.slug,
@@ -309,8 +323,33 @@ export async function getForumPostsAction(filters?: {
     }
   }
 
+  type PostQueryResult = {
+    id: string
+    title: string
+    excerpt: string | null
+    postType: string
+    status: string
+    tags: string | null
+    isPinned: boolean
+    isLocked: boolean
+    isFeatured: boolean
+    isResolved: boolean
+    viewCount: number
+    replyCount: number
+    likeCount: number
+    createdAt: Date
+    updatedAt: Date
+    lastReplyAt: Date | null
+    authorId: string
+    author: { firstName: string | null; lastName: string | null; role: string }
+    dealerId: string | null
+    dealer: { name: string; code: string } | null
+    categoryId: string
+    category: { name: string; slug: string; icon: string | null; color: string | null }
+  }
+
   // Transform for UI
-  const posts: ForumPostListItem[] = result.posts.map((post) => ({
+  const posts: ForumPostListItem[] = result.posts.map((post: PostQueryResult) => ({
     id: post.id,
     title: post.title,
     excerpt: post.excerpt,
@@ -417,7 +456,22 @@ export async function getForumPostAction(postId: string): Promise<ForumPostDetai
     categorySlug: post.category.slug,
     categoryIcon: post.category.icon,
     categoryColor: post.category.color,
-    replies: post.replies.map((reply) => ({
+    replies: post.replies.map((reply: {
+      id: string
+      content: string
+      status: string
+      isAcceptedAnswer: boolean
+      isEdited: boolean
+      editedAt: Date | null
+      likeCount: number
+      hasLiked: boolean
+      childReplyCount: number
+      createdAt: Date
+      authorId: string
+      author: { firstName: string | null; lastName: string | null; role: string; dealer: { name: string } | null }
+      dealerId: string | null
+      parentReplyId: string | null
+    }) => ({
       id: reply.id,
       content: reply.content,
       status: reply.status,
@@ -727,7 +781,22 @@ export async function getRecentForumActivityAction(limit: number = 10) {
     }
   }
 
-  return posts.map((post) => ({
+  type UserPostQueryResult = {
+    id: string
+    title: string
+    excerpt: string | null
+    postType: string
+    tags: string | null
+    isPinned: boolean
+    replyCount: number
+    viewCount: number
+    createdAt: Date
+    lastReplyAt: Date | null
+    author: { firstName: string | null; lastName: string | null }
+    category: { name: string; slug: string; icon: string | null; color: string | null }
+  }
+
+  return posts.map((post: UserPostQueryResult) => ({
     id: post.id,
     title: post.title,
     excerpt: post.excerpt,

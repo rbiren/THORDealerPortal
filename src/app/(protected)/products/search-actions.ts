@@ -61,7 +61,17 @@ export async function searchProducts(query: string): Promise<SearchSuggestion[]>
   })
 
   // Calculate relevance scores
-  const scoredProducts = products.map((product) => {
+  type ProductSearchItem = {
+    id: string
+    name: string
+    sku: string
+    description: string | null
+    price: number
+    category: { name: string } | null
+    images: Array<{ url: string }>
+  }
+
+  const scoredProducts = products.map((product: ProductSearchItem) => {
     let score = 0
 
     const nameLower = product.name.toLowerCase()
@@ -93,7 +103,7 @@ export async function searchProducts(query: string): Promise<SearchSuggestion[]>
 
     // Word boundary bonus
     const words = searchTerm.split(/\s+/)
-    words.forEach((word) => {
+    words.forEach((word: string) => {
       if (nameLower.split(/\s+/).includes(word)) {
         score += 20
       }
@@ -112,7 +122,7 @@ export async function searchProducts(query: string): Promise<SearchSuggestion[]>
 
   // Sort by relevance and limit results
   return scoredProducts
-    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    .sort((a: { relevanceScore: number }, b: { relevanceScore: number }) => b.relevanceScore - a.relevanceScore)
     .slice(0, MAX_SUGGESTIONS)
 }
 
@@ -188,5 +198,5 @@ export async function getPopularSearches(): Promise<string[]> {
     },
   })
 
-  return categories.map((c) => c.name)
+  return categories.map((c: { name: string }) => c.name)
 }

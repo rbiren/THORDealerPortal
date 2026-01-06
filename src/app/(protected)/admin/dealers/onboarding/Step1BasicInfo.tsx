@@ -59,7 +59,7 @@ export function Step1BasicInfo({ parentDealers }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
-        <p className="mt-1 text-sm text-gray-500">Enter the dealer's basic details to get started.</p>
+        <p className="mt-1 text-sm text-gray-500">Enter the dealer&apos;s basic details to get started.</p>
       </div>
 
       <div className="space-y-4">

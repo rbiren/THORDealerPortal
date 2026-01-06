@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 // Types
 export interface CreateCategoryInput {
@@ -97,7 +96,7 @@ export async function getCategoryTree() {
   });
 
   // Filter to only root categories for tree structure
-  return categories.filter((c) => !c.parentId);
+  return categories.filter((c: { parentId: string | null }) => !c.parentId);
 }
 
 /**
@@ -227,7 +226,7 @@ export async function listArticles(
     sortOrder = 'desc',
   } = pagination;
 
-  const where: Prisma.KnowledgeArticleWhereInput = {};
+  const where: Record<string, unknown> = {};
 
   if (categoryId) where.categoryId = categoryId;
   if (isPublished !== undefined) where.isPublished = isPublished;
@@ -260,8 +259,9 @@ export async function listArticles(
     prisma.knowledgeArticle.count({ where }),
   ]);
 
+  type ArticleType = typeof articles[number];
   return {
-    articles: articles.map((a) => ({
+    articles: articles.map((a: ArticleType) => ({
       ...a,
       tags: a.tags ? JSON.parse(a.tags) : [],
       targetRoles: a.targetRoles ? JSON.parse(a.targetRoles) : [],
@@ -280,7 +280,7 @@ export async function listArticles(
  * Update an article
  */
 export async function updateArticle(id: string, input: UpdateArticleInput) {
-  const updateData: Prisma.KnowledgeArticleUpdateInput = {};
+  const updateData: Record<string, unknown> = {};
 
   if (input.categoryId !== undefined) updateData.categoryId = input.categoryId;
   if (input.title !== undefined) updateData.title = input.title;
@@ -372,7 +372,7 @@ export async function searchArticles(
 ) {
   const { categoryId, limit = 10 } = options;
 
-  const where: Prisma.KnowledgeArticleWhereInput = {
+  const where: Record<string, unknown> = {
     isPublished: true,
     OR: [
       { title: { contains: query } },
@@ -399,7 +399,8 @@ export async function searchArticles(
   });
 
   // Filter by access rights if provided
-  return articles.filter((article) => {
+  type SearchArticle = typeof articles[number];
+  return articles.filter((article: SearchArticle) => {
     if (options.userRole && article.targetRoles) {
       const roles = JSON.parse(article.targetRoles);
       if (roles.length > 0 && !roles.includes(options.userRole)) {

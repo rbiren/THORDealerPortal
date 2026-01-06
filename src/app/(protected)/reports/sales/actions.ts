@@ -237,15 +237,28 @@ export async function getProductSales(
   })
 
   // Get product details
-  const productIds = productSales.map((p) => p.productId)
+  type ProductSalesGroup = {
+    productId: string
+    _sum: { quantity: number | null; totalPrice: number | null }
+    _count: { orderId: number }
+  }
+
+  const productIds = productSales.map((p: ProductSalesGroup) => p.productId)
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
     include: { category: true },
   })
 
-  const productMap = new Map(products.map((p) => [p.id, p]))
+  type ProductWithCategory = {
+    id: string
+    name: string
+    sku: string
+    category: { name: string } | null
+  }
 
-  return productSales.map((ps) => {
+  const productMap = new Map<string, ProductWithCategory>(products.map((p: ProductWithCategory) => [p.id, p]))
+
+  return productSales.map((ps: ProductSalesGroup) => {
     const product = productMap.get(ps.productId)
     return {
       productId: ps.productId,

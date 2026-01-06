@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { fullOnboardingSchema, type FullOnboardingInput } from '@/lib/validations/dealer'
 
@@ -36,7 +37,7 @@ export async function submitDealerOnboarding(data: FullOnboardingInput): Promise
     }
 
     // Create dealer with contacts and addresses in a transaction
-    const dealer = await prisma.$transaction(async (tx) => {
+    const dealer = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create the dealer
       const newDealer = await tx.dealer.create({
         data: {

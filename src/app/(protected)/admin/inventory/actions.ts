@@ -124,7 +124,23 @@ export async function getLocationSummaries(): Promise<LocationSummary[]> {
     orderBy: { name: 'asc' },
   })
 
-  return locations.map((location) => {
+  type InventoryItem = {
+    quantity: number
+    reserved: number
+    lowStockThreshold: number
+    product: { costPrice: number | null; price: number }
+  }
+
+  type LocationWithInventory = {
+    id: string
+    name: string
+    code: string
+    type: string
+    isActive: boolean
+    inventory: InventoryItem[]
+  }
+
+  return locations.map((location: LocationWithInventory) => {
     let totalStock = 0
     let totalReserved = 0
     let totalValue = 0
@@ -184,9 +200,18 @@ export async function getLowStockItems(limit = 20): Promise<LowStockItem[]> {
     },
   })
 
+  type LowStockInventory = {
+    id: string
+    quantity: number
+    reserved: number
+    lowStockThreshold: number
+    product: { id: string; name: string; sku: string; price: number; costPrice: number | null }
+    location: { id: string; name: string; code: string }
+  }
+
   // Filter for low stock items and calculate percent of threshold
   const lowStockItems = inventory
-    .map((item) => {
+    .map((item: LowStockInventory) => {
       const available = item.quantity - item.reserved
       const percentOfThreshold = item.lowStockThreshold > 0
         ? (available / item.lowStockThreshold) * 100
@@ -203,8 +228,8 @@ export async function getLowStockItems(limit = 20): Promise<LowStockItem[]> {
         percentOfThreshold,
       }
     })
-    .filter((item) => item.available <= item.lowStockThreshold)
-    .sort((a, b) => a.percentOfThreshold - b.percentOfThreshold)
+    .filter((item: { available: number; lowStockThreshold: number }) => item.available <= item.lowStockThreshold)
+    .sort((a: { percentOfThreshold: number }, b: { percentOfThreshold: number }) => a.percentOfThreshold - b.percentOfThreshold)
     .slice(0, limit)
 
   return lowStockItems
@@ -232,9 +257,18 @@ export async function getOutOfStockItems(limit = 20): Promise<LowStockItem[]> {
     },
   })
 
+  type OutOfStockInventory = {
+    id: string
+    quantity: number
+    reserved: number
+    lowStockThreshold: number
+    product: { id: string; name: string; sku: string; price: number; costPrice: number | null }
+    location: { id: string; name: string; code: string }
+  }
+
   // Filter for out of stock items (available <= 0)
   const outOfStockItems = inventory
-    .map((item) => {
+    .map((item: OutOfStockInventory) => {
       const available = item.quantity - item.reserved
       return {
         id: item.id,
@@ -247,7 +281,7 @@ export async function getOutOfStockItems(limit = 20): Promise<LowStockItem[]> {
         percentOfThreshold: 0,
       }
     })
-    .filter((item) => item.available <= 0)
+    .filter((item: { available: number }) => item.available <= 0)
     .slice(0, limit)
 
   return outOfStockItems
@@ -439,8 +473,25 @@ export async function getInventoryList(
     },
   })
 
+  type FullInventoryItem = {
+    id: string
+    quantity: number
+    reserved: number
+    lowStockThreshold: number
+    product: {
+      id: string
+      sku: string
+      name: string
+      price: number
+      costPrice: number | null
+      categoryId: string | null
+      category: { name: string } | null
+    }
+    location: { id: string; name: string; code: string }
+  }
+
   // Transform and filter by status
-  let items: InventoryListItem[] = inventory.map((item) => {
+  let items: InventoryListItem[] = inventory.map((item: FullInventoryItem) => {
     const available = item.quantity - item.reserved
     const unitValue = item.product.costPrice ?? item.product.price
 
@@ -540,7 +591,17 @@ export async function getInventoryLocations(): Promise<InventoryLocationListItem
     orderBy: { name: 'asc' },
   })
 
-  return locations.map((location) => ({
+  type LocationResult = {
+    id: string
+    name: string
+    code: string
+    type: string
+    address: string | null
+    isActive: boolean
+    _count: { inventory: number }
+  }
+
+  return locations.map((location: LocationResult) => ({
     id: location.id,
     name: location.name,
     code: location.code,

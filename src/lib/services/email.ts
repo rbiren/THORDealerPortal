@@ -217,8 +217,9 @@ export async function sendOrderConfirmationEmail(
   }
 
   const subject = `Order Confirmation - ${order.orderNumber}`
+  type OrderItemLine = { product: { name: string; sku: string }; quantity: number; totalPrice: number }
   const itemsList = order.items
-    .map((item) => `  - ${item.product.name} (${item.product.sku}) x${item.quantity} = $${item.totalPrice.toFixed(2)}`)
+    .map((item: OrderItemLine) => `  - ${item.product.name} (${item.product.sku}) x${item.quantity} = $${item.totalPrice.toFixed(2)}`)
     .join('\n')
 
   const text = `
@@ -276,7 +277,7 @@ THOR Dealer Portal
         </tr>
       </thead>
       <tbody>
-        ${order.items.map((item) => `
+        ${order.items.map((item: { product: { name: string; sku: string }; quantity: number; totalPrice: number }) => `
           <tr>
             <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">
               <strong>${item.product.name}</strong><br>

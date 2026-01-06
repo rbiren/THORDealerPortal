@@ -62,19 +62,33 @@ export async function GET(request: NextRequest) {
     });
 
     // Group by product
-    const byProduct = new Map<string, typeof forecasts>();
+    type ForecastItem = {
+      productId: string
+      periodStart: Date
+      periodEnd: Date
+      forecastedDemand: number
+      lowerBound: number | null
+      upperBound: number | null
+      historicalAverage: number | null
+      yearOverYearChange: number | null
+      trendComponent: number | null
+      seasonalComponent: number | null
+      product: { id: string; name: string; sku: string; price: number }
+    }
+
+    const byProduct = new Map<string, ForecastItem[]>();
     for (const forecast of forecasts) {
       if (!byProduct.has(forecast.productId)) {
         byProduct.set(forecast.productId, []);
       }
-      byProduct.get(forecast.productId)!.push(forecast);
+      byProduct.get(forecast.productId)!.push(forecast as ForecastItem);
     }
 
     const results = Array.from(byProduct.entries()).map(([productId, productForecasts]) => ({
       productId,
       productName: productForecasts[0].product.name,
       productSku: productForecasts[0].product.sku,
-      periods: productForecasts.map(f => ({
+      periods: productForecasts.map((f: ForecastItem) => ({
         periodStart: f.periodStart,
         periodEnd: f.periodEnd,
         periodLabel: f.periodStart.toLocaleDateString('en-US', {

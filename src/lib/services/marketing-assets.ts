@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 // Types
 export interface CreateAssetCategoryInput {
@@ -101,7 +100,7 @@ export async function getAssetCategoryTree() {
     orderBy: { sortOrder: 'asc' },
   });
 
-  return categories.filter((c) => !c.parentId);
+  return categories.filter((c: { parentId: string | null }) => !c.parentId);
 }
 
 /**
@@ -225,7 +224,7 @@ export async function searchAssets(options: AssetSearchOptions = {}) {
     limit = 20,
   } = options;
 
-  const where: Prisma.MarketingAssetWhereInput = {
+  const where: Record<string, unknown> = {
     status: 'active',
   };
 
@@ -262,9 +261,10 @@ export async function searchAssets(options: AssetSearchOptions = {}) {
   ]);
 
   // Filter by tier access if provided
+  type AssetType = typeof assets[number];
   let filteredAssets = assets;
   if (dealerTier) {
-    filteredAssets = assets.filter((asset) => {
+    filteredAssets = assets.filter((asset: AssetType) => {
       if (!asset.availableToTiers) return true;
       const tiers = JSON.parse(asset.availableToTiers);
       return tiers.length === 0 || tiers.includes(dealerTier);
@@ -272,7 +272,7 @@ export async function searchAssets(options: AssetSearchOptions = {}) {
   }
 
   return {
-    assets: filteredAssets.map((a) => ({
+    assets: filteredAssets.map((a: AssetType) => ({
       ...a,
       tags: a.tags ? JSON.parse(a.tags) : [],
       availableToTiers: a.availableToTiers ? JSON.parse(a.availableToTiers) : [],
@@ -291,7 +291,7 @@ export async function updateAsset(
   id: string,
   input: Partial<Omit<CreateAssetInput, 'url' | 'mimeType' | 'fileSize'>>
 ) {
-  const updateData: Prisma.MarketingAssetUpdateInput = {};
+  const updateData: Record<string, unknown> = {};
 
   if (input.name !== undefined) updateData.name = input.name;
   if (input.description !== undefined) updateData.description = input.description;
@@ -496,7 +496,7 @@ export async function listTemplates(options: {
 } = {}) {
   const { templateType, category, dealerTier, page = 1, limit = 20 } = options;
 
-  const where: Prisma.CampaignTemplateWhereInput = {
+  const where: Record<string, unknown> = {
     status: 'active',
   };
 
@@ -514,9 +514,10 @@ export async function listTemplates(options: {
   ]);
 
   // Filter by tier access if provided
+  type TemplateType = typeof templates[number];
   let filteredTemplates = templates;
   if (dealerTier) {
-    filteredTemplates = templates.filter((template) => {
+    filteredTemplates = templates.filter((template: TemplateType) => {
       if (!template.availableToTiers) return true;
       const tiers = JSON.parse(template.availableToTiers);
       return tiers.length === 0 || tiers.includes(dealerTier);
@@ -524,7 +525,7 @@ export async function listTemplates(options: {
   }
 
   return {
-    templates: filteredTemplates.map((t) => ({
+    templates: filteredTemplates.map((t: TemplateType) => ({
       ...t,
       customizableFields: t.customizableFields
         ? JSON.parse(t.customizableFields)
@@ -554,7 +555,7 @@ export async function updateTemplate(
   id: string,
   input: Partial<CreateTemplateInput>
 ) {
-  const updateData: Prisma.CampaignTemplateUpdateInput = {};
+  const updateData: Record<string, unknown> = {};
 
   if (input.name !== undefined) updateData.name = input.name;
   if (input.description !== undefined) updateData.description = input.description;
@@ -630,7 +631,7 @@ export async function getAssetLibraryStats() {
     totalCategories,
     totalDownloads,
     byType: Object.fromEntries(
-      downloadsByType.map((d) => [
+      downloadsByType.map((d: { assetType: string; _count: { id: number }; _sum: { downloadCount: number | null } }) => [
         d.assetType,
         { count: d._count.id, downloads: d._sum.downloadCount },
       ])
@@ -653,16 +654,17 @@ export async function getPopularAssets(limit = 10, dealerTier?: string) {
   });
 
   // Filter by tier access if provided
+  type PopularAssetType = typeof assets[number];
   let filteredAssets = assets;
   if (dealerTier) {
-    filteredAssets = assets.filter((asset) => {
+    filteredAssets = assets.filter((asset: PopularAssetType) => {
       if (!asset.availableToTiers) return true;
       const tiers = JSON.parse(asset.availableToTiers);
       return tiers.length === 0 || tiers.includes(dealerTier);
     });
   }
 
-  return filteredAssets.slice(0, limit).map((a) => ({
+  return filteredAssets.slice(0, limit).map((a: PopularAssetType) => ({
     ...a,
     tags: a.tags ? JSON.parse(a.tags) : [],
   }));

@@ -112,7 +112,7 @@ export async function createInvoiceFromOrder(
         shippingAddress: order.shippingAddress,
         paymentTerms: 'Net 30',
         items: JSON.stringify(
-          order.items.map((item) => ({
+          order.items.map((item: { product: { name: string; sku: string }; quantity: number; unitPrice: number; totalPrice: number }) => ({
             description: item.product.name,
             sku: item.product.sku,
             quantity: item.quantity,

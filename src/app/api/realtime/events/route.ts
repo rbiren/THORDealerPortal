@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import {
   createClientSubscription,
   type RealtimeEvent,
@@ -18,7 +17,7 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(request: NextRequest) {
   // Authenticate the request
-  const session = await getServerSession(authOptions)
+  const session = await auth()
 
   if (!session?.user) {
     return new Response('Unauthorized', { status: 401 })
@@ -62,8 +61,11 @@ export async function GET(request: NextRequest) {
       // Subscribe to events
       const unsubscribe = createClientSubscription(connection, (event: RealtimeEvent) => {
         try {
+          const payload = typeof event.payload === 'object' && event.payload !== null
+            ? event.payload as Record<string, unknown>
+            : { data: event.payload }
           const eventData = `event: ${event.type}\ndata: ${JSON.stringify({
-            ...event.payload,
+            ...payload,
             timestamp: event.timestamp.toISOString(),
           })}\n\n`
           controller.enqueue(encoder.encode(eventData))

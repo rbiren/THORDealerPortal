@@ -532,7 +532,7 @@ export async function sendMessage(input: SendMessageInput): Promise<MessageWithS
   if (channel.assignedToId) {
     targetUsers.add(channel.assignedToId)
   }
-  channel.agents.forEach((a) => targetUsers.add(a.userId))
+  channel.agents.forEach((a: { userId: string }) => targetUsers.add(a.userId))
   targetUsers.delete(input.senderId) // Don't notify sender
 
   // Emit message event
@@ -656,7 +656,7 @@ export async function broadcastTyping(
   if (channel.assignedToId) {
     targetUsers.add(channel.assignedToId)
   }
-  channel.agents.forEach((a) => targetUsers.add(a.userId))
+  channel.agents.forEach((a: { userId: string }) => targetUsers.add(a.userId))
   targetUsers.delete(userId)
 
   emitChatTyping(
@@ -726,7 +726,7 @@ export async function getAvailableAgents(department?: ChatDepartment): Promise<
     orderBy: { activeChatsCount: 'asc' }, // Prefer agents with fewer active chats
   })
 
-  return agents.filter((a) => a.activeChatsCount < a.maxActiveChats)
+  return agents.filter((a: { activeChatsCount: number; maxActiveChats: number }) => a.activeChatsCount < a.maxActiveChats)
 }
 
 // ============================================================================
@@ -818,7 +818,7 @@ export async function getChatStats(options?: {
   ])
 
   const departmentCounts: Record<string, number> = {}
-  byDepartment.forEach((d) => {
+  byDepartment.forEach((d: { department: string; _count: { id: number } }) => {
     departmentCounts[d.department] = d._count.id
   })
 
