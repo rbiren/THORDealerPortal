@@ -2,17 +2,9 @@
 
 import { prisma } from '@/lib/prisma'
 import { formatFileSize, getFileExtension, checkExpiration } from '@/lib/document-utils'
+import { DOCUMENT_CATEGORIES, type DocumentCategory } from '@/lib/document-constants'
 
-// Document Types
-export type DocumentCategory =
-  | 'contract'
-  | 'marketing'
-  | 'compliance'
-  | 'training'
-  | 'product_spec'
-  | 'invoice'
-  | 'report'
-  | 'other'
+// Note: Client components should import DOCUMENT_CATEGORIES from '@/lib/document-constants'
 
 export type DocumentSortBy = 'name' | 'createdAt' | 'size' | 'category'
 
@@ -41,20 +33,7 @@ export interface DocumentWithDetails extends Document {
   fileExtension: string
 }
 
-// Category configuration
-export const DOCUMENT_CATEGORIES: Record<
-  DocumentCategory,
-  { label: string; icon: string; color: string }
-> = {
-  contract: { label: 'Contracts', icon: 'document-text', color: 'blue' },
-  marketing: { label: 'Marketing', icon: 'presentation-chart-bar', color: 'purple' },
-  compliance: { label: 'Compliance', icon: 'shield-check', color: 'green' },
-  training: { label: 'Training', icon: 'academic-cap', color: 'yellow' },
-  product_spec: { label: 'Product Specs', icon: 'clipboard-list', color: 'orange' },
-  invoice: { label: 'Invoices', icon: 'receipt-refund', color: 'gray' },
-  report: { label: 'Reports', icon: 'chart-bar', color: 'indigo' },
-  other: { label: 'Other', icon: 'folder', color: 'gray' },
-}
+export type { DocumentCategory }
 
 // Get documents list
 export async function getDocuments(options?: {

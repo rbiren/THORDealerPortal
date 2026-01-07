@@ -7,9 +7,8 @@ import {
   getAdminOrderStats,
   bulkUpdateOrderStatus,
   exportOrdersCsv,
-  ADMIN_ORDER_STATUSES,
-  type AdminOrderStatus,
 } from './actions'
+import { ADMIN_ORDER_STATUSES, type AdminOrderStatus } from '@/lib/admin-order-statuses'
 
 type AdminOrder = {
   id: string

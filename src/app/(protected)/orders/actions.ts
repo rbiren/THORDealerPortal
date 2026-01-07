@@ -13,8 +13,7 @@ import {
 import { sendEmail } from '@/lib/services/email'
 import { ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses'
 
-// Re-export for use by client components
-export { ORDER_STATUSES, type OrderStatus }
+// Note: Client components should import ORDER_STATUSES directly from '@/lib/order-statuses'
 
 // Get order details for display
 export async function getOrder(orderIdOrNumber: string) {

@@ -10,7 +10,7 @@ Transform from a transaction portal into a true **dealer-OEM relationship platfo
 
 ## Status
 
-🚧 **In Development** - Transaction layer complete, Relationship layer in planning
+🚧 **In Development** - Transaction layer complete, Relationship layer Phase 8.1-8.2 complete
 
 ## Tech Stack
 
@@ -83,20 +83,24 @@ THORDealerPortal/
 | **Authentication** | Login, sessions, role-based access | ✅ |
 | **Dashboard** | Overview metrics, recent activity, quick actions | ✅ |
 | **Dealer Management** | Registration, onboarding, hierarchy, profiles | ✅ |
+| **Products** | Product catalog, categories, search | ✅ |
+| **Cart & Checkout** | Shopping cart, saved carts, checkout flow | ✅ |
 | **Inventory** | Real-time stock, adjustments, locations, forecasting | ✅ |
-| **Orders** | Cart, checkout, tracking, order management | ✅ |
+| **Orders** | Order tracking, history, order management | ✅ |
 | **Invoices** | Invoice generation, status tracking, payment info | ✅ |
+| **Documents** | Document library, upload, categories, expiration | ✅ |
 | **Warranty Claims** | Claim submission, review workflow, approvals | ✅ |
-| **Reporting** | Dashboards, analytics, exports | ✅ |
-| **Documents** | Upload, preview, library | ✅ |
-| **Notifications** | In-app notifications, bell icon | ✅ |
+| **Reporting** | Sales reports, inventory reports, analytics | ✅ |
+| **Notifications** | Notification center, grouped by time | ✅ |
 
-### Relationship Layer (Planned - Phase 8)
+### Relationship Layer (Phase 8)
 
 | Module | Description | Priority | Status |
 |--------|-------------|----------|--------|
-| **Communication Hub** | Support tickets, OEM announcements, knowledge base | P1 | ⏳ |
-| **Incentives & Programs** | Volume rebates, co-op funds, sales contests | P1 | ⏳ |
+| **Support Tickets** | Dealer support tickets, admin management | P1 | ✅ |
+| **Community Forum** | Dealer forum, categories, posts, replies | P1 | ✅ |
+| **Live Chat** | Real-time chat, admin dashboard | P1 | ✅ |
+| **Incentives & Programs** | Volume rebates, dealer enrollment, claims, payouts | P1 | ✅ |
 | **Training Portal** | Course catalog, certifications, compliance | P1 | ⏳ |
 | **Performance Scorecard** | KPIs, tier management, benchmarks | P1 | ⏳ |
 | **Parts & Service** | Parts catalog, service bulletins, recalls | P2 | ⏳ |
@@ -116,27 +120,27 @@ Pay invoices                   See performance score
 
 The Relationship Layer transforms dealers from **customers** into **partners**.
 
-## Recommended Build Sequence
-
-**Start with Communication Hub** - it provides immediate value and is foundational:
+## Build Progress
 
 ```
-Phase 8.1: Communication Hub
-├── Support ticket system (dealer → OEM)
-├── OEM announcements (OEM → dealers)
-└── Knowledge base (self-service)
+Phase 8.1: Communication Hub ✅
+├── Support ticket system (dealer → OEM) ✅
+├── Community forum ✅
+└── Live chat with admin dashboard ✅
 
-Phase 8.2: Incentives & Programs
-├── Rebate program management
-├── Co-op fund tracking
-└── Dealer tier benefits
+Phase 8.2: Incentives & Programs ✅
+├── Incentive program management ✅
+├── Dealer enrollment flow ✅
+├── Rebate calculation engine ✅
+├── Claims submission & review ✅
+└── Payout processing ✅
 
-Phase 8.3: Training Portal
+Phase 8.3: Training Portal ⏳
 ├── Course catalog
 ├── Certification tracking
 └── Compliance dashboard
 
-Phase 8.4: Performance Scorecard
+Phase 8.4: Performance Scorecard ⏳
 ├── KPI dashboard
 ├── Trend visualization
 └── Tier management

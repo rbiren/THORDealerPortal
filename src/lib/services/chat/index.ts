@@ -222,8 +222,8 @@ export async function getAdminChannels(options?: {
   const channels = await prisma.chatChannel.findMany({
     where: {
       status: options?.status ? { in: options.status } : { not: 'closed' },
-      department: options?.department,
-      assignedToId: options?.unassignedOnly ? null : options?.assignedToId,
+      ...(options?.department ? { department: options.department } : {}),
+      ...(options?.unassignedOnly ? { assignedToId: null } : options?.assignedToId ? { assignedToId: options.assignedToId } : {}),
     },
     include: {
       dealer: { select: { id: true, name: true, code: true } },

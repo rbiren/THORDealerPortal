@@ -8,8 +8,8 @@ This document provides guidance for AI assistants working with the THORDealerPor
 
 ### Current Status
 
-- **Stage**: Active development (Phase 3+ features)
-- **Completed**: Authentication, Dashboard, Inventory, Orders, Invoices, Warranty Claims, Community Forum
+- **Stage**: Active development (Phase 8+ features)
+- **Completed**: Authentication, Dashboard, Inventory, Orders, Invoices, Warranty Claims, Community Forum, Support Tickets, Documents, Reports, Cart/Checkout, Notifications, Incentives & Rebates
 - **Branch Strategy**: Feature branches prefixed with `claude/` for AI-assisted development
 - **Development Approach**: Ralph Wiggum autonomous loops for iterative implementation
 
@@ -27,11 +27,18 @@ THORDealerPortal/
 ├── src/
 │   ├── app/              # Next.js app router pages
 │   │   ├── dashboard/    # Main dealer dashboard
-│   │   ├── inventory/    # Inventory management
+│   │   ├── products/     # Product catalog
+│   │   ├── cart/         # Shopping cart & checkout
 │   │   ├── orders/       # Order processing
 │   │   ├── invoices/     # Invoice management
+│   │   ├── documents/    # Document management
 │   │   ├── warranty/     # Warranty claims module
+│   │   ├── incentives/   # Dealer incentives & rebates
+│   │   ├── reports/      # Sales & inventory reports
 │   │   ├── forum/        # Community forum for dealers
+│   │   ├── support/      # Support tickets
+│   │   ├── notifications/# Notification center
+│   │   ├── admin/        # Admin management pages
 │   │   └── api/          # API routes
 │   ├── components/       # Reusable React components
 │   ├── lib/              # Utilities, services, validations

@@ -4,19 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { updateOrderStatus, releaseInventory } from '@/lib/services/order'
 import { createInvoiceFromOrder } from '@/lib/services/invoice'
+import { ADMIN_ORDER_STATUSES, type AdminOrderStatus } from '@/lib/admin-order-statuses'
 
-// Order status configuration for admin
-export const ADMIN_ORDER_STATUSES = {
-  draft: { label: 'Draft', color: 'gray', adminActions: ['confirm', 'cancel'] },
-  submitted: { label: 'Submitted', color: 'blue', adminActions: ['confirm', 'cancel'] },
-  confirmed: { label: 'Confirmed', color: 'olive', adminActions: ['process', 'cancel'] },
-  processing: { label: 'Processing', color: 'yellow', adminActions: ['ship'] },
-  shipped: { label: 'Shipped', color: 'purple', adminActions: ['deliver'] },
-  delivered: { label: 'Delivered', color: 'green', adminActions: [] },
-  cancelled: { label: 'Cancelled', color: 'red', adminActions: [] },
-} as const
-
-export type AdminOrderStatus = keyof typeof ADMIN_ORDER_STATUSES
+// Note: Client components should import ADMIN_ORDER_STATUSES from '@/lib/admin-order-statuses'
 
 // Get all orders with advanced filters (admin view)
 export async function getAdminOrders(options: {

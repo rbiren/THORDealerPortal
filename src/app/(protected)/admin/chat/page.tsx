@@ -49,14 +49,27 @@ export default function AdminChatPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null)
   const [filterDepartment, setFilterDepartment] = useState<ChatDepartment | 'all'>('all')
-  const [filterStatus, setFilterStatus] = useState<string>('active')
+  const [filterStatus, setFilterStatus] = useState<string>('active_open')
   const [searchQuery, setSearchQuery] = useState('')
   const [stats, setStats] = useState<ChatStats | null>(null)
   const [isLoadingStats, setIsLoadingStats] = useState(true)
 
+  // Map filter value to actual status array
+  const getStatusFilter = (filter: string): string[] | undefined => {
+    switch (filter) {
+      case 'active_open': return ['open', 'waiting', 'active']
+      case 'open': return ['open']
+      case 'waiting': return ['waiting']
+      case 'active': return ['active']
+      case 'closed': return ['closed']
+      case 'all': return undefined
+      default: return ['open', 'waiting', 'active']
+    }
+  }
+
   // Get channels based on filter
   const { channels, isLoading: isLoadingChannels, refresh } = useChatList({
-    status: filterStatus === 'all' ? undefined : [filterStatus],
+    status: getStatusFilter(filterStatus),
     department: filterDepartment === 'all' ? undefined : filterDepartment,
     unassignedOnly: filterStatus === 'unassigned',
   })
@@ -233,9 +246,10 @@ export default function AdminChatPage() {
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-burnt-orange-500"
                 >
-                  <option value="active">Active & Open</option>
-                  <option value="open">Open (Unassigned)</option>
-                  <option value="waiting">Waiting</option>
+                  <option value="active_open">Active & Open</option>
+                  <option value="open">Open (New)</option>
+                  <option value="waiting">Waiting for Agent</option>
+                  <option value="active">Active</option>
                   <option value="closed">Closed</option>
                   <option value="all">All Chats</option>
                 </select>

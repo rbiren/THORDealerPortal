@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { DOCUMENT_CATEGORIES, type DocumentCategory } from './actions'
+import { DOCUMENT_CATEGORIES, type DocumentCategory } from '@/lib/document-constants'
 
 type DocumentWithDetails = {
   id: string

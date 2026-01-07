@@ -2,6 +2,9 @@
 
 import { prisma } from '@/lib/prisma'
 import { createDocument, type DocumentCategory } from '../actions'
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/document-constants'
+
+// Note: Client components should import ALLOWED_MIME_TYPES, MAX_FILE_SIZE from '@/lib/document-constants'
 
 // Types
 export interface UploadMetadata {
@@ -25,28 +28,6 @@ export interface PresignedUrlResult {
   key: string
   expiresIn: number
 }
-
-// Allowed MIME types
-export const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-powerpoint',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'text/plain',
-  'text/csv',
-  'application/zip',
-  'application/x-zip-compressed',
-]
-
-// Max file size: 50MB
-export const MAX_FILE_SIZE = 50 * 1024 * 1024
 
 // Validate file before upload
 export function validateUpload(

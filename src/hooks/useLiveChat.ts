@@ -445,15 +445,20 @@ export function useChatList(options?: {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Stabilize the status array to prevent infinite re-renders
+  const statusKey = options?.status?.join(',') ?? ''
+  const department = options?.department
+  const unassignedOnly = options?.unassignedOnly
+
   const refresh = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
     try {
       const params = new URLSearchParams()
-      if (options?.status) params.set('status', options.status.join(','))
-      if (options?.department) params.set('department', options.department)
-      if (options?.unassignedOnly) params.set('unassigned', 'true')
+      if (statusKey) params.set('status', statusKey)
+      if (department) params.set('department', department)
+      if (unassignedOnly) params.set('unassigned', 'true')
 
       const response = await fetch(`/api/chat/channels?${params}`)
 
@@ -468,7 +473,7 @@ export function useChatList(options?: {
     } finally {
       setIsLoading(false)
     }
-  }, [options?.status, options?.department, options?.unassignedOnly])
+  }, [statusKey, department, unassignedOnly])
 
   useEffect(() => {
     refresh()

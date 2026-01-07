@@ -13,17 +13,11 @@ import {
 } from '@/lib/services/invoice'
 import { sendEmail } from '@/lib/services/email'
 import { prisma } from '@/lib/prisma'
+import { INVOICE_STATUSES } from '@/lib/invoice-statuses'
 
 export type { InvoiceStatus, InvoiceData }
 
-// Invoice status configuration
-export const INVOICE_STATUSES = {
-  draft: { label: 'Draft', color: 'gray' },
-  sent: { label: 'Sent', color: 'blue' },
-  paid: { label: 'Paid', color: 'green' },
-  overdue: { label: 'Overdue', color: 'red' },
-  cancelled: { label: 'Cancelled', color: 'gray' },
-} as const
+// Note: Client components should import INVOICE_STATUSES directly from '@/lib/invoice-statuses'
 
 // Get invoice by ID or number
 export async function getInvoice(idOrNumber: string) {

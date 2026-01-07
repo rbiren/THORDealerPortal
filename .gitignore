@@ -53,3 +53,4 @@ prisma/migrations/
 # Ralph Wiggum runtime state
 .ralph/progress.md
 .ralph/state.json
+nul

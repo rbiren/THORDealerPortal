@@ -5,10 +5,10 @@ import Link from 'next/link'
 import {
   getInvoicesForDealer,
   getDealerInvoiceStats,
-  INVOICE_STATUSES,
   type InvoiceStatus,
   type InvoiceData,
 } from './actions'
+import { INVOICE_STATUSES } from '@/lib/invoice-statuses'
 
 type InvoiceWithLabels = InvoiceData & {
   statusLabel: string
