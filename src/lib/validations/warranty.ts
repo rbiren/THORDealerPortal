@@ -101,6 +101,10 @@ export const createWarrantyClaimSchema = z.object({
   purchaseDate: z.coerce.date().optional(),
   installDate: z.coerce.date().optional(),
 
+  // RV Unit reference (optional)
+  rvUnitId: z.string().optional(),
+  vin: z.string().max(20).optional(),
+
   // Customer information
   customerName: z.string().max(200).optional(),
   customerPhone: z.string().max(50).optional(),

@@ -23,6 +23,7 @@ import {
   type TicketCategory,
   type TicketPriority,
 } from '@/lib/validations/support'
+import { searchRVUnitsByVin } from '@/lib/services/rv-inventory'
 
 export type SupportTicketListItem = {
   id: string
@@ -197,6 +198,9 @@ export async function createSupportTicketAction(
       subject: formData.get('subject') as string,
       description: formData.get('description') as string,
       priority: (formData.get('priority') as string) || 'normal',
+      // RV Unit fields
+      rvUnitId: (formData.get('rvUnitId') as string) || undefined,
+      vin: (formData.get('vin') as string) || undefined,
     }
 
     const validated = createTicketSchema.parse(rawData)
@@ -304,4 +308,40 @@ export async function isUserAdmin(): Promise<boolean> {
   const session = await auth()
   if (!session?.user) return false
   return ['super_admin', 'admin'].includes(session.user.role)
+}
+
+// Search RV units by VIN for autocomplete
+export type VINSearchResult = {
+  id: string
+  vin: string
+  stockNumber: string | null
+  modelYear: number
+  modelName: string
+  series: string
+  condition: string
+  status: string
+}
+
+export async function searchVINForTicket(query: string): Promise<VINSearchResult[]> {
+  const session = await auth()
+  if (!session?.user?.dealerId) {
+    return []
+  }
+
+  if (!query || query.length < 3) {
+    return []
+  }
+
+  const units = await searchRVUnitsByVin(session.user.dealerId, query)
+
+  return units.map((unit: any) => ({
+    id: unit.id,
+    vin: unit.vin,
+    stockNumber: unit.stockNumber,
+    modelYear: unit.modelYear,
+    modelName: unit.model?.name || 'Unknown',
+    series: unit.model?.series || 'Unknown',
+    condition: unit.condition,
+    status: unit.status,
+  }))
 }

@@ -60,6 +60,9 @@ export const createTicketSchema = z.object({
     .min(20, 'Please provide more details (at least 20 characters)')
     .max(10000, 'Description cannot exceed 10,000 characters'),
   priority: z.enum(ticketPriorityOptions).default('normal'),
+  // RV Unit reference (optional)
+  rvUnitId: z.string().optional(),
+  vin: z.string().max(20).optional(),
 })
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>

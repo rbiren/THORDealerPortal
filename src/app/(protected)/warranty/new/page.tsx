@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createWarrantyClaimAction } from '../actions'
+import { createWarrantyClaimAction, searchVINForWarranty, type VINSearchResult } from '../actions'
 
 const claimTypes = [
   { value: 'product_defect', label: 'Product Defect', description: 'Manufacturing or quality issue with the product' },
@@ -43,6 +43,75 @@ export default function NewWarrantyClaimPage() {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState(1)
+
+  // VIN search state
+  const [vinQuery, setVinQuery] = useState('')
+  const [vinResults, setVinResults] = useState<VINSearchResult[]>([])
+  const [selectedUnit, setSelectedUnit] = useState<VINSearchResult | null>(null)
+  const [vinSearching, setVinSearching] = useState(false)
+  const [showVinDropdown, setShowVinDropdown] = useState(false)
+  const vinInputRef = useRef<HTMLInputElement>(null)
+  const vinDropdownRef = useRef<HTMLDivElement>(null)
+
+  // VIN search debounce effect
+  useEffect(() => {
+    if (!vinQuery || vinQuery.length < 3) {
+      setVinResults([])
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setVinSearching(true)
+      try {
+        const results = await searchVINForWarranty(vinQuery)
+        setVinResults(results)
+        setShowVinDropdown(results.length > 0)
+      } catch (e) {
+        console.error('VIN search error:', e)
+      } finally {
+        setVinSearching(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [vinQuery])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        vinDropdownRef.current &&
+        !vinDropdownRef.current.contains(event.target as Node) &&
+        vinInputRef.current &&
+        !vinInputRef.current.contains(event.target as Node)
+      ) {
+        setShowVinDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Handle VIN selection
+  function handleSelectUnit(unit: VINSearchResult) {
+    setSelectedUnit(unit)
+    setVinQuery(unit.vin)
+    setShowVinDropdown(false)
+    // Auto-populate product name with unit info
+    setProductName(`${unit.modelYear} ${unit.series} ${unit.modelName}`)
+    setSerialNumber(unit.vin)
+    setModelNumber(unit.stockNumber || '')
+  }
+
+  // Clear selected unit
+  function clearSelectedUnit() {
+    setSelectedUnit(null)
+    setVinQuery('')
+    setProductName('')
+    setSerialNumber('')
+    setModelNumber('')
+  }
 
   // Form state
   const [claimType, setClaimType] = useState('')
@@ -151,6 +220,12 @@ export default function NewWarrantyClaimPage() {
     formData.set('priority', priority)
     formData.set('submitNow', String(submitNow))
 
+    // Include RV unit info if selected
+    if (selectedUnit) {
+      formData.set('rvUnitId', selectedUnit.id)
+      formData.set('vin', selectedUnit.vin)
+    }
+
     if (items.length > 0) {
       formData.set(
         'items',
@@ -239,6 +314,111 @@ export default function NewWarrantyClaimPage() {
         <div className="card">
           <div className="card-body space-y-6">
             <h2 className="text-lg font-heading font-semibold text-charcoal">Product Information</h2>
+
+            {/* VIN Lookup */}
+            <div className="form-group border-b border-light-gray pb-6">
+              <label className="form-label flex items-center gap-2">
+                <svg className="h-4 w-4 text-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Link to RV Unit (Optional)
+              </label>
+              <p className="text-sm text-medium-gray mb-2">
+                Search for an RV unit by VIN to automatically link this claim to the unit
+              </p>
+
+              {selectedUnit ? (
+                <div className="flex items-center gap-3 p-3 bg-olive/5 border border-olive rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium text-charcoal">
+                      {selectedUnit.modelYear} {selectedUnit.series} {selectedUnit.modelName}
+                    </p>
+                    <p className="text-sm text-medium-gray">
+                      VIN: {selectedUnit.vin}
+                      {selectedUnit.stockNumber && ` | Stock #: ${selectedUnit.stockNumber}`}
+                    </p>
+                    <p className="text-xs text-medium-gray mt-1">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 ${
+                        selectedUnit.status === 'in_stock' ? 'bg-green-100 text-green-800' :
+                        selectedUnit.status === 'sold' ? 'bg-gray-100 text-gray-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {selectedUnit.status.replace('_', ' ')}
+                      </span>
+                      <span className="capitalize">{selectedUnit.condition}</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearSelectedUnit}
+                    className="text-medium-gray hover:text-red-600"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    ref={vinInputRef}
+                    type="text"
+                    value={vinQuery}
+                    onChange={(e) => {
+                      setVinQuery(e.target.value)
+                      if (e.target.value.length >= 3) {
+                        setShowVinDropdown(true)
+                      }
+                    }}
+                    onFocus={() => vinQuery.length >= 3 && vinResults.length > 0 && setShowVinDropdown(true)}
+                    className="input w-full pl-10"
+                    placeholder="Enter VIN to search (min 3 characters)..."
+                  />
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-medium-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {vinSearching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="animate-spin h-4 w-4 border-2 border-olive border-t-transparent rounded-full" />
+                    </div>
+                  )}
+
+                  {showVinDropdown && vinResults.length > 0 && (
+                    <div
+                      ref={vinDropdownRef}
+                      className="absolute z-10 w-full mt-1 bg-white border border-light-gray rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    >
+                      {vinResults.map((unit) => (
+                        <button
+                          key={unit.id}
+                          type="button"
+                          onClick={() => handleSelectUnit(unit)}
+                          className="w-full px-4 py-3 text-left hover:bg-light-beige border-b border-light-gray last:border-b-0"
+                        >
+                          <p className="font-medium text-charcoal">
+                            {unit.modelYear} {unit.series} {unit.modelName}
+                          </p>
+                          <p className="text-sm text-medium-gray">
+                            VIN: {unit.vin}
+                            {unit.stockNumber && ` | Stock #: ${unit.stockNumber}`}
+                          </p>
+                          <p className="text-xs text-medium-gray mt-1">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 ${
+                              unit.status === 'in_stock' ? 'bg-green-100 text-green-800' :
+                              unit.status === 'sold' ? 'bg-gray-100 text-gray-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {unit.status.replace('_', ' ')}
+                            </span>
+                            <span className="capitalize">{unit.condition}</span>
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Claim Type */}
             <div className="form-group">

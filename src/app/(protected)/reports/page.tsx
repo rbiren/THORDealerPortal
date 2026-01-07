@@ -3,9 +3,47 @@
 import Link from 'next/link'
 
 const reports = [
+  // RV Reports
+  {
+    id: 'rv-sales',
+    name: 'RV Unit Sales',
+    description: 'Track RV sales performance, trends, and gross profit analysis',
+    href: '/reports/rv-sales',
+    icon: (
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    color: 'bg-green-100 text-green-600',
+  },
+  {
+    id: 'rv-aging',
+    name: 'RV Inventory Aging',
+    description: 'Monitor days on lot, aging buckets, and stale inventory',
+    href: '/reports/rv-aging',
+    icon: (
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    color: 'bg-orange-100 text-orange-600',
+  },
+  {
+    id: 'floor-plan',
+    name: 'Floor Plan Exposure',
+    description: 'View floor plan payoffs, carrying costs, and lender breakdown',
+    href: '/reports/floor-plan',
+    icon: (
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+    color: 'bg-purple-100 text-purple-600',
+  },
+  // Parts Reports
   {
     id: 'sales',
-    name: 'Sales Reports',
+    name: 'Parts Sales Reports',
     description: 'View sales trends, product performance, and revenue analysis',
     href: '/reports/sales',
     icon: (
@@ -17,7 +55,7 @@ const reports = [
   },
   {
     id: 'inventory',
-    name: 'Inventory Reports',
+    name: 'Parts Inventory Reports',
     description: 'Track inventory levels, turnover rates, and stock aging',
     href: '/reports/inventory',
     icon: (
