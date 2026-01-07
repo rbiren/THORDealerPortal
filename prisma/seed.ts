@@ -16,6 +16,16 @@ async function main() {
   // Clean existing data - order matters for foreign keys!
   // Using exact model names from schema.prisma
 
+  // RV Inventory (new)
+  await prisma.serviceRecord.deleteMany()
+  await prisma.vehicleOrderStatusHistory.deleteMany()
+  await prisma.vehicleInvoice.deleteMany()
+  await prisma.vehicleOrder.deleteMany()
+  await prisma.tradeIn.deleteMany()
+  await prisma.rVModelIncentive.deleteMany()
+  await prisma.rVUnit.deleteMany()
+  await prisma.rVModel.deleteMany()
+
   // Forum
   await prisma.forumReplyLike.deleteMany()
   await prisma.forumPostLike.deleteMany()
@@ -796,6 +806,411 @@ Thank you for your continued partnership!`,
 
   console.log('📝 Created audit logs')
 
+  // ============================================================================
+  // RV INVENTORY SEEDING
+  // ============================================================================
+
+  // Create RV Models
+  const rvModels = await Promise.all([
+    prisma.rVModel.create({
+      data: {
+        code: 'ARIA-4000',
+        name: 'Aria 4000',
+        series: 'Aria',
+        classType: 'Class A',
+        modelYear: 2025,
+        lengthFeet: 40,
+        lengthInches: 6,
+        baseWeight: 32000,
+        freshWaterCapacity: 100,
+        grayWaterCapacity: 65,
+        blackWaterCapacity: 50,
+        lpgCapacity: 30,
+        fuelCapacity: 100,
+        sleepingCapacity: 6,
+        slideOuts: 4,
+        chassisMake: 'Freightliner',
+        chassisModel: 'XC-R',
+        engineType: 'Diesel',
+        engineSize: '6.7L Cummins',
+        baseMSRP: 425000,
+        dealerInvoice: 380000,
+        holdback: 5000,
+        availableExteriorColors: JSON.stringify(['Slate Gray', 'Modern White', 'Midnight Blue']),
+        availableInteriorColors: JSON.stringify(['Modern Farmhouse', 'Contemporary Dark', 'Coastal']),
+        standardFeatures: JSON.stringify([
+          'King-size bed', 'Residential refrigerator', 'Washer/dryer combo',
+          'Fireplace', 'Power awning', 'Solar panels'
+        ]),
+        status: 'active',
+      },
+    }),
+    prisma.rVModel.create({
+      data: {
+        code: 'MAGNITUDE-XG32',
+        name: 'Magnitude XG32',
+        series: 'Magnitude',
+        classType: 'Class A',
+        modelYear: 2025,
+        lengthFeet: 32,
+        lengthInches: 11,
+        baseWeight: 26000,
+        freshWaterCapacity: 80,
+        grayWaterCapacity: 50,
+        blackWaterCapacity: 40,
+        lpgCapacity: 24,
+        fuelCapacity: 80,
+        sleepingCapacity: 5,
+        slideOuts: 2,
+        chassisMake: 'Ford',
+        chassisModel: 'F-53',
+        engineType: 'Gas',
+        engineSize: '7.3L V8',
+        baseMSRP: 189000,
+        dealerInvoice: 165000,
+        holdback: 3000,
+        availableExteriorColors: JSON.stringify(['Champagne', 'Graphite', 'Oxford White']),
+        availableInteriorColors: JSON.stringify(['Saddle', 'Ash', 'Mocha']),
+        standardFeatures: JSON.stringify([
+          'Queen-size bed', 'Convection microwave', 'Power drop-down bunk',
+          'Backup camera', 'LED lighting'
+        ]),
+        status: 'active',
+      },
+    }),
+    prisma.rVModel.create({
+      data: {
+        code: 'COMPASS-24TF',
+        name: 'Compass 24TF',
+        series: 'Compass',
+        classType: 'Class C',
+        modelYear: 2025,
+        lengthFeet: 25,
+        lengthInches: 5,
+        baseWeight: 12500,
+        freshWaterCapacity: 44,
+        grayWaterCapacity: 30,
+        blackWaterCapacity: 30,
+        lpgCapacity: 11,
+        fuelCapacity: 50,
+        sleepingCapacity: 5,
+        slideOuts: 1,
+        chassisMake: 'Ford',
+        chassisModel: 'E-450',
+        engineType: 'Gas',
+        engineSize: '7.3L V8',
+        baseMSRP: 129000,
+        dealerInvoice: 112000,
+        holdback: 2000,
+        availableExteriorColors: JSON.stringify(['Arctic White', 'Ingot Silver']),
+        availableInteriorColors: JSON.stringify(['Nutmeg', 'Fossil']),
+        standardFeatures: JSON.stringify([
+          'Cab-over bunk', 'Full bath', 'Dinette', 'LED TV', 'Generator'
+        ]),
+        status: 'active',
+      },
+    }),
+    prisma.rVModel.create({
+      data: {
+        code: 'VENETIAN-F42',
+        name: 'Venetian F42',
+        series: 'Venetian',
+        classType: 'Class A',
+        modelYear: 2025,
+        lengthFeet: 42,
+        lengthInches: 8,
+        baseWeight: 38000,
+        freshWaterCapacity: 130,
+        grayWaterCapacity: 80,
+        blackWaterCapacity: 60,
+        lpgCapacity: 35,
+        fuelCapacity: 150,
+        sleepingCapacity: 4,
+        slideOuts: 4,
+        chassisMake: 'Freightliner',
+        chassisModel: 'XCR',
+        engineType: 'Diesel',
+        engineSize: '8.9L Cummins',
+        baseMSRP: 625000,
+        dealerInvoice: 560000,
+        holdback: 8000,
+        availableExteriorColors: JSON.stringify(['Pearl White', 'Obsidian Black', 'Champagne Pearl']),
+        availableInteriorColors: JSON.stringify(['Italian Villa', 'Modern Luxe', 'Tuscan']),
+        standardFeatures: JSON.stringify([
+          'King bed with sleep number', 'Residential refrigerator', 'Central vacuum',
+          'Aqua-Hot heating', 'In-motion satellite', 'Dishwasher'
+        ]),
+        status: 'active',
+      },
+    }),
+    prisma.rVModel.create({
+      data: {
+        code: 'OUTLAW-38MB',
+        name: 'Outlaw 38MB',
+        series: 'Outlaw',
+        classType: 'Toy Hauler',
+        modelYear: 2025,
+        lengthFeet: 38,
+        lengthInches: 10,
+        baseWeight: 25000,
+        freshWaterCapacity: 80,
+        grayWaterCapacity: 48,
+        blackWaterCapacity: 48,
+        lpgCapacity: 30,
+        fuelCapacity: 80,
+        sleepingCapacity: 8,
+        slideOuts: 2,
+        chassisMake: 'Ford',
+        chassisModel: 'F-53',
+        engineType: 'Gas',
+        engineSize: '7.3L V8',
+        baseMSRP: 215000,
+        dealerInvoice: 188000,
+        holdback: 3500,
+        availableExteriorColors: JSON.stringify(['Stealth Gray', 'Race Red', 'Lightning Blue']),
+        availableInteriorColors: JSON.stringify(['Sport', 'Titanium']),
+        standardFeatures: JSON.stringify([
+          '10ft garage', 'Ramp door with party patio', 'Fuel station', 'Zero-gravity recliners',
+          'Power loft bed', 'Exterior entertainment center'
+        ]),
+        status: 'active',
+      },
+    }),
+  ])
+
+  console.log('🚐 Created RV models')
+
+  // Create RV Units (inventory)
+  const now = new Date()
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+  const oneTwentyDaysAgo = new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000)
+
+  const rvUnits = await Promise.all([
+    // Aria units
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THOR4000A2500001',
+        stockNumber: 'A4000-001',
+        modelId: rvModels[0].id,
+        modelYear: 2025,
+        exteriorColor: 'Slate Gray',
+        interiorColor: 'Modern Farmhouse',
+        installedOptions: JSON.stringify(['Premium sound system', 'Exterior TV', 'Lithium batteries']),
+        condition: 'new',
+        status: 'in_stock',
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        lotLocation: 'Lot A, Row 1',
+        msrp: 445000,
+        invoiceCost: 398000,
+        internetPrice: 429000,
+        minimumPrice: 410000,
+        floorPlanLender: 'Bank of America',
+        floorPlanNumber: 'FL-2025-001234',
+        floorPlanPayoff: 390000,
+        floorPlanDueDate: new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000),
+        floorPlanInterestRate: 5.99,
+        receivedDate: thirtyDaysAgo,
+        daysOnLot: 30,
+        warrantyStartDate: thirtyDaysAgo,
+        warrantyEndDate: new Date(thirtyDaysAgo.getTime() + 3 * 365 * 24 * 60 * 60 * 1000),
+      },
+    }),
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THOR4000A2500002',
+        stockNumber: 'A4000-002',
+        modelId: rvModels[0].id,
+        modelYear: 2025,
+        exteriorColor: 'Modern White',
+        interiorColor: 'Contemporary Dark',
+        condition: 'new',
+        status: 'reserved',
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        lotLocation: 'Lot A, Row 2',
+        msrp: 438000,
+        invoiceCost: 392000,
+        internetPrice: 425000,
+        receivedDate: sixtyDaysAgo,
+        daysOnLot: 60,
+        warrantyStartDate: sixtyDaysAgo,
+        warrantyEndDate: new Date(sixtyDaysAgo.getTime() + 3 * 365 * 24 * 60 * 60 * 1000),
+      },
+    }),
+    // Magnitude units
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THORMAG32B2500001',
+        stockNumber: 'M32-001',
+        modelId: rvModels[1].id,
+        modelYear: 2025,
+        exteriorColor: 'Champagne',
+        interiorColor: 'Saddle',
+        condition: 'new',
+        status: 'in_stock',
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        lotLocation: 'Lot B, Row 1',
+        msrp: 199000,
+        invoiceCost: 172000,
+        internetPrice: 189000,
+        floorPlanLender: 'M&T Bank',
+        floorPlanNumber: 'FL-2025-005678',
+        floorPlanPayoff: 168000,
+        floorPlanDueDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000),
+        floorPlanInterestRate: 6.25,
+        receivedDate: ninetyDaysAgo,
+        daysOnLot: 90,
+        warrantyStartDate: ninetyDaysAgo,
+        warrantyEndDate: new Date(ninetyDaysAgo.getTime() + 3 * 365 * 24 * 60 * 60 * 1000),
+      },
+    }),
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THORMAG32B2500002',
+        stockNumber: 'M32-002',
+        modelId: rvModels[1].id,
+        modelYear: 2025,
+        exteriorColor: 'Graphite',
+        interiorColor: 'Ash',
+        condition: 'demo',
+        status: 'in_stock',
+        mileage: 1250,
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        msrp: 199000,
+        invoiceCost: 172000,
+        internetPrice: 175000,
+        minimumPrice: 165000,
+        receivedDate: oneTwentyDaysAgo,
+        daysOnLot: 120,
+        conditionNotes: 'Demo unit - excellent condition. Minor wear on driver seat.',
+      },
+    }),
+    // Compass units
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THORCOMP24C2500001',
+        stockNumber: 'C24-001',
+        modelId: rvModels[2].id,
+        modelYear: 2025,
+        exteriorColor: 'Arctic White',
+        interiorColor: 'Nutmeg',
+        condition: 'new',
+        status: 'in_stock',
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        lotLocation: 'Lot C, Row 1',
+        msrp: 135000,
+        invoiceCost: 118000,
+        internetPrice: 129000,
+        receivedDate: thirtyDaysAgo,
+        daysOnLot: 30,
+        warrantyStartDate: thirtyDaysAgo,
+        warrantyEndDate: new Date(thirtyDaysAgo.getTime() + 3 * 365 * 24 * 60 * 60 * 1000),
+      },
+    }),
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THORCOMP24C2500002',
+        stockNumber: 'C24-002',
+        modelId: rvModels[2].id,
+        modelYear: 2025,
+        exteriorColor: 'Ingot Silver',
+        interiorColor: 'Fossil',
+        condition: 'new',
+        status: 'in_transit',
+        dealerId: dealers[0].id,
+        msrp: 132000,
+        invoiceCost: 115000,
+        availableDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      },
+    }),
+    // Venetian unit
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THORVENETF42D2500001',
+        stockNumber: 'V42-001',
+        modelId: rvModels[3].id,
+        modelYear: 2025,
+        exteriorColor: 'Pearl White',
+        interiorColor: 'Italian Villa',
+        installedOptions: JSON.stringify(['Stacked washer/dryer', 'Wine cooler', 'Outdoor kitchen', 'Upgraded suspension']),
+        condition: 'new',
+        status: 'in_stock',
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        lotLocation: 'Premium Lot, Spot 1',
+        msrp: 685000,
+        invoiceCost: 610000,
+        internetPrice: 659000,
+        minimumPrice: 630000,
+        floorPlanLender: 'Wells Fargo',
+        floorPlanNumber: 'WF-2025-007890',
+        floorPlanPayoff: 600000,
+        floorPlanDueDate: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000),
+        floorPlanInterestRate: 5.5,
+        receivedDate: sixtyDaysAgo,
+        daysOnLot: 60,
+        warrantyStartDate: sixtyDaysAgo,
+        warrantyEndDate: new Date(sixtyDaysAgo.getTime() + 5 * 365 * 24 * 60 * 60 * 1000),
+      },
+    }),
+    // Outlaw Toy Hauler
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THOROUTLAW38E2500001',
+        stockNumber: 'OL38-001',
+        modelId: rvModels[4].id,
+        modelYear: 2025,
+        exteriorColor: 'Stealth Gray',
+        interiorColor: 'Sport',
+        condition: 'new',
+        status: 'in_stock',
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        lotLocation: 'Lot D, Row 1',
+        msrp: 225000,
+        invoiceCost: 196000,
+        internetPrice: 215000,
+        receivedDate: thirtyDaysAgo,
+        daysOnLot: 30,
+        warrantyStartDate: thirtyDaysAgo,
+        warrantyEndDate: new Date(thirtyDaysAgo.getTime() + 3 * 365 * 24 * 60 * 60 * 1000),
+      },
+    }),
+    // Used unit
+    prisma.rVUnit.create({
+      data: {
+        vin: '1THORMAG32B2400099',
+        stockNumber: 'U-M32-099',
+        modelId: rvModels[1].id,
+        modelYear: 2024,
+        exteriorColor: 'Oxford White',
+        interiorColor: 'Mocha',
+        condition: 'used',
+        status: 'in_stock',
+        mileage: 12500,
+        conditionNotes: 'Trade-in. Previous owner well-maintained. New tires, recent service.',
+        dealerId: dealers[0].id,
+        locationId: warehouse.id,
+        lotLocation: 'Used Lot, Row 2',
+        msrp: 165000,
+        invoiceCost: 125000,
+        internetPrice: 159000,
+        minimumPrice: 145000,
+        receivedDate: sixtyDaysAgo,
+        daysOnLot: 60,
+        warrantyEndDate: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000), // 6 months left
+      },
+    }),
+  ])
+
+  console.log('🚗 Created RV inventory units')
+
   console.log('✅ Seed completed successfully!')
   console.log(`
 Summary:
@@ -805,6 +1220,8 @@ Summary:
 - ${await prisma.inventory.count()} Inventory records
 - ${await prisma.order.count()} Orders
 - ${await prisma.notification.count()} Notifications
+- ${await prisma.rVModel.count()} RV Models
+- ${await prisma.rVUnit.count()} RV Units
   `)
 }
 
