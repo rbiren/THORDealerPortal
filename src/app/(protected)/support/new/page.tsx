@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -15,8 +15,10 @@ import {
   User,
   AlertCircle,
   CheckCircle,
+  Search,
+  X,
 } from 'lucide-react'
-import { createSupportTicketAction } from '../actions'
+import { createSupportTicketAction, searchVINForTicket, type VINSearchResult } from '../actions'
 import {
   ticketCategoryOptions,
   ticketPriorityOptions,
@@ -49,6 +51,68 @@ export default function NewSupportTicketPage() {
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<TicketPriority>('normal')
 
+  // VIN search state
+  const [vinQuery, setVinQuery] = useState('')
+  const [vinResults, setVinResults] = useState<VINSearchResult[]>([])
+  const [selectedUnit, setSelectedUnit] = useState<VINSearchResult | null>(null)
+  const [vinSearching, setVinSearching] = useState(false)
+  const [showVinDropdown, setShowVinDropdown] = useState(false)
+  const vinInputRef = useRef<HTMLInputElement>(null)
+  const vinDropdownRef = useRef<HTMLDivElement>(null)
+
+  // VIN search debounce effect
+  useEffect(() => {
+    if (!vinQuery || vinQuery.length < 3) {
+      setVinResults([])
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setVinSearching(true)
+      try {
+        const results = await searchVINForTicket(vinQuery)
+        setVinResults(results)
+        setShowVinDropdown(results.length > 0)
+      } catch (e) {
+        console.error('VIN search error:', e)
+      } finally {
+        setVinSearching(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [vinQuery])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        vinDropdownRef.current &&
+        !vinDropdownRef.current.contains(event.target as Node) &&
+        vinInputRef.current &&
+        !vinInputRef.current.contains(event.target as Node)
+      ) {
+        setShowVinDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Handle VIN selection
+  const handleSelectUnit = (unit: VINSearchResult) => {
+    setSelectedUnit(unit)
+    setVinQuery(unit.vin)
+    setShowVinDropdown(false)
+  }
+
+  // Clear selected unit
+  const clearSelectedUnit = () => {
+    setSelectedUnit(null)
+    setVinQuery('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -60,6 +124,12 @@ export default function NewSupportTicketPage() {
     formData.append('subject', subject)
     formData.append('description', description)
     formData.append('priority', priority)
+
+    // Include RV unit info if selected
+    if (selectedUnit) {
+      formData.append('rvUnitId', selectedUnit.id)
+      formData.append('vin', selectedUnit.vin)
+    }
 
     const result = await createSupportTicketAction(formData)
 
@@ -225,6 +295,84 @@ export default function NewSupportTicketPage() {
             {priority === 'normal' && 'For general questions and non-urgent requests'}
             {priority === 'low' && 'For minor issues or general feedback'}
           </p>
+        </div>
+
+        {/* VIN Lookup */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Related RV Unit (Optional)
+          </label>
+          <p className="text-sm text-gray-500 mb-2">
+            Link this ticket to a specific RV unit for faster support
+          </p>
+
+          {selectedUnit ? (
+            <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary rounded-lg">
+              <div className="flex-1">
+                <p className="font-medium text-gray-900">
+                  {selectedUnit.modelYear} {selectedUnit.series} {selectedUnit.modelName}
+                </p>
+                <p className="text-sm text-gray-500">
+                  VIN: {selectedUnit.vin}
+                  {selectedUnit.stockNumber && ` | Stock #: ${selectedUnit.stockNumber}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={clearSelectedUnit}
+                className="text-gray-400 hover:text-red-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <div className="relative">
+              <input
+                ref={vinInputRef}
+                type="text"
+                value={vinQuery}
+                onChange={(e) => {
+                  setVinQuery(e.target.value)
+                  if (e.target.value.length >= 3) {
+                    setShowVinDropdown(true)
+                  }
+                }}
+                onFocus={() => vinQuery.length >= 3 && vinResults.length > 0 && setShowVinDropdown(true)}
+                className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                placeholder="Search by VIN (min 3 characters)..."
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {vinSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+              )}
+
+              {showVinDropdown && vinResults.length > 0 && (
+                <div
+                  ref={vinDropdownRef}
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                  {vinResults.map((unit) => (
+                    <button
+                      key={unit.id}
+                      type="button"
+                      onClick={() => handleSelectUnit(unit)}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                    >
+                      <p className="font-medium text-gray-900">
+                        {unit.modelYear} {unit.series} {unit.modelName}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        VIN: {unit.vin}
+                        {unit.stockNumber && ` | Stock #: ${unit.stockNumber}`}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Subject */}

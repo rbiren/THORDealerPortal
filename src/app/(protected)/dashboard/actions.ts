@@ -330,3 +330,119 @@ export async function getQuickStats(dealerId: string) {
     unreadNotifications,
   }
 }
+
+// RV Inventory Dashboard Metrics
+export type RVDashboardMetrics = {
+  unitsInStock: number
+  unitsInTransit: number
+  unitsReserved: number
+  unitsSoldMTD: number
+  unitsSoldYTD: number
+  totalInventoryValue: number
+  totalFloorPlanExposure: number
+  averageDaysOnLot: number
+  unitsOver90Days: number
+  openWarrantyClaims: number
+  pendingVehicleOrders: number
+}
+
+// Get RV inventory metrics for dashboard
+export async function getRVDashboardMetrics(dealerId: string): Promise<RVDashboardMetrics> {
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const startOfYear = new Date(now.getFullYear(), 0, 1)
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+
+  const [
+    inStock,
+    inTransit,
+    reserved,
+    soldMTD,
+    soldYTD,
+    inventoryValue,
+    floorPlanExposure,
+    avgDaysOnLot,
+    over90Days,
+    openClaims,
+    pendingOrders,
+  ] = await Promise.all([
+    prisma.rVUnit.count({ where: { dealerId, status: 'in_stock' } }),
+    prisma.rVUnit.count({ where: { dealerId, status: 'in_transit' } }),
+    prisma.rVUnit.count({ where: { dealerId, status: 'reserved' } }),
+    prisma.rVUnit.count({
+      where: { dealerId, status: 'sold', soldDate: { gte: startOfMonth } },
+    }),
+    prisma.rVUnit.count({
+      where: { dealerId, status: 'sold', soldDate: { gte: startOfYear } },
+    }),
+    prisma.rVUnit.aggregate({
+      where: { dealerId, status: { in: ['in_stock', 'in_transit', 'reserved'] } },
+      _sum: { invoiceCost: true },
+    }),
+    prisma.rVUnit.aggregate({
+      where: { dealerId, status: { in: ['in_stock', 'in_transit', 'reserved'] }, floorPlanPayoff: { not: null } },
+      _sum: { floorPlanPayoff: true },
+    }),
+    prisma.rVUnit.aggregate({
+      where: { dealerId, status: 'in_stock', daysOnLot: { not: null } },
+      _avg: { daysOnLot: true },
+    }),
+    prisma.rVUnit.count({
+      where: { dealerId, status: 'in_stock', receivedDate: { lt: ninetyDaysAgo } },
+    }),
+    prisma.warrantyClaim.count({
+      where: { dealerId, rvUnitId: { not: null }, status: { in: ['submitted', 'under_review', 'info_requested'] } },
+    }),
+    prisma.vehicleOrder.count({
+      where: { dealerId, status: { in: ['quote', 'pending_approval', 'approved', 'confirmed'] } },
+    }),
+  ])
+
+  return {
+    unitsInStock: inStock,
+    unitsInTransit: inTransit,
+    unitsReserved: reserved,
+    unitsSoldMTD: soldMTD,
+    unitsSoldYTD: soldYTD,
+    totalInventoryValue: inventoryValue._sum.invoiceCost || 0,
+    totalFloorPlanExposure: floorPlanExposure._sum.floorPlanPayoff || 0,
+    averageDaysOnLot: Math.round(avgDaysOnLot._avg.daysOnLot || 0),
+    unitsOver90Days: over90Days,
+    openWarrantyClaims: openClaims,
+    pendingVehicleOrders: pendingOrders,
+  }
+}
+
+// Get recent RV inventory for dashboard
+export type RecentRVUnit = {
+  id: string
+  vin: string
+  stockNumber: string | null
+  modelName: string
+  modelYear: number
+  status: string
+  condition: string
+  msrp: number
+  daysOnLot: number | null
+}
+
+export async function getRecentRVUnits(dealerId: string, limit = 5): Promise<RecentRVUnit[]> {
+  const units = await prisma.rVUnit.findMany({
+    where: { dealerId, status: { in: ['in_stock', 'in_transit', 'reserved'] } },
+    include: { model: true },
+    orderBy: { receivedDate: 'desc' },
+    take: limit,
+  })
+
+  return units.map((unit: any) => ({
+    id: unit.id,
+    vin: unit.vin,
+    stockNumber: unit.stockNumber,
+    modelName: `${unit.model.series} ${unit.model.name}`,
+    modelYear: unit.modelYear,
+    status: unit.status,
+    condition: unit.condition,
+    msrp: unit.msrp,
+    daysOnLot: unit.daysOnLot,
+  }))
+}

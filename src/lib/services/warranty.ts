@@ -220,6 +220,9 @@ export async function createWarrantyClaim(
         ...totals,
         priority: input.priority,
         submittedAt: input.submitNow ? new Date() : null,
+        // RV Unit reference
+        rvUnitId: input.rvUnitId || null,
+        vin: input.vin || null,
         items: input.items
           ? {
               create: input.items.map((item) => ({

@@ -169,6 +169,11 @@ model Dealer {
   // Phase 8.8: Live Chat
   chatChannels            ChatChannel[]
 
+  // RV Inventory
+  rvUnits                 RVUnit[]
+  vehicleOrders           VehicleOrder[]
+  vehicleInvoices         VehicleInvoice[]
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -289,6 +294,7 @@ model InventoryLocation {
   isActive  Boolean  @default(true)
 
   inventory Inventory[]
+  rvUnits   RVUnit[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -942,6 +948,15 @@ model WarrantyClaim {
   // Tracking
   priority            String    @default("normal") // low, normal, high, urgent
 
+  // RV Unit Link (for VIN-based claims)
+  rvUnitId            String?
+  rvUnit              RVUnit?   @relation(fields: [rvUnitId], references: [id])
+  vin                 String?   // Denormalized for quick reference
+  unitModelYear       Int?
+  unitModelName       String?
+  warrantyStatus      String?   // in_warranty, expired, extended
+  warrantyExpires     DateTime?
+
   items               WarrantyClaimItem[]
   attachments         WarrantyClaimAttachment[]
   notes               WarrantyClaimNote[]
@@ -959,6 +974,8 @@ model WarrantyClaim {
   @@index([status])
   @@index([submittedById])
   @@index([assignedToId])
+  @@index([rvUnitId])
+  @@index([vin])
   @@index([createdAt])
 }
 
@@ -1082,6 +1099,15 @@ model SupportTicket {
   resolutionNotes String?
   satisfactionRating Int?   // 1-5 rating from dealer
 
+  // RV Unit Context
+  rvUnitId        String?
+  rvUnit          RVUnit?   @relation(fields: [rvUnitId], references: [id])
+  vin             String?   // For quick lookup
+
+  // Related Records
+  relatedClaimId  String?   // If escalated from warranty
+  relatedOrderId  String?   // If about an order
+
   messages        TicketMessage[]
   attachments     TicketAttachment[]
 
@@ -1096,6 +1122,8 @@ model SupportTicket {
   @@index([status])
   @@index([assignedToId])
   @@index([priority])
+  @@index([rvUnitId])
+  @@index([vin])
   @@index([createdAt])
 }
 
@@ -1234,6 +1262,9 @@ model IncentiveProgram {
   accruals        RebateAccrual[]
   claims          IncentiveClaim[]
   payouts         IncentivePayout[]
+
+  // RV Model-specific incentives
+  modelIncentives RVModelIncentive[]
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -2580,4 +2611,470 @@ model ChatAgentStatus {
 
   @@index([status])
   @@index([autoAssignEnabled])
+}
+
+// ============================================================================
+// RV INVENTORY & VEHICLE MANAGEMENT
+// ============================================================================
+
+// RV Model Definition - what Thor manufactures
+model RVModel {
+  id                String    @id @default(cuid())
+  code              String    @unique  // "ARIA-4000", "MAGNITUDE-XG32"
+  name              String              // "Aria 4000"
+  series            String              // "Aria", "Magnitude", "Venetian"
+  classType         String              // "Class A", "Class B", "Class C", "Fifth Wheel", "Travel Trailer"
+  modelYear         Int
+
+  // Physical Specifications
+  lengthFeet        Int
+  lengthInches      Int       @default(0)
+  baseWeight        Int                 // GVWR in lbs
+  hitchWeight       Int?                // For towables
+  freshWaterCapacity Int?               // Gallons
+  grayWaterCapacity Int?
+  blackWaterCapacity Int?
+  lpgCapacity       Float?              // Gallons
+  fuelCapacity      Int?                // Gallons (for motorized)
+
+  // Living Specs
+  sleepingCapacity  Int
+  slideOuts         Int       @default(0)
+
+  // Engine/Chassis (for motorized)
+  chassisMake       String?             // "Freightliner", "Ford"
+  chassisModel      String?
+  engineType        String?             // "Diesel", "Gas"
+  engineSize        String?             // "6.7L Cummins"
+
+  // Pricing
+  baseMSRP          Float
+  dealerInvoice     Float               // Dealer cost
+  holdback          Float?              // Dealer holdback amount
+
+  // Options & Colors (JSON for flexibility)
+  availableExteriorColors String?       // JSON array
+  availableInteriorColors String?       // JSON array
+  standardFeatures  String?             // JSON array of standard features
+  availableOptions  String?             // JSON array of option codes
+
+  // Media
+  heroImageUrl      String?
+  galleryImages     String?             // JSON array of image URLs
+  brochureUrl       String?
+  specSheetUrl      String?
+  floorPlanUrl      String?
+
+  // Status
+  status            String    @default("active") // active, discontinued, coming_soon
+
+  // Relations
+  units             RVUnit[]
+  vehicleOrders     VehicleOrder[]
+  modelIncentives   RVModelIncentive[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([code])
+  @@index([series])
+  @@index([classType])
+  @@index([modelYear])
+  @@index([status])
+}
+
+// Individual RV Unit - tracked by VIN
+model RVUnit {
+  id                String    @id @default(cuid())
+  vin               String    @unique   // Vehicle Identification Number
+  stockNumber       String?             // Dealer's internal stock number
+
+  // Model Reference
+  modelId           String
+  model             RVModel   @relation(fields: [modelId], references: [id])
+  modelYear         Int                 // May differ from RVModel.modelYear for carryover
+
+  // Configuration
+  exteriorColor     String
+  interiorColor     String?
+  installedOptions  String?             // JSON array of option codes installed
+
+  // Condition
+  condition         String    @default("new") // new, used, demo, certified_preowned
+  mileage           Int?                // For used/demo units
+  hours             Int?                // Engine hours if applicable
+  conditionNotes    String?
+
+  // Status
+  status            String    @default("in_stock") // in_transit, in_stock, reserved, sold, wholesale, service
+  availableDate     DateTime?           // When unit becomes available
+
+  // Location
+  dealerId          String
+  dealer            Dealer    @relation(fields: [dealerId], references: [id])
+  locationId        String?
+  location          InventoryLocation? @relation(fields: [locationId], references: [id])
+  lotLocation       String?             // "Lot A, Row 3" etc.
+
+  // Pricing
+  msrp              Float               // Sticker price
+  invoiceCost       Float               // What dealer paid
+  internetPrice     Float?              // Advertised price
+  minimumPrice      Float?              // Floor price for negotiations
+
+  // Floor Plan Financing
+  floorPlanLender   String?             // Lender name
+  floorPlanNumber   String?             // Account/loan number
+  floorPlanPayoff   Float?              // Current payoff amount
+  floorPlanDueDate  DateTime?           // Curtailment date
+  floorPlanInterestRate Float?          // Annual rate
+
+  // Dates
+  receivedDate      DateTime?           // When dealer received unit
+  lastServiceDate   DateTime?
+  soldDate          DateTime?
+  daysOnLot         Int?                // Calculated field, updated periodically
+
+  // Warranty Info
+  warrantyStartDate DateTime?
+  warrantyEndDate   DateTime?
+  extendedWarrantyId String?
+
+  // Media
+  photos            String?             // JSON array of photo URLs
+  videoUrl          String?
+
+  // Relations
+  vehicleOrders     VehicleOrder[]
+  warrantyClaims    WarrantyClaim[]
+  supportTickets    SupportTicket[]
+  serviceRecords    ServiceRecord[]
+  vehicleInvoices   VehicleInvoice[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([vin])
+  @@index([stockNumber])
+  @@index([modelId])
+  @@index([dealerId])
+  @@index([status])
+  @@index([condition])
+  @@index([modelYear])
+  @@index([receivedDate])
+}
+
+// Vehicle Order - different from parts orders
+model VehicleOrder {
+  id                String    @id @default(cuid())
+  orderNumber       String    @unique   // VO-2025-00001
+
+  // Dealer
+  dealerId          String
+  dealer            Dealer    @relation(fields: [dealerId], references: [id])
+  salesPersonId     String?             // User who made the sale
+
+  // Order Type
+  orderType         String    @default("stock") // stock (existing unit), factory (build order), locate
+
+  // Unit Being Ordered
+  rvUnitId          String?             // For stock orders - specific VIN
+  rvUnit            RVUnit?   @relation(fields: [rvUnitId], references: [id])
+
+  // Or Factory/Build Order
+  rvModelId         String?             // For factory orders
+  rvModel           RVModel?  @relation(fields: [rvModelId], references: [id])
+  requestedExteriorColor String?
+  requestedInteriorColor String?
+  requestedOptions  String?             // JSON array of option codes
+
+  // Customer Info (if retail sale)
+  customerType      String    @default("retail") // retail, wholesale, internal
+  customerName      String?
+  customerEmail     String?
+  customerPhone     String?
+  customerAddress   String?             // JSON
+
+  // Trade-In
+  tradeInId         String?   @unique
+  tradeIn           TradeIn?  @relation(fields: [tradeInId], references: [id])
+
+  // Pricing
+  unitPrice         Float               // Negotiated price
+  optionsPrice      Float     @default(0)
+  freightPrice      Float     @default(0)
+  prepFee           Float     @default(0)
+  docFee            Float     @default(0)
+  additionalFees    String?             // JSON array of additional fees
+  tradeInAllowance  Float     @default(0)
+  tradeInPayoff     Float     @default(0) // Lien payoff on trade
+  rebatesApplied    Float     @default(0)
+  taxAmount         Float     @default(0)
+  totalPrice        Float
+
+  // Payment
+  depositAmount     Float     @default(0)
+  depositDate       DateTime?
+  paymentMethod     String?             // cash, financing, lease, floor_plan
+  financingDetails  String?             // JSON: { lender, term, rate, payment }
+
+  // Delivery
+  deliveryMethod    String?             // dealer_pickup, factory_delivery, transport
+  deliveryAddress   String?             // JSON
+  requestedDeliveryDate DateTime?
+  estimatedDeliveryDate DateTime?
+  actualDeliveryDate DateTime?
+  deliveryNotes     String?
+
+  // Documentation
+  documentsComplete Boolean   @default(false)
+  titleReceived     Boolean   @default(false)
+  titleSent         Boolean   @default(false)
+  registrationComplete Boolean @default(false)
+
+  // Status Workflow
+  status            String    @default("quote") // quote, pending_approval, approved, confirmed,
+                                                // in_production, ready, in_transit, delivered,
+                                                // completed, cancelled
+
+  // Notes
+  internalNotes     String?
+  customerNotes     String?
+
+  // Timestamps
+  quotedAt          DateTime?
+  submittedAt       DateTime?
+  approvedAt        DateTime?
+  confirmedAt       DateTime?
+  cancelledAt       DateTime?
+  cancelReason      String?
+  completedAt       DateTime?
+
+  statusHistory     VehicleOrderStatusHistory[]
+  vehicleInvoice    VehicleInvoice?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([orderNumber])
+  @@index([dealerId])
+  @@index([rvUnitId])
+  @@index([rvModelId])
+  @@index([status])
+  @@index([orderType])
+  @@index([createdAt])
+}
+
+model VehicleOrderStatusHistory {
+  id              String        @id @default(cuid())
+  orderId         String
+  order           VehicleOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  fromStatus      String?
+  toStatus        String
+  changedById     String?
+  note            String?
+
+  createdAt       DateTime      @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+// Trade-In Vehicle
+model TradeIn {
+  id                String    @id @default(cuid())
+
+  // Vehicle Info
+  vehicleType       String              // rv, auto, truck, motorcycle, boat
+  year              Int
+  make              String
+  model             String
+  trim              String?
+  vin               String?
+
+  // Condition
+  mileage           Int?
+  hours             Int?                // For RVs/boats
+  condition         String              // excellent, good, fair, poor
+  conditionNotes    String?
+
+  // For RV Trade-ins
+  rvClass           String?             // Class A, B, C, etc.
+  lengthFeet        Int?
+  slideOuts         Int?
+
+  // Valuation
+  estimatedValue    Float               // Initial estimate
+  nada_value        Float?              // NADA book value
+  appraisedValue    Float?              // After inspection
+  approvedValue     Float?              // Final approved value
+  acv               Float?              // Actual Cash Value
+
+  // Lien Info
+  hasLien           Boolean   @default(false)
+  lienHolder        String?
+  lienPayoff        Float?
+  lienPayoffGoodThrough DateTime?
+
+  // Photos
+  photos            String?             // JSON array of photo URLs
+
+  // Status
+  status            String    @default("pending") // pending, appraised, approved, rejected, completed
+
+  // Notes
+  appraisalNotes    String?
+  internalNotes     String?
+
+  // Linked to order
+  vehicleOrder      VehicleOrder?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([vin])
+  @@index([status])
+  @@index([vehicleType])
+}
+
+// Service/Repair Records per Unit
+model ServiceRecord {
+  id                String    @id @default(cuid())
+
+  rvUnitId          String
+  rvUnit            RVUnit    @relation(fields: [rvUnitId], references: [id], onDelete: Cascade)
+
+  // Service Info
+  serviceType       String              // warranty, recall, customer_pay, pdi, internal
+  serviceNumber     String?             // RO number
+
+  // Description
+  description       String
+  complaint         String?             // Customer complaint
+  cause             String?             // Cause found
+  correction        String?             // What was done
+
+  // Labor & Parts
+  laborHours        Float?
+  laborRate         Float?
+  laborCost         Float?
+  partsCost         Float?
+  subletCost        Float?              // Outside vendor costs
+  totalCost         Float?
+
+  // Parts Used (JSON array)
+  partsUsed         String?             // JSON: [{ partNumber, name, qty, cost }]
+
+  // Mileage/Hours at Service
+  mileageIn         Int?
+  hoursIn           Int?
+
+  // Technician
+  technicianId      String?
+  technicianName    String?
+
+  // Status
+  status            String    @default("open") // open, in_progress, completed, cancelled
+
+  // Related Claim
+  warrantyClaimId   String?
+
+  // Dates
+  dateIn            DateTime
+  dateOut           DateTime?
+  promisedDate      DateTime?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([rvUnitId])
+  @@index([serviceType])
+  @@index([status])
+  @@index([dateIn])
+}
+
+// Vehicle-specific Invoice (different from parts invoice)
+model VehicleInvoice {
+  id                String    @id @default(cuid())
+  invoiceNumber     String    @unique   // VI-2025-00001
+
+  // Links
+  vehicleOrderId    String    @unique
+  vehicleOrder      VehicleOrder @relation(fields: [vehicleOrderId], references: [id])
+  rvUnitId          String
+  rvUnit            RVUnit    @relation(fields: [rvUnitId], references: [id])
+  dealerId          String
+  dealer            Dealer    @relation(fields: [dealerId], references: [id])
+
+  // Status
+  status            String    @default("draft") // draft, sent, paid, cancelled
+
+  // Line Items (denormalized for invoice record)
+  unitDescription   String              // "2025 Thor Aria 4000 - VIN: xxx"
+  unitPrice         Float
+  optionsDetail     String?             // JSON array of options with prices
+  optionsTotal      Float     @default(0)
+  freightCharge     Float     @default(0)
+  prepCharge        Float     @default(0)
+  docFee            Float     @default(0)
+  additionalCharges String?             // JSON array
+
+  // Trade
+  tradeDescription  String?
+  tradeAllowance    Float     @default(0)
+  tradePayoff       Float     @default(0)
+
+  // Totals
+  subtotal          Float
+  rebatesApplied    Float     @default(0)
+  taxAmount         Float     @default(0)
+  totalAmount       Float
+  depositApplied    Float     @default(0)
+  balanceDue        Float
+
+  // Payment
+  paymentMethod     String?
+  paymentReference  String?
+  paidDate          DateTime?
+
+  // PDF
+  pdfUrl            String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([invoiceNumber])
+  @@index([vehicleOrderId])
+  @@index([dealerId])
+  @@index([status])
+}
+
+// Unit-Based Incentives
+model RVModelIncentive {
+  id                String    @id @default(cuid())
+
+  programId         String
+  program           IncentiveProgram @relation(fields: [programId], references: [id])
+  rvModelId         String
+  rvModel           RVModel   @relation(fields: [rvModelId], references: [id])
+
+  // Incentive Amount
+  incentiveType     String              // per_unit, percentage, tiered
+  amount            Float               // Dollar amount or percentage
+
+  // Conditions
+  conditions        String?             // JSON: { minUnits, requireDemo, etc. }
+
+  // Validity
+  validFrom         DateTime
+  validTo           DateTime?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([programId, rvModelId])
+  @@index([programId])
+  @@index([rvModelId])
+  @@index([validFrom])
 }

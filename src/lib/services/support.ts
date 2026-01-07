@@ -74,6 +74,9 @@ export async function createSupportTicket(
         status: 'open',
         slaResponseDue: responseDue,
         slaResolutionDue: resolutionDue,
+        // RV Unit reference
+        rvUnitId: data.rvUnitId || null,
+        vin: data.vin || null,
       },
     })
 
